@@ -1,5 +1,4 @@
 using System;
-using Umbraco.Core.Dynamics;
 
 namespace Umbraco.Core
 {
@@ -7,8 +6,10 @@ namespace Umbraco.Core
     /// Represents the result of an operation attempt.
     /// </summary>
     /// <typeparam name="T">The type of the attempted operation result.</typeparam>
+#if NET461
     [Serializable]
-	public struct Attempt<T>
+#endif
+    public struct Attempt<T>
 	{
 		private readonly bool _success;
 		private readonly T _result;

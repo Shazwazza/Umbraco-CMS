@@ -1,22 +1,46 @@
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
+using Microsoft.Extensions.PlatformAbstractions;
 
-namespace Umbraco.Core
+namespace Umbraco.Core.Plugins
 {
     /// <summary>
 	/// A utility class for type checking, this provides internal caching so that calls to these methods will be faster
 	/// than doing a manual type check in c#
 	/// </summary>
-	internal static class TypeHelper
-	{
-		
-		private static readonly ConcurrentDictionary<Type, FieldInfo[]> GetFieldsCache = new ConcurrentDictionary<Type, FieldInfo[]>();
-		private static readonly ConcurrentDictionary<Tuple<Type, bool, bool, bool>, PropertyInfo[]> GetPropertiesCache = new ConcurrentDictionary<Tuple<Type, bool, bool, bool>, PropertyInfo[]>();
-       
+	public class TypeHelper
+    {
+
+#if NET461
+        public TypeHelper()
+        {
+
+        }
+#else
+        public TypeHelper(ILibraryManager libraryManager)
+        {
+            _libraryManager = libraryManager;
+        }
+#endif
+
+        private readonly ILibraryManager _libraryManager;
+        private readonly ConcurrentDictionary<Type, FieldInfo[]> _getFieldsCache = new ConcurrentDictionary<Type, FieldInfo[]>();
+        private readonly ConcurrentDictionary<Tuple<Type, bool, bool, bool>, PropertyInfo[]> _getPropertiesCache = new ConcurrentDictionary<Tuple<Type, bool, bool, bool>, PropertyInfo[]>();
+
+        /// <summary>
+        /// Checks if the method is actually overriding a base method
+        /// </summary>
+        /// <param name="m"></param>
+        /// <returns></returns>
+        public bool IsOverride(MethodInfo m)
+        {
+            return m.GetBaseDefinition().DeclaringType != m.DeclaringType;
+        }
+
         /// <summary>
         /// Find all assembly references that are referencing the assignTypeFrom Type's assembly found in the assemblyList
         /// </summary>
@@ -27,35 +51,45 @@ namespace Umbraco.Core
         /// If the assembly of the assignTypeFrom Type is in the App_Code assembly, then we return nothing since things cannot
         /// reference that assembly, same with the global.asax assembly.
         /// </remarks>
-        public static Assembly[] GetReferencedAssemblies(Type assignTypeFrom, IEnumerable<Assembly> assemblies)
+        public Assembly[] GetReferencedAssemblies(Type assignTypeFrom, IEnumerable<Assembly> assemblies)
         {
-            //check if it is the app_code assembly.
-            //check if it is App_global.asax assembly
-            if (assignTypeFrom.Assembly.IsAppCodeAssembly() || assignTypeFrom.Assembly.IsGlobalAsaxAssembly())
-            {
-                return Enumerable.Empty<Assembly>().ToArray();
-            }
-            
             //find all assembly references that are referencing the current type's assembly since we 
             //should only be scanning those assemblies because any other assembly will definitely not
             //contain sub type's of the one we're currently looking for
+
+            Func<Type, Assembly> getAssembly = type =>
+            {
+#if NET461
+                return type.Assembly;
+#else
+                return type.GetTypeInfo().Assembly;
+#endif
+            };
+
             return assemblies
-                .Where(assembly =>
-                       assembly == assignTypeFrom.Assembly 
-                        || HasReferenceToAssemblyWithName(assembly, assignTypeFrom.Assembly.GetName().Name))
+                .Where(assembly => assembly == getAssembly(assignTypeFrom) || HasReferenceToAssemblyWithName(assembly, getAssembly(assignTypeFrom).GetName().Name))
                 .ToArray();
+
+
         }
 
-	    /// <summary>
-	    /// checks if the assembly has a reference with the same name as the expected assembly name.
-	    /// </summary>
-	    /// <param name="assembly"></param>
-	    /// <param name="expectedAssemblyName"></param>
-	    /// <returns></returns>
-        private static bool HasReferenceToAssemblyWithName(Assembly assembly, string expectedAssemblyName)
-        {           
+        /// <summary>
+        /// checks if the assembly has a reference with the same name as the expected assembly name.
+        /// </summary>
+        /// <param name="assembly"></param>
+        /// <param name="expectedAssemblyName"></param>
+        /// <returns></returns>
+        private bool HasReferenceToAssemblyWithName(Assembly assembly, string expectedAssemblyName)
+        {
+
+#if NET461
             return assembly
-                .GetReferencedAssemblies()                
+                .GetReferencedAssemblies()
+#else
+            //TODO: Need to figure out if this works!
+            return
+                _libraryManager.GetReferencingLibraries(assembly.GetName().Name)
+#endif
                 .Select(a => a.Name)
                 .Contains(expectedAssemblyName, StringComparer.Ordinal);
         }
@@ -65,26 +99,40 @@ namespace Umbraco.Core
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-	    public static bool IsNonStaticClass(Type t)
+	    public bool IsNonStaticClass(Type t)
         {
-            return t.IsClass && IsStaticClass(t) == false;
+            return
+#if NET461
+                t.IsClass
+#else
+                t.GetTypeInfo().IsClass
+#endif
+
+                && IsStaticClass(t) == false;
         }
 
-	    /// <summary>
-        /// Returns true if the type is a static class
+        /// <summary>
+        /// Returns true if the type is a class
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
         /// <remarks>
-        /// In IL a static class is abstract and sealed
+        /// In IL a class is abstract and sealed
         /// see: http://stackoverflow.com/questions/1175888/determine-if-a-type-is-static
         /// </remarks>
-        public static bool IsStaticClass(Type type)
+        public bool IsStaticClass(Type type)
         {
-            return type.IsAbstract && type.IsSealed;
+            return
+
+#if NET461
+                type.IsAbstract && type.IsSealed;
+#else
+                type.GetTypeInfo().IsAbstract && type.GetTypeInfo().IsSealed;
+#endif
+
         }
 
-	    /// <summary>
+        /// <summary>
         /// Finds a lowest base class amongst a collection of types
         /// </summary>
         /// <param name="types"></param>
@@ -93,33 +141,33 @@ namespace Umbraco.Core
         /// The term 'lowest' refers to the most base class of the type collection.
         /// If a base type is not found amongst the type collection then an invalid attempt is returned.
         /// </remarks>
-        public static Attempt<Type> GetLowestBaseType(params Type[] types)
-	    {
-	        if (types.Length == 0)
-	        {
-	            return Attempt<Type>.Fail();
-	        }
-	        if (types.Length == 1)
-	        {
+        public Attempt<Type> GetLowestBaseType(params Type[] types)
+        {
+            if (types.Length == 0)
+            {
+                return Attempt<Type>.Fail();
+            }
+            if (types.Length == 1)
+            {
                 return Attempt.Succeed(types[0]);
-	        }
+            }
 
-	        foreach (var curr in types)
-	        {
-	            var others = types.Except(new[] {curr});
+            foreach (var curr in types)
+            {
+                var others = types.Except(new[] { curr });
 
-	            //is the curr type a common denominator for all others ?
-	            var isBase = others.All(curr.IsAssignableFrom);
+                //is the curr type a common denominator for all others ?
+                var isBase = others.All(curr.IsAssignableFrom);
 
-	            //if this type is the base for all others
-	            if (isBase)
-	            {
-	                return Attempt.Succeed(curr);
-	            }
-	        }
+                //if this type is the base for all others
+                if (isBase)
+                {
+                    return Attempt.Succeed(curr);
+                }
+            }
 
-	        return Attempt<Type>.Fail();
-	    }
+            return Attempt<Type>.Fail();
+        }
 
         /// <summary>
 		/// Determines whether the type <paramref name="implementation"/> is assignable from the specified implementation,
@@ -130,21 +178,21 @@ namespace Umbraco.Core
 		/// <returns>
 		/// 	<c>true</c> if [is type assignable from] [the specified contract]; otherwise, <c>false</c>.
 		/// </returns>
-		public static bool IsTypeAssignableFrom(Type contract, Type implementation)
-		{
-		    return contract.IsAssignableFrom(implementation);
-		}
+		public bool IsTypeAssignableFrom(Type contract, Type implementation)
+        {
+            return contract.IsAssignableFrom(implementation);
+        }
 
-		/// <summary>
-		/// Determines whether the type <paramref name="implementation"/> is assignable from the specified implementation <typeparamref name="TContract"/>,
-		/// and caches the result across the application using a <see cref="ConcurrentDictionary{TKey,TValue}"/>.
-		/// </summary>
-		/// <typeparam name="TContract">The type of the contract.</typeparam>
-		/// <param name="implementation">The implementation.</param>
-		public static bool IsTypeAssignableFrom<TContract>(Type implementation)
-		{
-			return IsTypeAssignableFrom(typeof(TContract), implementation);
-		}
+        /// <summary>
+        /// Determines whether the type <paramref name="implementation"/> is assignable from the specified implementation <typeparamref name="TContract"/>,
+        /// and caches the result across the application using a <see cref="ConcurrentDictionary{TKey,TValue}"/>.
+        /// </summary>
+        /// <typeparam name="TContract">The type of the contract.</typeparam>
+        /// <param name="implementation">The implementation.</param>
+        public bool IsTypeAssignableFrom<TContract>(Type implementation)
+        {
+            return IsTypeAssignableFrom(typeof(TContract), implementation);
+        }
 
         /// <summary>
         /// Determines whether the object instance <paramref name="implementation"/> is assignable from the specified implementation <typeparamref name="TContract"/>,
@@ -152,57 +200,100 @@ namespace Umbraco.Core
         /// </summary>
         /// <typeparam name="TContract">The type of the contract.</typeparam>
         /// <param name="implementation">The implementation.</param>
-        public static bool IsTypeAssignableFrom<TContract>(object implementation)
+        public bool IsTypeAssignableFrom<TContract>(object implementation)
         {
             if (implementation == null) throw new ArgumentNullException("implementation");
             return IsTypeAssignableFrom<TContract>(implementation.GetType());
         }
-	
 
-		/// <summary>
-		/// Returns (and caches) a PropertyInfo from a type
-		/// </summary>
-		/// <param name="type"></param>
-		/// <param name="name"></param>
-		/// <param name="mustRead"></param>
-		/// <param name="mustWrite"></param>
-		/// <param name="includeIndexed"></param>
-		/// <param name="caseSensitive"> </param>
-		/// <returns></returns>
-		public static PropertyInfo GetProperty(Type type, string name, 
-			bool mustRead = true, 
-			bool mustWrite = true, 
-			bool includeIndexed = false,
-			bool caseSensitive = true)
-		{
-			return CachedDiscoverableProperties(type, mustRead, mustWrite, includeIndexed)
-				.FirstOrDefault(x =>
-					{
-						if (caseSensitive)
-							return x.Name == name;
-						return x.Name.InvariantEquals(name);
-					});
-		}        
+        /// <summary>
+        /// A method to determine whether <paramref name="implementation"/> represents a value type.
+        /// </summary>
+        /// <param name="implementation">The implementation.</param>
+        public bool IsValueType(Type implementation)
+        {
+#if NET461
+            return implementation.IsValueType || implementation.IsPrimitive;
+#else
+            return implementation.GetTypeInfo().IsValueType || implementation.GetTypeInfo().IsPrimitive;
+#endif
 
-		/// <summary>
-		/// Gets (and caches) <see cref="PropertyInfo"/> discoverable in the current <see cref="AppDomain"/> for a given <paramref name="type"/>.
-		/// </summary>
-		/// <param name="type">The source.</param>
-		/// <param name="mustRead">true if the properties discovered are readable</param>
-		/// <param name="mustWrite">true if the properties discovered are writable</param>
-		/// <param name="includeIndexed">true if the properties discovered are indexable</param>
-		/// <returns></returns>
-		public static PropertyInfo[] CachedDiscoverableProperties(Type type, bool mustRead = true, bool mustWrite = true, bool includeIndexed = false)
-		{
-			return GetPropertiesCache.GetOrAdd(
-				new Tuple<Type, bool, bool, bool>(type, mustRead, mustWrite, includeIndexed),
-				x => type
-				     	.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-				     	.Where(y => (!mustRead || y.CanRead)
-				     	            && (!mustWrite || y.CanWrite)
-				     	            && (includeIndexed || !y.GetIndexParameters().Any()))
-				     	.ToArray());
-		}
+        }
+
+        /// <summary>
+        /// A method to determine whether <paramref name="implementation"/> is an implied value type (<see cref="Type.IsValueType"/>, <see cref="Type.IsEnum"/> or a string).
+        /// </summary>
+        /// <param name="implementation">The implementation.</param>
+        public bool IsImplicitValueType(Type implementation)
+        {
+            return IsValueType(implementation)
+#if NET461
+                || implementation.IsEnum
+#else
+                || implementation.GetTypeInfo().IsEnum
+#endif
+                || implementation == typeof(string);
+        }
+
+        /// <summary>
+        /// Returns (and caches) a PropertyInfo from a type
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="name"></param>
+        /// <param name="mustRead"></param>
+        /// <param name="mustWrite"></param>
+        /// <param name="includeIndexed"></param>
+        /// <param name="caseSensitive"> </param>
+        /// <returns></returns>
+        public PropertyInfo GetProperty(Type type, string name,
+            bool mustRead = true,
+            bool mustWrite = true,
+            bool includeIndexed = false,
+            bool caseSensitive = true)
+        {
+            return CachedDiscoverableProperties(type, mustRead, mustWrite, includeIndexed)
+                .FirstOrDefault(x =>
+                {
+                    if (caseSensitive)
+                        return x.Name == name;
+                    return x.Name.InvariantEquals(name);
+                });
+        }
+
+        /// <summary>
+        /// Gets (and caches) <see cref="FieldInfo"/> discoverable in the current <see cref="AppDomain"/> for a given <paramref name="type"/>.
+        /// </summary>
+        /// <param name="type">The source.</param>
+        /// <returns></returns>
+        public FieldInfo[] CachedDiscoverableFields(Type type)
+        {
+            return _getFieldsCache.GetOrAdd(
+                type,
+                x => type
+                         .GetFields(BindingFlags.Public | BindingFlags.Instance)
+                         .Where(y => !y.IsInitOnly)
+                         .ToArray());
+        }
+
+        /// <summary>
+        /// Gets (and caches) <see cref="PropertyInfo"/> discoverable in the current <see cref="AppDomain"/> for a given <paramref name="type"/>.
+        /// </summary>
+        /// <param name="type">The source.</param>
+        /// <param name="mustRead">true if the properties discovered are readable</param>
+        /// <param name="mustWrite">true if the properties discovered are writable</param>
+        /// <param name="includeIndexed">true if the properties discovered are indexable</param>
+        /// <returns></returns>
+        public PropertyInfo[] CachedDiscoverableProperties(Type type, bool mustRead = true, bool mustWrite = true, bool includeIndexed = false)
+        {
+            return _getPropertiesCache.GetOrAdd(
+                new Tuple<Type, bool, bool, bool>(type, mustRead, mustWrite, includeIndexed),
+                x => type
+                         .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                         .Where(y => (!mustRead || y.CanRead)
+                                     && (!mustWrite || y.CanWrite)
+                                     && (includeIndexed || !y.GetIndexParameters().Any()))
+                         .ToArray());
+        }
 
 
         #region Match Type
@@ -216,13 +307,18 @@ namespace Umbraco.Core
         // http://stackoverflow.com/questions/1827425/how-to-check-programatically-if-a-type-is-a-struct-or-a-class
         // http://stackoverflow.com/questions/74616/how-to-detect-if-type-is-another-generic-type/1075059#1075059
 
-        private static bool MatchGeneric(Type implementation, Type contract, IDictionary<string, Type> bindings)
+        private bool MatchGeneric(Type implementation, Type contract, IDictionary<string, Type> bindings)
         {
             // trying to match eg List<int> with List<T>
             // or List<List<List<int>>> with List<ListList<T>>>
             // classes are NOT invariant so List<string> does not match List<object>
 
+#if NET461
             if (implementation.IsGenericType == false) return false;
+#else
+            if (implementation.GetTypeInfo().IsGenericType == false) return false;
+#endif
+
 
             // must have the same generic type definition
             var implDef = implementation.GetGenericTypeDefinition();
@@ -247,14 +343,19 @@ namespace Umbraco.Core
             return true;
         }
 
-        public static bool MatchType(Type implementation, Type contract)
+        public bool MatchType(Type implementation, Type contract)
         {
             return MatchType(implementation, contract, new Dictionary<string, Type>());
         }
 
-        internal static bool MatchType(Type implementation, Type contract, IDictionary<string, Type> bindings, bool variance = true)
+        internal bool MatchType(Type implementation, Type contract, IDictionary<string, Type> bindings, bool variance = true)
         {
+#if NET461
             if (contract.IsGenericType)
+#else
+            if (contract.GetTypeInfo().IsGenericType)
+#endif
+
             {
                 // eg type is List<int> or List<T>
                 // if we have variance then List<int> can match IList<T>
@@ -267,11 +368,20 @@ namespace Umbraco.Core
                 if (variance == false) return false;
 
                 // try to match an ancestor of implementation against contract
+#if NET461
                 var t = implementation.BaseType;
+#else
+                var t = implementation.GetTypeInfo().BaseType;
+#endif
+
                 while (t != null)
                 {
                     if (MatchGeneric(t, contract, bindings)) return true;
+#if NET461
                     t = t.BaseType;
+#else
+                    t = t.GetTypeInfo().BaseType;
+#endif
                 }
 
                 // try to match an interface of implementation against contract
@@ -300,12 +410,18 @@ namespace Umbraco.Core
             // http://stackoverflow.com/questions/1827425/how-to-check-programatically-if-a-type-is-a-struct-or-a-class
 
             if (implementation == contract) return true;
+
+#if NET461
             if (contract.IsClass && implementation.IsClass && implementation.IsSubclassOf(contract)) return true;
             if (contract.IsInterface && implementation.GetInterfaces().Contains(contract)) return true;
+#else
+            if (contract.GetTypeInfo().IsClass && implementation.GetTypeInfo().IsClass && implementation.GetTypeInfo().IsSubclassOf(contract)) return true;
+            if (contract.GetTypeInfo().IsInterface && implementation.GetInterfaces().Contains(contract)) return true;
+#endif
 
             return false;
         }
 
         #endregion
-	}
+    }
 }
