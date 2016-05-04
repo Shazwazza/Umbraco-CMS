@@ -6,6 +6,47 @@
   "projectUrl": "",
   "licenseUrl": "",
 
+  "exclude": [
+    "*.cs",
+    "_Legacy/**/*.cs",
+    "Auditing/**/*.*",
+    "Cache/**/*.*",
+    "CodeAnnotations/**/*.*",
+    "Collections/**/*.*",
+    "Configuration/**/*.*",
+    "DependencyInjection/**/*.*",
+    "Dictionary/**/*.*",
+    "Dynamics/**/*.*",
+    "Events/**/*.*",
+    "Exceptions/**/*.*",
+    "FileResources/**/*.*",
+    "IO/**/*.*",
+    "Logging/**/*.*",
+    "Macros/**/*.*",
+    "Manifest/**/*.*",
+    "Media/**/*.*",
+    "Models/**/*.*",
+    "ObjectResolution/**/*.*",
+    "Packaging/**/*.*",
+    "Persistence/**/*.*",
+    "Profiling/**/*.*",
+    "PropertyEditors/**/*.*",
+    "Publishing/**/*.*",
+    "Security/**/*.*",
+    "Serialization/**/*.*",
+    "Services/**/*.*",
+    "Strategies/**/*.*",
+    "Strings/**/*.*",
+    "Sync/**/*.*",
+    "Xml/**/*.*"
+  ],
+  "compileFiles": [
+    "StringExtensions.cs",
+    "EnumerableExtensions.cs",
+    "Attempt{T}.cs",
+    "Attempt.cs"
+  ],
+
   "dependencies": {
     "Newtonsoft.Json": "8.0",
     "NPoco": "3.1.0-u005",
@@ -29,7 +70,7 @@
         "semver": "1.0",
         "Microsoft.SqlServer.Compact": "4.0",
         "MySql.Data": "6.9"
-      } 
+      }
     },
     "dnxcore50": {
       "dependencies": {
