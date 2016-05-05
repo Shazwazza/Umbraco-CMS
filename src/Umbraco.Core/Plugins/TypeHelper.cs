@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.PlatformAbstractions;
+using ReflectionBridge.Extensions;
 
 namespace Umbraco.Core.Plugins
 {
@@ -57,14 +58,7 @@ namespace Umbraco.Core.Plugins
             //should only be scanning those assemblies because any other assembly will definitely not
             //contain sub type's of the one we're currently looking for
 
-            Func<Type, Assembly> getAssembly = type =>
-            {
-#if NET461
-                return type.Assembly;
-#else
-                return type.GetTypeInfo().Assembly;
-#endif
-            };
+            Func<Type, Assembly> getAssembly = type => type.GetAssembly();
 
             return assemblies
                 .Where(assembly => assembly == getAssembly(assignTypeFrom) || HasReferenceToAssemblyWithName(assembly, getAssembly(assignTypeFrom).GetName().Name))
@@ -101,14 +95,7 @@ namespace Umbraco.Core.Plugins
         /// <returns></returns>
 	    public bool IsNonStaticClass(Type t)
         {
-            return
-#if NET461
-                t.IsClass
-#else
-                t.GetTypeInfo().IsClass
-#endif
-
-                && IsStaticClass(t) == false;
+            return t.IsClass() && IsStaticClass(t) == false;
         }
 
         /// <summary>
@@ -178,7 +165,7 @@ namespace Umbraco.Core.Plugins
 		/// <returns>
 		/// 	<c>true</c> if [is type assignable from] [the specified contract]; otherwise, <c>false</c>.
 		/// </returns>
-		public bool IsTypeAssignableFrom(Type contract, Type implementation)
+		public static bool IsTypeAssignableFrom(Type contract, Type implementation)
         {
             return contract.IsAssignableFrom(implementation);
         }
@@ -189,7 +176,7 @@ namespace Umbraco.Core.Plugins
         /// </summary>
         /// <typeparam name="TContract">The type of the contract.</typeparam>
         /// <param name="implementation">The implementation.</param>
-        public bool IsTypeAssignableFrom<TContract>(Type implementation)
+        public static bool IsTypeAssignableFrom<TContract>(Type implementation)
         {
             return IsTypeAssignableFrom(typeof(TContract), implementation);
         }
@@ -200,7 +187,7 @@ namespace Umbraco.Core.Plugins
         /// </summary>
         /// <typeparam name="TContract">The type of the contract.</typeparam>
         /// <param name="implementation">The implementation.</param>
-        public bool IsTypeAssignableFrom<TContract>(object implementation)
+        public static bool IsTypeAssignableFrom<TContract>(object implementation)
         {
             if (implementation == null) throw new ArgumentNullException("implementation");
             return IsTypeAssignableFrom<TContract>(implementation.GetType());
@@ -212,12 +199,7 @@ namespace Umbraco.Core.Plugins
         /// <param name="implementation">The implementation.</param>
         public bool IsValueType(Type implementation)
         {
-#if NET461
-            return implementation.IsValueType || implementation.IsPrimitive;
-#else
-            return implementation.GetTypeInfo().IsValueType || implementation.GetTypeInfo().IsPrimitive;
-#endif
-
+            return implementation.IsValueType() || implementation.IsPrimitive();
         }
 
         /// <summary>
@@ -313,12 +295,7 @@ namespace Umbraco.Core.Plugins
             // or List<List<List<int>>> with List<ListList<T>>>
             // classes are NOT invariant so List<string> does not match List<object>
 
-#if NET461
-            if (implementation.IsGenericType == false) return false;
-#else
-            if (implementation.GetTypeInfo().IsGenericType == false) return false;
-#endif
-
+            if (implementation.IsGenericType() == false) return false;
 
             // must have the same generic type definition
             var implDef = implementation.GetGenericTypeDefinition();
@@ -326,8 +303,8 @@ namespace Umbraco.Core.Plugins
             if (implDef != contDef) return false;
 
             // must have the same number of generic arguments
-            var implArgs = implementation.GetGenericArguments();
-            var contArgs = contract.GetGenericArguments();
+            var implArgs = ReflectionBridgeExtensions.GetGenericArguments(implementation);
+            var contArgs = ReflectionBridgeExtensions.GetGenericArguments(contract);
             if (implArgs.Length != contArgs.Length) return false;
 
             // generic arguments must match
@@ -350,12 +327,7 @@ namespace Umbraco.Core.Plugins
 
         internal bool MatchType(Type implementation, Type contract, IDictionary<string, Type> bindings, bool variance = true)
         {
-#if NET461
-            if (contract.IsGenericType)
-#else
-            if (contract.GetTypeInfo().IsGenericType)
-#endif
-
+            if (contract.IsGenericType())
             {
                 // eg type is List<int> or List<T>
                 // if we have variance then List<int> can match IList<T>
@@ -368,20 +340,12 @@ namespace Umbraco.Core.Plugins
                 if (variance == false) return false;
 
                 // try to match an ancestor of implementation against contract
-#if NET461
-                var t = implementation.BaseType;
-#else
-                var t = implementation.GetTypeInfo().BaseType;
-#endif
+                var t = implementation.BaseType();
 
                 while (t != null)
                 {
                     if (MatchGeneric(t, contract, bindings)) return true;
-#if NET461
-                    t = t.BaseType;
-#else
-                    t = t.GetTypeInfo().BaseType;
-#endif
+                    t = t.BaseType();
                 }
 
                 // try to match an interface of implementation against contract
@@ -411,13 +375,8 @@ namespace Umbraco.Core.Plugins
 
             if (implementation == contract) return true;
 
-#if NET461
-            if (contract.IsClass && implementation.IsClass && implementation.IsSubclassOf(contract)) return true;
-            if (contract.IsInterface && implementation.GetInterfaces().Contains(contract)) return true;
-#else
-            if (contract.GetTypeInfo().IsClass && implementation.GetTypeInfo().IsClass && implementation.GetTypeInfo().IsSubclassOf(contract)) return true;
-            if (contract.GetTypeInfo().IsInterface && implementation.GetInterfaces().Contains(contract)) return true;
-#endif
+            if (contract.IsClass() && implementation.IsClass() && implementation.IsSubclassOf(contract)) return true;
+            if (contract.IsInterface() && implementation.GetInterfaces().Contains(contract)) return true;
 
             return false;
         }

@@ -37,13 +37,13 @@ namespace Umbraco.Core
         internal void AddString(string s)
         {
             if (s != null)
-                AddInt((StringComparer.InvariantCulture).GetHashCode(s));
+                AddInt((StringComparer.OrdinalIgnoreCase).GetHashCode(s));
         }
 
 		internal void AddCaseInsensitiveString(string s)
 		{
 			if (s != null)
-				AddInt((StringComparer.InvariantCultureIgnoreCase).GetHashCode(s));
+				AddInt((StringComparer.OrdinalIgnoreCase).GetHashCode(s));
 		}
 
 		internal void AddFileSystemItem(FileSystemInfo f)

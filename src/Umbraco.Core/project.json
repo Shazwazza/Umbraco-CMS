@@ -1,4 +1,4 @@
-﻿{
+{
   "version": "1.0.0-*",
   "description": "Umbraco.Core Class Library",
   "authors": [ "Shannon" ],
@@ -41,10 +41,47 @@
     "Xml/**/*.*"
   ],
   "compileFiles": [
+    "Strings/IShortStringHelper.cs",
+    "Strings/CleanStringType.cs",
+
     "StringExtensions.cs",
     "EnumerableExtensions.cs",
     "Attempt{T}.cs",
-    "Attempt.cs"
+    "Attempt.cs",
+    "Enum.cs",
+    "ActivatorHelper.cs",
+    "ActivatorServiceProvider.cs",
+    "ConcurrentHashSet.cs",
+    "WriteLock.cs",
+    "Constants.cs",
+    "Constants-Applications.cs",
+    "Constants-Conventions.cs",
+    "Constants-Examine.cs",
+    "Constants-Icons.cs",
+    "Constants-ObjectTypes.cs",
+    "Constants-Packaging.cs",
+    "Constants-PropertyEditors.cs",
+    "Constants-PropertyTypeGroups.cs",
+    "Constants-System.cs",
+    "Constants-Web.cs",
+    "CustomBooleanTypeConverter.cs",
+    "DateTimeExtensions.cs",
+    "DelegateEqualityComparer.cs",
+    "DelegateExtensions.cs",
+    "DictionaryExtensions.cs",
+    "DisposableObject.cs",
+    "ExpressionExtensions.cs",
+    "LambdaExpressionCacheKey.cs",
+    "HashCodeCombiner.cs",
+    "IfExtensions.cs",
+    "IntExtensions.cs",
+    "IScopeContextAdapter.cs",
+    "ListExtensions.cs",
+    "Mandate.cs",
+    "MonitorLock.cs",
+    "ObjectExtensions.cs",
+    "TypeExtensions.cs",
+    "ExpressionHelper.cs"
   ],
 
   "dependencies": {
@@ -59,7 +96,9 @@
     "Microsoft.Extensions.WebEncoders.Core": "1.0.0-rc1-final",
     "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc1-final",
     "Microsoft.Extensions.Logging": "1.0.0-rc1-final",
-    "System.Security.Cryptography.Algorithms": "4.0.0-beta-*"
+    "System.Security.Cryptography.Algorithms": "4.0.0-beta-*",
+    "System.Threading.Thread": "4.0.0-beta-*",
+    "ReflectionBridge": "0.0.9"
   },
 
   "frameworks": {

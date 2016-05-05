@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using ReflectionBridge.Extensions;
 
 namespace Umbraco.Core
 {
@@ -61,22 +62,19 @@ namespace Umbraco.Core
 									else member = boxedMember;
 								}
 							}
-							else throw new ArgumentException(string.Format("Expression '{0}' refers to a method, not a property.", propertyLambda));
+							else throw new ArgumentException($"Expression '{propertyLambda}' refers to a method, not a property.");
 						}
 
 
 						var propInfo = member.Member as PropertyInfo;
 						if (propInfo == null)
-							throw new ArgumentException(string.Format(
-								"Expression '{0}' refers to a field, not a property.",
-								propertyLambda));
+							throw new ArgumentException($"Expression '{propertyLambda}' refers to a field, not a property.");
 
-						if (type != propInfo.ReflectedType &&
-						    !type.IsSubclassOf(propInfo.ReflectedType))
-							throw new ArgumentException(string.Format(
-								"Expresion '{0}' refers to a property that is not from type {1}.",
-								propertyLambda,
-								type));
+					    if (type != propInfo.DeclaringType && type.IsSubclassOf(propInfo.DeclaringType) == false)
+                        {
+                            throw new ArgumentException($"Expresion '{propertyLambda}' refers to a property that is not from type {type}.");
+                        }
+							
 
 						return propInfo;
 					});
@@ -280,8 +278,11 @@ namespace Umbraco.Core
 		{
 			if (fromMethodGroup == null) throw new ArgumentNullException("fromMethodGroup");
 
-
-			return fromMethodGroup.Method;
+#if NET461
+            return fromMethodGroup.Method; 
+#else
+		    return fromMethodGroup.GetMethodInfo();
+#endif
 		}
 
 		///// <summary>

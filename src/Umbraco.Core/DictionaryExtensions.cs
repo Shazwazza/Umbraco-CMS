@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
-using System.Web;
 
 namespace Umbraco.Core
 {
@@ -251,7 +250,7 @@ namespace Umbraco.Core
 			var builder = new StringBuilder();
 			foreach (var i in d)
 			{
-				builder.Append(String.Format("{0}={1}&", HttpUtility.UrlEncode(i.Key), i.Value == null ? string.Empty : HttpUtility.UrlEncode(i.Value.ToString())));
+				builder.Append(String.Format("{0}={1}&", System.Net.WebUtility.UrlEncode(i.Key), i.Value == null ? string.Empty : System.Net.WebUtility.UrlEncode(i.Value.ToString())));
 			}
 			return builder.ToString().TrimEnd('&');
 		}

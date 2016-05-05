@@ -7,7 +7,9 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Umbraco.Core.Plugins;
 using Umbraco.Core.Strings;
+using ReflectionBridge.Extensions;
 
 namespace Umbraco.Core
 {
@@ -30,14 +32,15 @@ namespace Umbraco.Core
                 {
                     try
                     {
+#if NET461
                         return Attempt<object>.Succeed(
-                                                   type.InvokeMember(memberAlias,
-                                                                                  System.Reflection.BindingFlags.GetProperty |
-                                                                                  System.Reflection.BindingFlags.Instance |
-                                                                                  System.Reflection.BindingFlags.Public,
-                                                                                  null,
-                                                                                  target,
-                                                                                  null));
+                            type.InvokeMember(memberAlias,
+                                System.Reflection.BindingFlags.GetProperty | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public,
+                                null, target, null)); 
+#else
+                        var method = type.GetTypeInfo().GetDeclaredMethod(memberAlias);
+                        return Attempt<object>.Succeed(method.Invoke(target, null));
+#endif
                     }
                     catch (MissingMethodException ex)
                     {
@@ -63,13 +66,13 @@ namespace Umbraco.Core
 
 		public static object GetDefaultValue(this Type t)
 		{
-			return t.IsValueType
-			       	? Activator.CreateInstance(t)
+			return t.IsValueType()
+                    ? Activator.CreateInstance(t)
 			       	: null;
 		}
         internal static MethodInfo GetGenericMethod(this Type type, string name, params Type[] parameterTypes)
         {
-            var methods = type.GetMethods().Where(method => method.Name == name);
+            var methods = ReflectionBridgeExtensions.GetMethods(type).Where(method => method.Name == name);
 
             foreach (var method in methods)
             {
@@ -92,12 +95,21 @@ namespace Umbraco.Core
 		{
 			if (type == null) throw new ArgumentNullException("type");
 
+#if NET461
+            return Attribute.IsDefined(type, typeof(CompilerGeneratedAttribute), false)
+                       && type.IsGenericType && type.Name.Contains("AnonymousType")
+                       && (type.Name.StartsWith("<>") || type.Name.StartsWith("VB$"))
+                       && (type.Attributes & TypeAttributes.NotPublic) == TypeAttributes.NotPublic; 
+#else
+            //TODO: We need to test this in NetCoreCLR, probs a bit different
+		    var cgaAttribute = type.GetTypeInfo().GetCustomAttribute<CompilerGeneratedAttribute>(false);
 
-			return Attribute.IsDefined(type, typeof(CompilerGeneratedAttribute), false)
-			       && type.IsGenericType && type.Name.Contains("AnonymousType")
-			       && (type.Name.StartsWith("<>") || type.Name.StartsWith("VB$"))
-			       && (type.Attributes & TypeAttributes.NotPublic) == TypeAttributes.NotPublic;
-		}
+            return cgaAttribute != null
+                       && type.GetTypeInfo().IsGenericType && type.Name.Contains("AnonymousType")
+                       && (type.Name.StartsWith("<>") || type.Name.StartsWith("VB$"))
+                       && (type.GetTypeInfo().Attributes & TypeAttributes.NotPublic) == TypeAttributes.NotPublic;
+#endif
+        }
 
 		public static T GetCustomAttribute<T>(this Type type, bool inherit)
 			where T : Attribute
@@ -109,16 +121,16 @@ namespace Umbraco.Core
 			where T : Attribute
 		{
 			if (type == null) return Enumerable.Empty<T>();
-			return type.GetCustomAttributes(typeof (T), inherited).OfType<T>();		
-		}
+            return type.GetCustomAttributes(typeof(T), inherited).OfType<T>();       
+        }
 
 
-	    /// <summary>
-	    /// Determines whether the specified type is enumerable.
-	    /// </summary>
-	    /// <param name="method">The type.</param>
-	    /// <param name="parameterTypes"></param>
-	    internal static bool HasParameters(this MethodInfo method, params Type[] parameterTypes)
+        /// <summary>
+        /// Determines whether the specified type is enumerable.
+        /// </summary>
+        /// <param name="method">The type.</param>
+        /// <param name="parameterTypes"></param>
+        internal static bool HasParameters(this MethodInfo method, params Type[] parameterTypes)
         {
             var methodParameters = method.GetParameters().Select(parameter => parameter.ParameterType).ToArray();
 
@@ -137,8 +149,7 @@ namespace Umbraco.Core
             if (andSelf)
                 yield return type;
 
-            while ((type = type.BaseType) != null)
-                yield return type;
+            while ((type = type.BaseType()) != null) yield return type;
         }
 
         public static IEnumerable<MethodInfo> AllMethods(this Type target)
@@ -147,7 +158,7 @@ namespace Umbraco.Core
             var allTypes = target.GetInterfaces().ToList(); // GetInterfaces is ok here
             allTypes.Add(target);
 
-            return allTypes.SelectMany(t => t.GetMethods());
+            return allTypes.SelectMany(t => ReflectionBridgeExtensions.GetMethods(t));
         }
  
 		/// <returns>
@@ -155,9 +166,9 @@ namespace Umbraco.Core
 		/// </returns>
 		public static bool IsEnumerable(this Type type)
 		{
-			if (type.IsGenericType)
-			{
-				if (type.GetGenericTypeDefinition().GetInterfaces().Contains(typeof(IEnumerable)))
+            if (type.IsGenericType())
+            {
+                if (type.GetGenericTypeDefinition().GetInterfaces().Contains(typeof(IEnumerable)))
 					return true;
 			}
 			else
@@ -199,19 +210,20 @@ namespace Umbraco.Core
 			{
 				throw new ArgumentNullException("genericType");
 			}
-			if (genericType.IsGenericType == false)
-			{
-				throw new ArgumentException("genericType must be a generic type");
+
+            if (genericType.IsGenericType() == false)
+            {
+                throw new ArgumentException("genericType must be a generic type");
 			}
 
 			Func<Type, Type, Type[]> checkGenericType = (@int, t) =>
 				{
-					if (@int.IsGenericType)
+					if (@int.IsGenericType())
 					{
 						var def = @int.GetGenericTypeDefinition();
 						if (def == t)
 						{
-							return @int.GetGenericArguments();
+							return ReflectionBridgeExtensions.GetGenericArguments(@int);
 						}
 					}
 					return null;
@@ -223,7 +235,7 @@ namespace Umbraco.Core
 				return true;
 
 			//if we're looking for interfaces, enumerate them:
-			if (genericType.IsInterface)
+			if (genericType.IsInterface())
 			{
 				foreach (Type @interface in type.GetInterfaces())
 				{
@@ -235,12 +247,12 @@ namespace Umbraco.Core
 			else
 			{
 				//loop back into the base types as long as they are generic
-				while (type.BaseType != null && type.BaseType != typeof(object))
+				while (type.BaseType() != null && type.BaseType() != typeof(object))
 				{
-					genericArgType = checkGenericType(type.BaseType, genericType);
+					genericArgType = checkGenericType(type.BaseType(), genericType);
 					if (genericArgType != null)
 						return true;
-					type = type.BaseType;
+					type = type.BaseType();
 				}
 
 			}
@@ -257,7 +269,7 @@ namespace Umbraco.Core
         /// <returns></returns>
         public static PropertyInfo[] GetAllProperties(this Type type)
         {
-            if (type.IsInterface)
+            if (type.IsInterface())
             {
                 var propertyInfos = new List<PropertyInfo>();
 
@@ -305,7 +317,7 @@ namespace Umbraco.Core
         /// </remarks>
         public static PropertyInfo[] GetPublicProperties(this Type type)
         {
-            if (type.IsInterface)
+            if (type.IsInterface())
             {
                 var propertyInfos = new List<PropertyInfo>();
 
@@ -330,7 +342,7 @@ namespace Umbraco.Core
                         | BindingFlags.Instance);
 
                     var newPropertyInfos = typeProperties
-                        .Where(x => !propertyInfos.Contains(x));
+                        .Where(x => propertyInfos.Contains(x) == false);
 
                     propertyInfos.InsertRange(0, newPropertyInfos);
                 }
@@ -371,36 +383,42 @@ namespace Umbraco.Core
         }
 
         public static TAttribute FirstAttribute<TAttribute>(this Type type)
+            where TAttribute : Attribute
         {
             return type.FirstAttribute<TAttribute>(true);
         }
 
         public static TAttribute FirstAttribute<TAttribute>(this Type type, bool inherit)
+            where TAttribute : Attribute
         {
             var attrs = type.GetCustomAttributes(typeof(TAttribute), inherit);
             return (TAttribute)(attrs.Length > 0 ? attrs[0] : null);
         }
 
         public static TAttribute FirstAttribute<TAttribute>(this PropertyInfo propertyInfo)
+            where TAttribute : Attribute
         {
             return propertyInfo.FirstAttribute<TAttribute>(true);
         }
 
         public static TAttribute FirstAttribute<TAttribute>(this PropertyInfo propertyInfo, bool inherit)
+            where TAttribute : Attribute
         {
-            var attrs = propertyInfo.GetCustomAttributes(typeof(TAttribute), inherit);
+            var attrs = propertyInfo.GetCustomAttributes(typeof(TAttribute), inherit).ToArray();
             return (TAttribute)(attrs.Length > 0 ? attrs[0] : null);
         }
 
         public static IEnumerable<TAttribute> MultipleAttribute<TAttribute>(this PropertyInfo propertyInfo)
+            where TAttribute : Attribute
         {
             return propertyInfo.MultipleAttribute<TAttribute>(true);
         }
 
         public static IEnumerable<TAttribute> MultipleAttribute<TAttribute>(this PropertyInfo propertyInfo, bool inherit)
+            where TAttribute : Attribute
         {
-            var attrs = propertyInfo.GetCustomAttributes(typeof(TAttribute), inherit);
-            return (attrs.Length > 0 ? attrs.ToList().ConvertAll(input => (TAttribute)input) : null);
+            var attrs = propertyInfo.GetCustomAttributes(typeof(TAttribute), inherit).ToList();
+            return (attrs.Count > 0 ? attrs.Select(input => (TAttribute)input) : null);
         }
 
 		/// <summary>
@@ -419,7 +437,7 @@ namespace Umbraco.Core
 		/// </example>
 		public static string GetFullNameWithAssembly(this Type type)
 		{
-		    var assemblyName = type.Assembly.GetName();
+		    var assemblyName = type.GetAssembly().GetName();
 
 			return string.Concat(type.FullName, ", ",
                 assemblyName.FullName.StartsWith("App_Code.") ? "App_Code" : assemblyName.Name);

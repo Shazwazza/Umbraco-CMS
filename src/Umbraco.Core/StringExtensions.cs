@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
+using Umbraco.Core.Strings;
 
 namespace Umbraco.Core
 {
@@ -154,7 +155,7 @@ namespace Umbraco.Core
         {
             //any character that is not alphanumeric, convert to a hyphen
             var mName = input;
-            foreach (var c in mName.ToCharArray().Where(c => !char.IsLetterOrDigit(c)))
+            foreach (var c in mName.ToCharArray().Where(c => char.IsLetterOrDigit(c) == false))
             {
 #if NET461
                 mName = mName.Replace(c.ToString(CultureInfo.InvariantCulture), replacement);
@@ -452,7 +453,7 @@ namespace Umbraco.Core
 #if NET461
             return input.EndsWith(toEndWith.ToString(CultureInfo.InvariantCulture)) ? input : input + toEndWith;
 #else
-            return input.EndsWith(toEndWith.ToString()) ? input : input + toEndWith;
+            return input.EndsWith(toEndWith) ? input : input + toEndWith;
 #endif
         }
 
@@ -874,18 +875,18 @@ namespace Umbraco.Core
             return new string(chArray);
         }
 
-        ///// <summary>
-        ///// Ensures that the folder path endds with a DirectorySeperatorChar
-        ///// </summary>
-        ///// <param name="currentFolder"></param>
-        ///// <returns></returns>
-        //public static string NormaliseDirectoryPath(this string currentFolder)
-        //{
-        //    currentFolder = currentFolder
-        //                        .IfNull(x => String.Empty)
-        //                        .TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
-        //    return currentFolder;
-        //}
+        /// <summary>
+        /// Ensures that the folder path endds with a DirectorySeperatorChar
+        /// </summary>
+        /// <param name="currentFolder"></param>
+        /// <returns></returns>
+        public static string NormaliseDirectoryPath(this string currentFolder)
+        {
+            currentFolder = currentFolder
+                                .IfNull(x => String.Empty)
+                                .TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            return currentFolder;
+        }
 
         /// <summary>
         /// Truncates the specified text string.
@@ -1012,90 +1013,92 @@ namespace Umbraco.Core
                 : input.Substring(0, 1).ToLowerInvariant() + input.Substring(1);
         }
 
-        ///// <summary>
-        ///// Gets the short string helper.
-        ///// </summary>
-        ///// <remarks>This is so that unit tests that do not initialize the resolver do not
-        ///// fail and fall back to defaults. When running the whole Umbraco, CoreBootManager
-        ///// does initialise the resolver.</remarks>
-        //private static IShortStringHelper ShortStringHelper
-        //{
-        //    get
-        //    {
-        //        if (ShortStringHelperResolver.HasCurrent)
-        //            return ShortStringHelperResolver.Current.Helper;
-        //        if (_helper != null)
-        //            return _helper;
+        /// <summary>
+        /// Gets the short string helper.
+        /// </summary>
+        /// <remarks>This is so that unit tests that do not initialize the resolver do not
+        /// fail and fall back to defaults. When running the whole Umbraco, CoreBootManager
+        /// does initialise the resolver.</remarks>
+        private static IShortStringHelper ShortStringHelper
+        {
+            get
+            {
+                throw new NotImplementedException("IShortStringHelper is not defined yet");
 
-        //        // we don't want Umbraco to die because the resolver hasn't been initialized
-        //        // as the ShortStringHelper is too important, so as long as it's not there
-        //        // already, we use a default one. That should never happen, but...
-        //        Logging.LogHelper.Warn<IShortStringHelper>("ShortStringHelperResolver.HasCurrent == false, fallback to default.");
-        //        _helper = new DefaultShortStringHelper(UmbracoConfig.For.UmbracoSettings()).WithDefaultConfig();
-        //        _helper.Freeze();
-        //        return _helper;
-        //    }
-        //}
-        //private static IShortStringHelper _helper;
+                //if (ShortStringHelperResolver.HasCurrent)
+                //    return ShortStringHelperResolver.Current.Helper;
+                //if (_helper != null)
+                //    return _helper;
 
-        ///// <summary>
-        ///// Returns a new string in which all occurences of specified strings are replaced by other specified strings.
-        ///// </summary>
-        ///// <param name="text">The string to filter.</param>
-        ///// <param name="replacements">The replacements definition.</param>
-        ///// <returns>The filtered string.</returns>
-        //public static string ReplaceMany(this string text, IDictionary<string, string> replacements)
-        //{
-        //    return ShortStringHelper.ReplaceMany(text, replacements);
-        //}
+                //// we don't want Umbraco to die because the resolver hasn't been initialized
+                //// as the ShortStringHelper is too important, so as long as it's not there
+                //// already, we use a default one. That should never happen, but...
+                //Logging.LogHelper.Warn<IShortStringHelper>("ShortStringHelperResolver.HasCurrent == false, fallback to default.");
+                //_helper = new DefaultShortStringHelper(UmbracoConfig.For.UmbracoSettings()).WithDefaultConfig();
+                //_helper.Freeze();
+                //return _helper;
+            }
+        }
+        private static IShortStringHelper _helper;
 
-        ///// <summary>
-        ///// Returns a new string in which all occurences of specified characters are replaced by a specified character.
-        ///// </summary>
-        ///// <param name="text">The string to filter.</param>
-        ///// <param name="chars">The characters to replace.</param>
-        ///// <param name="replacement">The replacement character.</param>
-        ///// <returns>The filtered string.</returns>
-        //public static string ReplaceMany(this string text, char[] chars, char replacement)
-        //{
-        //    return ShortStringHelper.ReplaceMany(text, chars, replacement);
-        //}
+        /// <summary>
+        /// Returns a new string in which all occurences of specified strings are replaced by other specified strings.
+        /// </summary>
+        /// <param name="text">The string to filter.</param>
+        /// <param name="replacements">The replacements definition.</param>
+        /// <returns>The filtered string.</returns>
+        public static string ReplaceMany(this string text, IDictionary<string, string> replacements)
+        {
+            return ShortStringHelper.ReplaceMany(text, replacements);
+        }
+
+        /// <summary>
+        /// Returns a new string in which all occurences of specified characters are replaced by a specified character.
+        /// </summary>
+        /// <param name="text">The string to filter.</param>
+        /// <param name="chars">The characters to replace.</param>
+        /// <param name="replacement">The replacement character.</param>
+        /// <returns>The filtered string.</returns>
+        public static string ReplaceMany(this string text, char[] chars, char replacement)
+        {
+            return ShortStringHelper.ReplaceMany(text, chars, replacement);
+        }
 
         // FORMAT STRINGS
-        
-        ///// <summary>
-        ///// Cleans a string to produce a string that can safely be used in an alias.
-        ///// </summary>
-        ///// <param name="alias">The text to filter.</param>
-        ///// <returns>The safe alias.</returns>
-        //public static string ToSafeAlias(this string alias)
-        //{
-        //    return ShortStringHelper.CleanStringForSafeAlias(alias);
-        //}
 
-        ///// <summary>
-        ///// Cleans a string to produce a string that can safely be used in an alias.
-        ///// </summary>
-        ///// <param name="alias">The text to filter.</param>
-        ///// <param name="camel">A value indicating that we want to camel-case the alias.</param>
-        ///// <returns>The safe alias.</returns>
-        //public static string ToSafeAlias(this string alias, bool camel)
-        //{
-        //    var a = ShortStringHelper.CleanStringForSafeAlias(alias);
-        //    if (string.IsNullOrWhiteSpace(a) || camel == false) return a;
-        //    return char.ToLowerInvariant(a[0]) + a.Substring(1);
-        //}
+        /// <summary>
+        /// Cleans a string to produce a string that can safely be used in an alias.
+        /// </summary>
+        /// <param name="alias">The text to filter.</param>
+        /// <returns>The safe alias.</returns>
+        public static string ToSafeAlias(this string alias)
+        {
+            return ShortStringHelper.CleanStringForSafeAlias(alias);
+        }
 
-        ///// <summary>
-        ///// Cleans a string, in the context of a specified culture, to produce a string that can safely be used in an alias.
-        ///// </summary>
-        ///// <param name="alias">The text to filter.</param>
-        ///// <param name="culture">The culture.</param>
-        ///// <returns>The safe alias.</returns>
-        //public static string ToSafeAlias(this string alias, CultureInfo culture)
-        //{
-        //    return ShortStringHelper.CleanStringForSafeAlias(alias, culture);
-        //}
+        /// <summary>
+        /// Cleans a string to produce a string that can safely be used in an alias.
+        /// </summary>
+        /// <param name="alias">The text to filter.</param>
+        /// <param name="camel">A value indicating that we want to camel-case the alias.</param>
+        /// <returns>The safe alias.</returns>
+        public static string ToSafeAlias(this string alias, bool camel)
+        {
+            var a = ShortStringHelper.CleanStringForSafeAlias(alias);
+            if (string.IsNullOrWhiteSpace(a) || camel == false) return a;
+            return char.ToLowerInvariant(a[0]) + a.Substring(1);
+        }
+
+        /// <summary>
+        /// Cleans a string, in the context of a specified culture, to produce a string that can safely be used in an alias.
+        /// </summary>
+        /// <param name="alias">The text to filter.</param>
+        /// <param name="culture">The culture.</param>
+        /// <returns>The safe alias.</returns>
+        public static string ToSafeAlias(this string alias, CultureInfo culture)
+        {
+            return ShortStringHelper.CleanStringForSafeAlias(alias, culture);
+        }
 
         ///// <summary>
         ///// Cleans (but only if required) a string to produce a string that can safely be used in an alias.
@@ -1122,128 +1125,128 @@ namespace Umbraco.Core
 
         // the new methods to get a url segment
 
-        ///// <summary>
-        ///// Cleans a string to produce a string that can safely be used in an url segment.
-        ///// </summary>
-        ///// <param name="text">The text to filter.</param>
-        ///// <returns>The safe url segment.</returns>
-        //public static string ToUrlSegment(this string text)
-        //{
-        //    return ShortStringHelper.CleanStringForUrlSegment(text);
-        //}
+        /// <summary>
+        /// Cleans a string to produce a string that can safely be used in an url segment.
+        /// </summary>
+        /// <param name="text">The text to filter.</param>
+        /// <returns>The safe url segment.</returns>
+        public static string ToUrlSegment(this string text)
+        {
+            return ShortStringHelper.CleanStringForUrlSegment(text);
+        }
 
-        ///// <summary>
-        ///// Cleans a string, in the context of a specified culture, to produce a string that can safely be used in an url segment.
-        ///// </summary>
-        ///// <param name="text">The text to filter.</param>
-        ///// <param name="culture">The culture.</param>
-        ///// <returns>The safe url segment.</returns>
-        //public static string ToUrlSegment(this string text, CultureInfo culture)
-        //{
-        //    return ShortStringHelper.CleanStringForUrlSegment(text, culture);
-        //}
+        /// <summary>
+        /// Cleans a string, in the context of a specified culture, to produce a string that can safely be used in an url segment.
+        /// </summary>
+        /// <param name="text">The text to filter.</param>
+        /// <param name="culture">The culture.</param>
+        /// <returns>The safe url segment.</returns>
+        public static string ToUrlSegment(this string text, CultureInfo culture)
+        {
+            return ShortStringHelper.CleanStringForUrlSegment(text, culture);
+        }
 
         // the new methods to clean a string (to alias, url segment...)
 
-        ///// <summary>
-        ///// Cleans a string.
-        ///// </summary>
-        ///// <param name="text">The text to clean.</param>
-        ///// <param name="stringType">A flag indicating the target casing and encoding of the string. By default, 
-        ///// strings are cleaned up to camelCase and Ascii.</param>
-        ///// <returns>The clean string.</returns>
-        ///// <remarks>The string is cleaned in the context of the IShortStringHelper default culture.</remarks>
-        //public static string ToCleanString(this string text, CleanStringType stringType)
-        //{
-        //    return ShortStringHelper.CleanString(text, stringType);
-        //}
+        /// <summary>
+        /// Cleans a string.
+        /// </summary>
+        /// <param name="text">The text to clean.</param>
+        /// <param name="stringType">A flag indicating the target casing and encoding of the string. By default, 
+        /// strings are cleaned up to camelCase and Ascii.</param>
+        /// <returns>The clean string.</returns>
+        /// <remarks>The string is cleaned in the context of the IShortStringHelper default culture.</remarks>
+        public static string ToCleanString(this string text, CleanStringType stringType)
+        {
+            return ShortStringHelper.CleanString(text, stringType);
+        }
 
-        ///// <summary>
-        ///// Cleans a string, using a specified separator.
-        ///// </summary>
-        ///// <param name="text">The text to clean.</param>
-        ///// <param name="stringType">A flag indicating the target casing and encoding of the string. By default, 
-        ///// strings are cleaned up to camelCase and Ascii.</param>
-        ///// <param name="separator">The separator.</param>
-        ///// <returns>The clean string.</returns>
-        ///// <remarks>The string is cleaned in the context of the IShortStringHelper default culture.</remarks>
-        //public static string ToCleanString(this string text, CleanStringType stringType, char separator)
-        //{
-        //    return ShortStringHelper.CleanString(text, stringType, separator);
-        //}
+        /// <summary>
+        /// Cleans a string, using a specified separator.
+        /// </summary>
+        /// <param name="text">The text to clean.</param>
+        /// <param name="stringType">A flag indicating the target casing and encoding of the string. By default, 
+        /// strings are cleaned up to camelCase and Ascii.</param>
+        /// <param name="separator">The separator.</param>
+        /// <returns>The clean string.</returns>
+        /// <remarks>The string is cleaned in the context of the IShortStringHelper default culture.</remarks>
+        public static string ToCleanString(this string text, CleanStringType stringType, char separator)
+        {
+            return ShortStringHelper.CleanString(text, stringType, separator);
+        }
 
-        ///// <summary>
-        ///// Cleans a string in the context of a specified culture.
-        ///// </summary>
-        ///// <param name="text">The text to clean.</param>
-        ///// <param name="stringType">A flag indicating the target casing and encoding of the string. By default, 
-        ///// strings are cleaned up to camelCase and Ascii.</param>
-        ///// <param name="culture">The culture.</param>
-        ///// <returns>The clean string.</returns>
-        //public static string ToCleanString(this string text, CleanStringType stringType, CultureInfo culture)
-        //{
-        //    return ShortStringHelper.CleanString(text, stringType, culture);
-        //}
+        /// <summary>
+        /// Cleans a string in the context of a specified culture.
+        /// </summary>
+        /// <param name="text">The text to clean.</param>
+        /// <param name="stringType">A flag indicating the target casing and encoding of the string. By default, 
+        /// strings are cleaned up to camelCase and Ascii.</param>
+        /// <param name="culture">The culture.</param>
+        /// <returns>The clean string.</returns>
+        public static string ToCleanString(this string text, CleanStringType stringType, CultureInfo culture)
+        {
+            return ShortStringHelper.CleanString(text, stringType, culture);
+        }
 
-        ///// <summary>
-        ///// Cleans a string in the context of a specified culture, using a specified separator.
-        ///// </summary>
-        ///// <param name="text">The text to clean.</param>
-        ///// <param name="stringType">A flag indicating the target casing and encoding of the string. By default, 
-        ///// strings are cleaned up to camelCase and Ascii.</param>
-        ///// <param name="separator">The separator.</param>
-        ///// <param name="culture">The culture.</param>
-        ///// <returns>The clean string.</returns>
-        //public static string ToCleanString(this string text, CleanStringType stringType, char separator, CultureInfo culture)
-        //{
-        //    return ShortStringHelper.CleanString(text, stringType, separator, culture);
-        //}
+        /// <summary>
+        /// Cleans a string in the context of a specified culture, using a specified separator.
+        /// </summary>
+        /// <param name="text">The text to clean.</param>
+        /// <param name="stringType">A flag indicating the target casing and encoding of the string. By default, 
+        /// strings are cleaned up to camelCase and Ascii.</param>
+        /// <param name="separator">The separator.</param>
+        /// <param name="culture">The culture.</param>
+        /// <returns>The clean string.</returns>
+        public static string ToCleanString(this string text, CleanStringType stringType, char separator, CultureInfo culture)
+        {
+            return ShortStringHelper.CleanString(text, stringType, separator, culture);
+        }
 
         // note: LegacyShortStringHelper will produce 100% backward-compatible output for SplitPascalCasing.
         // other helpers may not. DefaultShortStringHelper produces better, but non-compatible, results.
 
-        ///// <summary>
-        ///// Splits a Pascal cased string into a phrase separated by spaces.
-        ///// </summary>
-        ///// <param name="phrase">The text to split.</param>
-        ///// <returns>The splitted text.</returns>
-        //public static string SplitPascalCasing(this string phrase)
-        //{
-        //    return ShortStringHelper.SplitPascalCasing(phrase, ' ');
-        //}
+        /// <summary>
+        /// Splits a Pascal cased string into a phrase separated by spaces.
+        /// </summary>
+        /// <param name="phrase">The text to split.</param>
+        /// <returns>The splitted text.</returns>
+        public static string SplitPascalCasing(this string phrase)
+        {
+            return ShortStringHelper.SplitPascalCasing(phrase, ' ');
+        }
 
-        ////NOTE: Not sure what this actually does but is used a few places, need to figure it out and then move to StringExtensions and obsolete.
-        //// it basically is yet another version of SplitPascalCasing
-        //// plugging string extensions here to be 99% compatible
-        //// the only diff. is with numbers, Number6Is was "Number6 Is", and the new string helper does it too,
-        //// but the legacy one does "Number6Is"... assuming it is not a big deal.
-        //internal static string SpaceCamelCasing(this string phrase)
-        //{
-        //    return phrase.Length < 2 ? phrase : phrase.SplitPascalCasing().ToFirstUpperInvariant();
-        //}
+        //NOTE: Not sure what this actually does but is used a few places, need to figure it out and then move to StringExtensions and obsolete.
+        // it basically is yet another version of SplitPascalCasing
+        // plugging string extensions here to be 99% compatible
+        // the only diff. is with numbers, Number6Is was "Number6 Is", and the new string helper does it too,
+        // but the legacy one does "Number6Is"... assuming it is not a big deal.
+        internal static string SpaceCamelCasing(this string phrase)
+        {
+            return phrase.Length < 2 ? phrase : phrase.SplitPascalCasing().ToFirstUpperInvariant();
+        }
 
-        ///// <summary>
-        ///// Cleans a string, in the context of the invariant culture, to produce a string that can safely be used as a filename,
-        ///// both internally (on disk) and externally (as a url).
-        ///// </summary>
-        ///// <param name="text">The text to filter.</param>
-        ///// <returns>The safe filename.</returns>
-        //public static string ToSafeFileName(this string text)
-        //{
-        //    return ShortStringHelper.CleanStringForSafeFileName(text);
-        //}
+        /// <summary>
+        /// Cleans a string, in the context of the invariant culture, to produce a string that can safely be used as a filename,
+        /// both internally (on disk) and externally (as a url).
+        /// </summary>
+        /// <param name="text">The text to filter.</param>
+        /// <returns>The safe filename.</returns>
+        public static string ToSafeFileName(this string text)
+        {
+            return ShortStringHelper.CleanStringForSafeFileName(text);
+        }
 
-        ///// <summary>
-        ///// Cleans a string, in the context of the invariant culture, to produce a string that can safely be used as a filename,
-        ///// both internally (on disk) and externally (as a url).
-        ///// </summary>
-        ///// <param name="text">The text to filter.</param>
-        ///// <param name="culture">The culture.</param>
-        ///// <returns>The safe filename.</returns>
-        //public static string ToSafeFileName(this string text, CultureInfo culture)
-        //{
-        //    return ShortStringHelper.CleanStringForSafeFileName(text, culture);
-        //}
+        /// <summary>
+        /// Cleans a string, in the context of the invariant culture, to produce a string that can safely be used as a filename,
+        /// both internally (on disk) and externally (as a url).
+        /// </summary>
+        /// <param name="text">The text to filter.</param>
+        /// <param name="culture">The culture.</param>
+        /// <returns>The safe filename.</returns>
+        public static string ToSafeFileName(this string text, CultureInfo culture)
+        {
+            return ShortStringHelper.CleanStringForSafeFileName(text, culture);
+        }
 
         /// <summary>
         /// An extension method that returns a new string in which all occurrences of a 

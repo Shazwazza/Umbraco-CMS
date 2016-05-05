@@ -11,7 +11,9 @@ namespace Umbraco.Core
     /// Enumerating this collection is thread-safe and will only operate on a clone that is generated before returning the enumerator.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    [Serializable]
+#if NET461
+    [Serializable] 
+#endif
     public class ConcurrentHashSet<T> : ICollection<T>
     {
         private readonly HashSet<T> _innerSet = new HashSet<T>();

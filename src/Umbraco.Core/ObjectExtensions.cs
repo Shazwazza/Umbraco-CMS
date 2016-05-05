@@ -2,10 +2,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Xml;
+using Umbraco.Core.Plugins;
+using ReflectionBridge.Extensions;
 
 namespace Umbraco.Core
 {
@@ -72,25 +75,31 @@ namespace Umbraco.Core
 		public static Attempt<object> TryConvertTo(this object input, Type destinationType)
 		{
             //if it is null and it is nullable, then return success with null
-            if (input == null && destinationType.IsGenericType && destinationType.GetGenericTypeDefinition() == typeof (Nullable<>))
+            if (input == null
+                && destinationType.IsGenericType()
+                && destinationType.GetGenericTypeDefinition() == typeof (Nullable<>))
             {
                 return Attempt<object>.Succeed(null);
             }
 			
             //if its not nullable and it is a value type
-			if (input == null && destinationType.IsValueType) return Attempt<object>.Fail();
+		    if (input == null && destinationType.IsValueType())
+                return Attempt<object>.Fail();
+
             //if the type can be null, then no problem
-            if (input == null && destinationType.IsValueType == false) return Attempt<object>.Succeed(null);
+            if (input == null && destinationType.IsValueType() == false)
+                return Attempt<object>.Succeed(null);
 
 			if (destinationType == typeof(object)) return Attempt.Succeed(input);
 
-			if (input.GetType() == destinationType) return Attempt.Succeed(input);
+		    var inputType = input.GetType();
+			if (inputType == destinationType) return Attempt.Succeed(input);
 
             //check for string so that overloaders of ToString() can take advantage of the conversion.
             if (destinationType == typeof(string)) return Attempt<object>.Succeed(input.ToString());
 
-			// if we've got a nullable of something, we try to convert directly to that thing.
-			if (destinationType.IsGenericType && destinationType.GetGenericTypeDefinition() == typeof(Nullable<>))
+            // if we've got a nullable of something, we try to convert directly to that thing.
+            if (destinationType.IsGenericType() && destinationType.GetGenericTypeDefinition() == typeof(Nullable<>))
 			{
 			    var underlyingType = Nullable.GetUnderlyingType(destinationType);
 
@@ -111,10 +120,10 @@ namespace Umbraco.Core
 					return Attempt<object>.Fail(nonNullable.Exception);
 			}
 
-			// we've already dealed with nullables, so any other generic types need to fall through
-			if (destinationType.IsGenericType == false)
-			{
-				if (input is string)
+            // we've already dealed with nullables, so any other generic types need to fall through
+            if (destinationType.IsGenericType() == false)
+            {
+                if (input is string)
 				{
 					var result = TryConvertToFromString(input as string, destinationType);
 
@@ -125,7 +134,7 @@ namespace Umbraco.Core
                 //TODO: Do a check for destination type being IEnumerable<T> and source type implementing IEnumerable<T> with
                 // the same 'T', then we'd have to find the extension method for the type AsEnumerable() and execute it.
 
-				if (TypeHelper.IsTypeAssignableFrom(destinationType, input.GetType())
+				if (TypeHelper.IsTypeAssignableFrom(destinationType, inputType)
 					&& TypeHelper.IsTypeAssignableFrom<IConvertible>(input))
 				{
                     try
@@ -140,7 +149,7 @@ namespace Umbraco.Core
 				}
 			}
 
-			var inputConverter = TypeDescriptor.GetConverter(input);
+			var inputConverter = TypeDescriptor.GetConverter(inputType);
 			if (inputConverter.CanConvertTo(destinationType))
 			{
 				try
@@ -214,10 +223,10 @@ namespace Umbraco.Core
                     return Attempt<object>.Succeed(DateTime.MinValue);
 			}
 
-			// we have a non-empty string, look for type conversions in the expected order of frequency of use...
-			if (destinationType.IsPrimitive)
-			{
-			    if (destinationType == typeof(Int32))
+            // we have a non-empty string, look for type conversions in the expected order of frequency of use...
+            if (destinationType.IsPrimitive())
+            {
+                if (destinationType == typeof(Int32))
 				{
 					Int32 value;
 					return Int32.TryParse(input, out value) ? Attempt<object>.Succeed(value) : Attempt<object>.Fail();
@@ -334,7 +343,7 @@ namespace Umbraco.Core
 
 	    private static string NormalizeNumberDecimalSeparator(string s)
 	    {
-	        var normalized = System.Threading.Thread.CurrentThread.CurrentCulture.NumberFormat.NumberDecimalSeparator[0];
+	        var normalized = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator[0];
             return s.ReplaceMany(NumberDecimalSeparatorsToNormalize, normalized);
 	    }
 
@@ -425,32 +434,36 @@ namespace Umbraco.Core
 			return o.ToDictionary<TVal>(ignoreProperties.Select(e => o.GetPropertyInfo(e)).Select(propInfo => propInfo.Name).ToArray());
 		}
 
-		/// <summary>
-		/// Turns object into dictionary
-		/// </summary>
-		/// <param name="o"></param>
-		/// <param name="ignoreProperties">Properties to ignore</param>
-		/// <returns></returns>
-		internal static IDictionary<string, TVal> ToDictionary<TVal>(this object o, params string[] ignoreProperties)
-		{
-			if (o != null)
-			{
-				var props = TypeDescriptor.GetProperties(o);
-				var d = new Dictionary<string, TVal>();
-				foreach (var prop in props.Cast<PropertyDescriptor>().Where(x => ignoreProperties.Contains(x.Name) == false))
-				{
-					var val = prop.GetValue(o);
-					if (val != null)
-					{
-						d.Add(prop.Name, (TVal)val);
-					}
-				}
-				return d;
-			}
-			return new Dictionary<string, TVal>();
-		}
+        /// <summary>
+        /// Turns object into dictionary
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="ignoreProperties">Properties to ignore</param>
+        /// <returns></returns>
+        public static IDictionary<string, TVal> ToDictionary<TVal>(this object o, params string[] ignoreProperties)
+        {
+            if (o != null)
+            {
+#if NET461
+                var props = TypeDescriptor.GetProperties(o).Cast<PropertyDescriptor>();
+#else
+                var props = o.GetType().GetTypeInfo().DeclaredProperties;
+#endif
+                var d = new Dictionary<string, TVal>();
+                foreach (var prop in props.Where(x => !ignoreProperties.Contains(x.Name)))
+                {
+                    var val = prop.GetValue(o);
+                    if (val != null)
+                    {
+                        d.Add(prop.Name, (TVal)val);
+                    }
+                }
+                return d;
+            }
+            return new Dictionary<string, TVal>();
+        }
 
-		internal static string ToDebugString(this object obj, int levels = 0)
+        internal static string ToDebugString(this object obj, int levels = 0)
 		{
 			if (obj == null) return "{null}";
 			try

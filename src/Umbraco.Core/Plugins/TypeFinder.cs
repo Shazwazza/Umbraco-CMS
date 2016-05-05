@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using ReflectionBridge.Extensions;
 
 namespace Umbraco.Core.Plugins
 {
@@ -154,12 +155,8 @@ namespace Umbraco.Core.Plugins
             if (assemblies == null) throw new ArgumentNullException("assemblies");
 
             return GetClasses(assignTypeFrom, assemblies, onlyConcreteClasses,
-                    //the additional filter will ensure that any found types also have the attribute applied.
-#if NET461
-                    t => t.GetCustomAttributes<TAttribute>(false).Any()); 
-#else
-                    t => t.GetTypeInfo().GetCustomAttributes<TAttribute>(false).Any());
-#endif
+                //the additional filter will ensure that any found types also have the attribute applied.
+                t => t.GetCustomAttributes<TAttribute>(false).Any());
         }
 
         /// <summary>
@@ -224,7 +221,7 @@ namespace Umbraco.Core.Plugins
         {
             if (assemblies == null) throw new ArgumentNullException("assemblies");
 
-            if (_typeHelper.IsTypeAssignableFrom<Attribute>(attributeType) == false)
+            if (TypeHelper.IsTypeAssignableFrom<Attribute>(attributeType) == false)
                 throw new ArgumentException("The type specified: " + attributeType + " is not an Attribute type");
 
             var foundAttributedTypes = new HashSet<Type>();
@@ -256,13 +253,11 @@ namespace Umbraco.Core.Plugins
 
 #if NET461
                                         && (onlyConcreteClasses == false || t.IsAbstract == false))
-                                        //the type must have this attribute
-                                        && t.GetCustomAttributes(attributeType, false).Any())                        
 #else
-                                        && (onlyConcreteClasses == false || t.GetTypeInfo().IsAbstract == false))
-                                        //the type must have this attribute
-                                        && t.GetTypeInfo().GetCustomAttributes(attributeType, false).Any())
+                                        && (onlyConcreteClasses == false || t.GetTypeInfo().IsAbstract == false))                                        
 #endif
+                                        //the type must have this attribute
+                                        && t.GetCustomAttributes(attributeType, false).Any())
                         .ToArray();
                 }
                 catch (TypeLoadException ex)
@@ -282,12 +277,7 @@ namespace Umbraco.Core.Plugins
 
                 //now we need to include types that may be inheriting from sub classes of the attribute type being searched for
                 //so we will search in assemblies that reference those types too.
-                foreach (var subTypesInAssembly in allAttributeTypes
-#if NET461
-                    .GroupBy(x => x.Assembly)) 
-#else
-                    .GroupBy(x => x.GetTypeInfo().Assembly))
-#endif
+                foreach (var subTypesInAssembly in allAttributeTypes.GroupBy(x => x.GetAssembly()))
                 {
 
                     //So that we are not scanning too much, we need to group the sub types:
@@ -300,7 +290,7 @@ namespace Umbraco.Core.Plugins
 #else
                         .Where(t => t.GetTypeInfo().IsSealed == false
 #endif
-                                && _typeHelper.IsStaticClass(t) == false)
+                        && _typeHelper.IsStaticClass(t) == false)
                         .ToArray();
 
                     var baseClassAttempt = _typeHelper.GetLowestBaseType(subTypeList);
@@ -414,17 +404,13 @@ namespace Umbraco.Core.Plugins
                         .Where(t => (_typeHelper.IsNonStaticClass(t)
                                     //Do not include nested private classes - since we are in full trust now this will find those too!
 #if NET461
-                                    && t.IsNestedPrivate == false && (onlyConcreteClasses == false || t.IsAbstract == false) 
+                                    && t.IsNestedPrivate == false && (onlyConcreteClasses == false || t.IsAbstract == false)
 #else
                                     && t.GetTypeInfo().IsNestedPrivate == false && (onlyConcreteClasses == false || t.GetTypeInfo().IsAbstract == false)
 #endif
                                     //Do not include classes that are flagged to hide from the type finder
-#if NET461
-                                    && t.GetCustomAttribute<HideFromTypeFinderAttribute>() == null 
-#else
-                                    && t.GetTypeInfo().GetCustomAttribute<HideFromTypeFinderAttribute>() == null
-#endif
-                                     && additionalFilter(t)))
+                                    && t.GetCustomAttributes(typeof(HideFromTypeFinderAttribute), false) == null
+                                    && additionalFilter(t)))
                         .ToArray();
                 }
                 catch (TypeLoadException ex)
@@ -441,12 +427,7 @@ namespace Umbraco.Core.Plugins
 
                 //now we need to include types that may be inheriting from sub classes of the type being searched for
                 //so we will search in assemblies that reference those types too.
-                foreach (var subTypesInAssembly in
-#if NET461
-                            allSubTypes.GroupBy(x => x.Assembly)) 
-#else
-                            allSubTypes.GroupBy(x => x.GetTypeInfo().Assembly))
-#endif
+                foreach (var subTypesInAssembly in allSubTypes.GroupBy(x => x.GetAssembly()))
                 {
 
                     //So that we are not scanning too much, we need to group the sub types:
