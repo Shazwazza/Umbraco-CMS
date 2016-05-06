@@ -7,7 +7,7 @@ namespace Umbraco.Core.Persistence.FaultHandling
     /// The special type of exception that provides managed exit from a retry loop. The user code can use this
     /// exception to notify the retry policy that no further retry attempts are required.
     /// </summary>
-    #if NET461
+#if NET461
     [Serializable] 
 #endif
     public sealed class RetryLimitExceededException : Exception
@@ -49,6 +49,7 @@ namespace Umbraco.Core.Persistence.FaultHandling
         {
         }
 
+#if NET461
         /// <summary>
         /// Initializes a new instance of the <see cref="RetryLimitExceededException"/> class.
         /// </summary>
@@ -59,6 +60,7 @@ namespace Umbraco.Core.Persistence.FaultHandling
         private RetryLimitExceededException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-        }
+        } 
+#endif
     }
 }

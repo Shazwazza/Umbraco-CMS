@@ -394,7 +394,12 @@ ORDER BY TABLE_NAME, INDEX_NAME",
 
         public override string EscapeString(string val)
         {
-            return NPocoDatabaseExtensions.EscapeAtSymbols(MySql.Data.MySqlClient.MySqlHelper.EscapeString(val));
+
+#if NET461
+            return NPocoDatabaseExtensions.EscapeAtSymbols(MySql.Data.MySqlClient.MySqlHelper.EscapeString(val)); 
+#else
+            throw new NotImplementedException("Fix MySql implementation on .Net Core");
+#endif
         }
     }
 }

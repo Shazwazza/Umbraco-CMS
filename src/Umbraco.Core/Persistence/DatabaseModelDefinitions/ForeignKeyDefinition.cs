@@ -10,8 +10,8 @@ namespace Umbraco.Core.Persistence.DatabaseModelDefinitions
             ForeignColumns = new List<string>();
             PrimaryColumns = new List<string>();
             //Set to None by Default
-            OnDelete = Rule.None;
-            OnUpdate = Rule.None;
+            OnDelete = CascadeRule.None;
+            OnUpdate = CascadeRule.None;
         }
 
         public virtual string Name { get; set; }
@@ -19,8 +19,8 @@ namespace Umbraco.Core.Persistence.DatabaseModelDefinitions
         public virtual string ForeignTableSchema { get; set; }
         public virtual string PrimaryTable { get; set; }
         public virtual string PrimaryTableSchema { get; set; }
-        public virtual Rule OnDelete { get; set; }
-        public virtual Rule OnUpdate { get; set; }
+        public virtual CascadeRule OnDelete { get; set; }
+        public virtual CascadeRule OnUpdate { get; set; }
         public virtual ICollection<string> ForeignColumns { get; set; }
         public virtual ICollection<string> PrimaryColumns { get; set; }
     }

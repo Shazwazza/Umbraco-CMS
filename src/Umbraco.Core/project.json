@@ -28,16 +28,21 @@
     "Models/MediaExtensions.cs",
     "Models/UserExtensions.cs",
     "Models/Identity/**/*.*",
-    "Models/Editors/**/*.*",
     "Models/Mapping/**/*.*",
     "Models/Membership/**/*.*",
     "Models/PublishedContent/**/*.*",
-    "Models/Rdbms/**/*.*",
-    "Models/Validation/**/*.*",
 
     "ObjectResolution/**/*.*",
     "Packaging/**/*.*",
-    "Persistence/**/*.*",
+
+    "Persistence/*.cs",
+    "Persistence/Factories/**/*.*",
+    "Persistence/Mappers/**/*.*",
+    "Persistence/Migrations/**/*.*",
+    "Persistence/Querying/**/*.*",
+    "Persistence/Repositories/**/*.*",
+    "Persistence/UnitOfWork/**/*.*",
+
     "Profiling/**/*.*",
     "PropertyEditors/**/*.*",
     "Publishing/**/*.*",
@@ -59,12 +64,24 @@
     "Strings/CleanStringType.cs",
 
     "Logging/LogHelper.cs",
+    "Logging/ILogger.cs",
+    "Logging/LoggerExtensions.cs",
 
     "PropertyEditors/LegacyPropertyEditorIdToAliasConverter.cs",
     "PropertyEditors/LegacyParameterEditorAliasConverter.cs",
 
     "Sync/IServerAddress.cs",
 
+    "Persistence/SqlContext.cs",
+    "Persistence/UmbracoDatabase.cs",
+    "Persistence/IUmbracoDatabaseConfig.cs",
+    "Persistence/IDatabaseFactory.cs",
+    "Persistence/Querying/TextColumnType.cs",
+    "Persistence/Constants-DbProviderNames.cs",
+    "Persistence/NPocoDatabaseExtensions.cs",
+    "Persistence/RecordPersistenceType.cs",
+
+    "IDisposeOnRequestEnd.cs",
     "StringExtensions.cs",
     "EnumerableExtensions.cs",
     "Attempt{T}.cs",
@@ -135,7 +152,8 @@
     "System.Xml.XDocument": "4.0.11-beta-*",
     "System.Xml.XmlDocument": "4.0.1-beta-*",
     "System.Xml.XPath": "4.0.1-beta-*",
-    "System.Xml.XPath.XDocument": "4.0.1-beta-*"
+    "System.Xml.XPath.XDocument": "4.0.1-beta-*",
+    "System.ComponentModel.Annotations": "4.0.11-beta-*"
   },
 
   "frameworks": {
@@ -145,7 +163,8 @@
         "MiniProfiler": "3.2",
         "semver": "1.0",
         "Microsoft.SqlServer.Compact": "4.0",
-        "MySql.Data": "6.9"
+        "MySql.Data": "6.9",
+        "Microsoft.DataAnnotations": "1.0.0-beta1"
       }
     },
     "dnxcore50": {
@@ -154,7 +173,8 @@
         "System.Threading": "4.0.11-beta-*",
         "System.Threading.ThreadPool": "4.0.10-beta-*",
         "System.Threading.Thread": "4.0.0-beta-*",
-        "System.Reflection.TypeExtensions": "4.1.0-beta-*"
+        "System.Reflection.TypeExtensions": "4.1.0-beta-*",
+        "System.Data.Common":  "4.0.1-beta-*" 
       }
     }
   }

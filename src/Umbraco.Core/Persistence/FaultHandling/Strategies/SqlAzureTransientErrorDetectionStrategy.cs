@@ -143,14 +143,17 @@ namespace Umbraco.Core.Persistence.FaultHandling.Strategies
                 {
                     return true;
                 }
-                else
-                {
-                    EntityException entityException;
-                    if ((entityException = ex as EntityException) != null)
-                    {
-                        return this.IsTransient(entityException.InnerException);
-                    }
-                }
+
+                //TODO: There is no more EntityException or System.Data.Entity so not sure what else we might need to handle
+                //else
+                //{
+                //    EntityException entityException;
+                //    if ((entityException = ex as EntityException) != null)
+                //    {
+                //        return this.IsTransient(entityException.InnerException);
+                //    }
+                //} 
+
             }
 
             return false;

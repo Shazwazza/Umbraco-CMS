@@ -138,7 +138,8 @@ namespace Umbraco.Core.Persistence
             }
 
             // this can go on forever... have to break at some point and report an error.
-            throw new DataException("Record could not be inserted or updated.");
+            //TODO: What exception to use here that is available?
+            throw new Exception("Record could not be inserted or updated.");
         }
 
         /// <summary>
@@ -246,7 +247,7 @@ namespace Umbraco.Core.Persistence
         /// For some reason the 2100 limit is not actually allowed even though the exception from sql server mentions 2100 as a max, perhaps it is 2099
         /// that is max. I've reduced it to 2000 anyways.
         /// </remarks>
-        internal static IDbCommand[] GenerateBulkInsertCommand<T>(
+        internal static DbCommand[] GenerateBulkInsertCommand<T>(
             this IDatabase db,
             IEnumerable<T> collection,
             DbConnection connection,
@@ -286,7 +287,7 @@ namespace Umbraco.Core.Persistence
             var numTrans = Math.Ceiling(itemArray.Length / itemsPerTrans);
 
             var sqlQueries = new List<string>();
-            var commands = new List<IDbCommand>();
+            var commands = new List<DbCommand>();
 
             for (var tIndex = 0; tIndex < numTrans; tIndex++)
             {

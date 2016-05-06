@@ -389,20 +389,20 @@ namespace Umbraco.Core.Persistence.SqlSyntax
             return string.Format(RenameTable, GetQuotedTableName(oldName), GetQuotedTableName(newName));
         }
 
-        protected virtual string FormatCascade(string onWhat, Rule rule)
+        protected virtual string FormatCascade(string onWhat, CascadeRule cascadeRule)
         {
             string action = "NO ACTION";
-            switch (rule)
+            switch (cascadeRule)
             {
-                case Rule.None:
+                case CascadeRule.None:
                     return "";
-                case Rule.Cascade:
+                case CascadeRule.Cascade:
                     action = "CASCADE";
                     break;
-                case Rule.SetNull:
+                case CascadeRule.SetNull:
                     action = "SET NULL";
                     break;
-                case Rule.SetDefault:
+                case CascadeRule.SetDefault:
                     action = "SET DEFAULT";
                     break;
             }

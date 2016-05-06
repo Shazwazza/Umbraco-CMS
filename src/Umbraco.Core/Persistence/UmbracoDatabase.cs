@@ -3,7 +3,7 @@ using System.Data;
 using System.Data.Common;
 using System.Text;
 using NPoco;
-using StackExchange.Profiling;
+//using StackExchange.Profiling;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Persistence.FaultHandling;
 using Umbraco.Core.Persistence.SqlSyntax;
@@ -101,8 +101,8 @@ namespace Umbraco.Core.Persistence
         {
             if (connection == null) throw new ArgumentNullException(nameof(connection));
 
-            // wrap the connection with a profiling connection that tracks timings
-            connection = new StackExchange.Profiling.Data.ProfiledDbConnection(connection, MiniProfiler.Current);
+            //// wrap the connection with a profiling connection that tracks timings
+            //connection = new StackExchange.Profiling.Data.ProfiledDbConnection(connection, MiniProfiler.Current);
 
             // wrap the connection with a retrying connection
             if (_connectionRetryPolicy != null || _commandRetryPolicy != null)

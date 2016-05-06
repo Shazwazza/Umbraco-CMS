@@ -2,7 +2,6 @@
 using System.Data;
 using System.Data.Common;
 using NPoco;
-using Transaction = System.Transactions.Transaction;
 
 namespace Umbraco.Core.Persistence.FaultHandling
 {
@@ -30,10 +29,12 @@ namespace Umbraco.Core.Persistence.FaultHandling
             return _inner.BeginTransaction(isolationLevel);
         }
 
+#if NET461
         protected override bool CanRaiseEvents
         {
             get { return true; }
-        }
+        } 
+#endif
 
         public override void ChangeDatabase(string databaseName)
         {
@@ -76,10 +77,8 @@ namespace Umbraco.Core.Persistence.FaultHandling
             base.Dispose(disposing);
         }
 
-        public override void EnlistTransaction(Transaction transaction)
-        {
-            _inner.EnlistTransaction(transaction);
-        }
+#if NET461
+        
 
         public override DataTable GetSchema()
         {
@@ -94,7 +93,8 @@ namespace Umbraco.Core.Persistence.FaultHandling
         public override DataTable GetSchema(string collectionName, string[] restrictionValues)
         {
             return _inner.GetSchema(collectionName, restrictionValues);
-        }
+        } 
+#endif
 
         public override void Open()
         {
