@@ -8,7 +8,9 @@ namespace Umbraco.Core.Models
     /// <summary>
     /// Represents the content type that a <see cref="Member"/> object is based on
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     public class MemberType : ContentTypeCompositionBase, IMemberType
     {

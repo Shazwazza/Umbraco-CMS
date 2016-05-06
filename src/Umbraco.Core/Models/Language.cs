@@ -9,7 +9,9 @@ namespace Umbraco.Core.Models
     /// <summary>
     /// Represents a Language
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     public class Language : Entity, ILanguage
     {
@@ -64,7 +66,7 @@ namespace Umbraco.Core.Models
         [IgnoreDataMember]
         public CultureInfo CultureInfo
         {
-            get { return CultureInfo.GetCultureInfo(IsoCode); }
+            get { return new CultureInfo(IsoCode); }
         }
     }
 }

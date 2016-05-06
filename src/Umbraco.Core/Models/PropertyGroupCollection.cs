@@ -12,7 +12,9 @@ namespace Umbraco.Core.Models
     /// <summary>
     /// Represents a collection of <see cref="PropertyGroup"/> objects
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract]
     public class PropertyGroupCollection : KeyedCollection<string, PropertyGroup>, INotifyCollectionChanged, IDeepCloneable
     {

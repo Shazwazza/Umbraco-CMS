@@ -31,7 +31,7 @@ namespace Umbraco.Core.Models.PublishedContent
         public PublishedContentModelFactory(IEnumerable<Type> types)
         {
             var ctorArgTypes = new[] { typeof(IPublishedContent) };
-            var constructors = new Dictionary<string, Func<IPublishedContent, IPublishedContent>>(StringComparer.InvariantCultureIgnoreCase);
+            var constructors = new Dictionary<string, Func<IPublishedContent, IPublishedContent>>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var type in types)
             {

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using Umbraco.Core.Exceptions;
 
 namespace Umbraco.Core.PropertyEditors
 {
@@ -42,7 +43,7 @@ namespace Umbraco.Core.PropertyEditors
             {
                 if (throwIfNotFound)
                 {
-                    throw new ObjectNotFoundException("Could not find a map for a property editor with a legacy alias of " + legacyAlias);
+                    throw new NotFoundException("Could not find a map for a property editor with a legacy alias of " + legacyAlias);
                 }
                 return null;
             }
@@ -62,7 +63,7 @@ namespace Umbraco.Core.PropertyEditors
             {
                 if (throwIfNotFound)
                 {
-                    throw new ObjectNotFoundException("Could not find a map for a property editor with an alias of " + alias);
+                    throw new NotFoundException("Could not find a map for a property editor with an alias of " + alias);
                 }
                 return null;
             }

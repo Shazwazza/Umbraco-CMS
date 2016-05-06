@@ -3,7 +3,9 @@ using System.Runtime.Serialization;
 
 namespace Umbraco.Core.Packaging.Models
 {
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     internal class MetaData
     {

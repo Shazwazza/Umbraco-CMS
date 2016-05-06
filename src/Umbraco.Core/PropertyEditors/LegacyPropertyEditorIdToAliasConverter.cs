@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using Umbraco.Core.Exceptions;
 using Umbraco.Core.Logging;
 
 namespace Umbraco.Core.PropertyEditors
@@ -53,7 +54,7 @@ namespace Umbraco.Core.PropertyEditors
             {
                 if (throwIfNotFound)
                 {
-                    throw new ObjectNotFoundException("Could not find a map for a property editor with a legacy id of " + legacyId + ". Consider using the new business logic APIs instead of the old obsoleted ones.");
+                    throw new NotFoundException("Could not find a map for a property editor with a legacy id of " + legacyId + ". Consider using the new business logic APIs instead of the old obsoleted ones.");
                 }
                 return null;
             }
@@ -74,13 +75,13 @@ namespace Umbraco.Core.PropertyEditors
                 switch (notFoundBehavior)
                 {
                     case NotFoundLegacyIdResponseBehavior.ThrowException:
-                        throw new ObjectNotFoundException("Could not find a map for a property editor with an alias of " + alias + ". Consider using the new business logic APIs instead of the old obsoleted ones.");
+                        throw new NotFoundException("Could not find a map for a property editor with an alias of " + alias + ". Consider using the new business logic APIs instead of the old obsoleted ones.");
                     case NotFoundLegacyIdResponseBehavior.ReturnNull:
                         return null;
                     case NotFoundLegacyIdResponseBehavior.GenerateId:
                         var generated = alias.EncodeAsGuid();
                         CreateMap(generated, alias);
-
+                        
                         LogHelper.Warn(typeof(LegacyPropertyEditorIdToAliasConverter), "A legacy GUID id was generated for property editor " + alias + ". This occurs when the legacy APIs are used and done to attempt to maintain backwards compatibility. Consider upgrading all code to use the new Services APIs instead to avoid any potential issues.");
 
                         return generated;

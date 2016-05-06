@@ -6,7 +6,9 @@ using Umbraco.Core.Cache;
 
 namespace Umbraco.Core.Sync
 {
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     public class RefreshInstruction
     {
         // NOTE

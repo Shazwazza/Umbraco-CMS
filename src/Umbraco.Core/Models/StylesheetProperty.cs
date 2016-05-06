@@ -11,7 +11,9 @@ namespace Umbraco.Core.Models
     /// <remarks>
     /// Properties are always formatted to have a single selector, so it can be used in the backoffice
     /// </remarks>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     public class StylesheetProperty : TracksChangesEntityBase, IValueObject
     {

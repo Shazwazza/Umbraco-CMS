@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 using System.Xml.XPath;
-using Umbraco.Core.Dynamics;
 using Umbraco.Core.PropertyEditors;
 
 namespace Umbraco.Core.Models.PublishedContent
@@ -14,7 +13,7 @@ namespace Umbraco.Core.Models.PublishedContent
     /// </summary>
     /// <remarks>Instances of the <see cref="PublishedPropertyType"/> class are immutable, ie
     /// if the property type changes, then a new class needs to be created.</remarks>
-    public class PublishedPropertyType
+    public class PublishedPropertyType : IPublishedPropertyType
     {
         #region Constructors
 
@@ -133,7 +132,7 @@ namespace Umbraco.Core.Models.PublishedContent
         /// Gets or sets the published content type containing the property type.
         /// </summary>
         // internally set by PublishedContentType constructor
-        public PublishedContentType ContentType { get; internal set; }
+        public IPublishedContentType ContentType { get; internal set; }
 
         /// <summary>
         /// Gets or sets the alias uniquely identifying the property type.
@@ -160,18 +159,18 @@ namespace Umbraco.Core.Models.PublishedContent
         private PropertyCacheLevel _objectCacheLevel;
         private PropertyCacheLevel _xpathCacheLevel;
 
-        private Type _clrType = typeof (object);
+        private Type _clrType = typeof(object);
 
         private void InitializeConverters()
         {
             //TODO: Look at optimizing this method, it gets run for every property type for the document being rendered at startup,
             // every precious second counts!
 
-            var converters = PropertyValueConvertersResolver.Current.Converters.ToArray();            
+            var converters = PropertyValueConvertersResolver.Current.Converters.ToArray();
             var defaultConvertersWithAttributes = PropertyValueConvertersResolver.Current.DefaultConverters;
 
             _converter = null;
-            
+
             //get all converters for this property type
             var foundConverters = converters.Where(x => x.IsConverter(this)).ToArray();
             if (foundConverters.Length == 1)
@@ -198,7 +197,7 @@ namespace Umbraco.Core.Models.PublishedContent
                                       ContentType.Alias, PropertyTypeAlias,
                                       nonDefault[1].GetType().FullName, nonDefault[0].GetType().FullName));
                 }
-                else 
+                else
                 {
                     //we need to remove any converters that have been shadowed by another converter
                     var foundDefaultConvertersWithAttributes = defaultConvertersWithAttributes.Where(x => foundConverters.Contains(x.Item1));
@@ -209,7 +208,7 @@ namespace Umbraco.Core.Models.PublishedContent
                     if (nonShadowedDefaultConverters.Length == 1)
                     {
                         //assign to the single default converter
-                        _converter = nonShadowedDefaultConverters[0];    
+                        _converter = nonShadowedDefaultConverters[0];
                     }
                     else if (nonShadowedDefaultConverters.Length > 1)
                     {
@@ -222,7 +221,7 @@ namespace Umbraco.Core.Models.PublishedContent
                                           nonShadowedDefaultConverters[1].GetType().FullName, nonShadowedDefaultConverters[0].GetType().FullName));
                     }
                 }
-                
+
             }
 
             var converterMeta = _converter as IPropertyValueConverterMeta;
@@ -269,7 +268,7 @@ namespace Umbraco.Core.Models.PublishedContent
 
             return attr == null ? PropertyCacheLevel.Request : attr.Level;
         }
-        
+
         // converts the raw value into the source value
         // uses converters, else falls back to dark (& performance-wise expensive) magic
         // source: the property raw value
@@ -277,8 +276,8 @@ namespace Umbraco.Core.Models.PublishedContent
         public object ConvertDataToSource(object source, bool preview)
         {
             // use the converter else use dark (& performance-wise expensive) magic
-            return _converter != null 
-                ? _converter.ConvertDataToSource(this, source, preview) 
+            return _converter != null
+                ? _converter.ConvertDataToSource(this, source, preview)
                 : ConvertUsingDarkMagic(source);
         }
 
@@ -294,7 +293,7 @@ namespace Umbraco.Core.Models.PublishedContent
             // use the converter if any
             // else just return the source value
             return _converter != null
-                ? _converter.ConvertSourceToObject(this, source, preview) 
+                ? _converter.ConvertSourceToObject(this, source, preview)
                 : source;
         }
 
@@ -359,7 +358,7 @@ namespace Umbraco.Core.Models.PublishedContent
 
         #endregion
 
-       
+
 
         #region Detached
 
@@ -388,13 +387,13 @@ namespace Umbraco.Core.Models.PublishedContent
                 throw new Exception("PublishedPropertyType is already detached/nested.");
 
             var detached = new PublishedPropertyType(this);
-            detached._sourceCacheLevel 
-                = detached._objectCacheLevel 
-                = detached._xpathCacheLevel 
+            detached._sourceCacheLevel
+                = detached._objectCacheLevel
+                = detached._xpathCacheLevel
                 = PropertyCacheLevel.Content;
             // set to none to a) indicate it's detached / nested and b) make sure any nested
             // types switch all their cache to .Content
-            detached._sourceCacheLevelReduced 
+            detached._sourceCacheLevelReduced
                 = detached._objectCacheLevelReduced
                 = detached._xpathCacheLevelReduced
                 = PropertyCacheLevel.None;

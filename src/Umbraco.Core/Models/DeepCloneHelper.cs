@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Umbraco.Core.Plugins;
 
 namespace Umbraco.Core.Models
 {
@@ -59,7 +60,7 @@ namespace Umbraco.Core.Models
                             //is not attributed with the ignore clone attribute
                             propertyInfo.GetCustomAttribute<DoNotCloneAttribute>() != null
                             //reference type but not string
-                            || propertyInfo.PropertyType.IsValueType || propertyInfo.PropertyType == typeof (string)
+                            || propertyInfo.PropertyType.GetTypeInfo().IsValueType || propertyInfo.PropertyType == typeof (string)
                             //settable
                             || propertyInfo.CanWrite == false
                             //non-indexed
@@ -77,7 +78,7 @@ namespace Umbraco.Core.Models
                         if (TypeHelper.IsTypeAssignableFrom<IEnumerable>(propertyInfo.PropertyType)
                             && TypeHelper.IsTypeAssignableFrom<string>(propertyInfo.PropertyType) == false)
                         {
-                            if (propertyInfo.PropertyType.IsGenericType
+                            if (propertyInfo.PropertyType.GetTypeInfo().IsGenericType
                                 && (propertyInfo.PropertyType.GetGenericTypeDefinition() == typeof(IEnumerable<>)
                                     || propertyInfo.PropertyType.GetGenericTypeDefinition() == typeof(ICollection<>)
                                     || propertyInfo.PropertyType.GetGenericTypeDefinition() == typeof(IList<>)))
@@ -87,14 +88,14 @@ namespace Umbraco.Core.Models
                                 return new ClonePropertyInfo(propertyInfo) { GenericListType = genericType };
                             }
                             if (propertyInfo.PropertyType.IsArray
-                                || (propertyInfo.PropertyType.IsInterface && propertyInfo.PropertyType.IsGenericType == false))
+                                || (propertyInfo.PropertyType.GetTypeInfo().IsInterface && propertyInfo.PropertyType.GetTypeInfo().IsGenericType == false))
                             {
                                 //if its an array, we'll create a list to work with first and then convert to array later
                                 //otherwise if its just a regular derivitave of IEnumerable, we can use a list too
                                 return new ClonePropertyInfo(propertyInfo) { GenericListType = typeof(List<object>) };
                             }
                             //skip instead of trying to create instance of abstract or interface
-                            if (propertyInfo.PropertyType.IsAbstract || propertyInfo.PropertyType.IsInterface)
+                            if (propertyInfo.PropertyType.GetTypeInfo().IsAbstract || propertyInfo.PropertyType.GetTypeInfo().IsInterface)
                             {
                                 return null;
                             }
@@ -154,7 +155,7 @@ namespace Umbraco.Core.Models
                         {
                             newList.Add(dc.DeepClone());
                         }
-                        else if (o is string || o.GetType().IsValueType)
+                        else if (o is string || o.GetType().GetTypeInfo().IsValueType)
                         {
                             //check if the item is a value type or a string, then we can just use it                         
                             newList.Add(o);

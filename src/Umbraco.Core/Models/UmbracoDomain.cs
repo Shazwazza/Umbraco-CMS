@@ -5,7 +5,9 @@ using Umbraco.Core.Models.EntityBase;
 
 namespace Umbraco.Core.Models
 {
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     public class UmbracoDomain : Entity, IDomain
     {

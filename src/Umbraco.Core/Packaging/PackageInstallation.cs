@@ -463,11 +463,11 @@ namespace Umbraco.Core.Packaging
         private bool IsFileDestinationUnsecure(string destination)
         {
             var unsecureDirNames = new[] {"bin", "app_code"};
-            if(unsecureDirNames.Any(ud => destination.StartsWith(ud, StringComparison.InvariantCultureIgnoreCase)))
+            if(unsecureDirNames.Any(ud => destination.StartsWith(ud, StringComparison.OrdinalIgnoreCase)))
                 return true;
 
             string extension = Path.GetExtension(destination);
-            return extension != null && extension.Equals(".dll", StringComparison.InvariantCultureIgnoreCase);
+            return extension != null && extension.Equals(".dll", StringComparison.OrdinalIgnoreCase);
         }
         
         private KeyValuePair<string, string>[] ExtractSourceDestinationFileInformation(XElement filesElement)

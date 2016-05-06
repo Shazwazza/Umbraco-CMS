@@ -9,7 +9,9 @@ namespace Umbraco.Core.Models
     /// <summary>
     /// Represents a Macro Property
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     public class MacroProperty : TracksChangesEntityBase, IMacroProperty, IRememberBeingDirty, IDeepCloneable
     {

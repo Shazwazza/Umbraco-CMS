@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Runtime.Serialization;
-using Umbraco.Core.Services;
 
 namespace Umbraco.Core.Models
 {
@@ -8,7 +7,9 @@ namespace Umbraco.Core.Models
     /// <summary>
     /// Represents a Partial View file
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     public class PartialView : File, IPartialView
     {

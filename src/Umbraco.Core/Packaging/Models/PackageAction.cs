@@ -11,7 +11,9 @@ namespace Umbraco.Core.Packaging.Models
         Uninstall
     }
 
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     internal class PackageAction
     {

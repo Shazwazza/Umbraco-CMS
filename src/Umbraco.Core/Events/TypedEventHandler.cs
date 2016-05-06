@@ -2,6 +2,8 @@ using System;
 
 namespace Umbraco.Core.Events
 {
-	[Serializable]
+	#if NET461
+    [Serializable] 
+#endif
 	public delegate void TypedEventHandler<in TSender, in TEventArgs>(TSender sender, TEventArgs e);
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reflection;
-using Semver;
 using Umbraco.Core.Models.EntityBase;
 
 namespace Umbraco.Core.Models
@@ -11,7 +10,7 @@ namespace Umbraco.Core.Models
         {
         }
 
-        public MigrationEntry(int id, DateTime createDate, string migrationName, SemVersion version)
+        public MigrationEntry(int id, DateTime createDate, string migrationName, ISemVersion version)
         {
             Id = id;
             CreateDate = createDate;
@@ -20,9 +19,9 @@ namespace Umbraco.Core.Models
         }
 
         private static readonly PropertyInfo NameSelector = ExpressionHelper.GetPropertyInfo<MigrationEntry, string>(x => x.MigrationName);
-        private static readonly PropertyInfo VersionSelector = ExpressionHelper.GetPropertyInfo<MigrationEntry, SemVersion>(x => x.Version);
+        private static readonly PropertyInfo VersionSelector = ExpressionHelper.GetPropertyInfo<MigrationEntry, ISemVersion>(x => x.Version);
         private string _migrationName;
-        private SemVersion _version;
+        private ISemVersion _version;
 
         public string MigrationName
         {
@@ -37,7 +36,7 @@ namespace Umbraco.Core.Models
             }
         }
 
-        public SemVersion Version
+        public ISemVersion Version
         {
             get { return _version; }
             set

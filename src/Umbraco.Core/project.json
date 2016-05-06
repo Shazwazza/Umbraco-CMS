@@ -11,21 +11,30 @@
     "_Legacy/**/*.cs",
     "Auditing/**/*.*",
     "Cache/**/*.*",
-    "CodeAnnotations/**/*.*",
-    "Collections/**/*.*",
     "Configuration/**/*.*",
     "DependencyInjection/**/*.*",
     "Dictionary/**/*.*",
     "Dynamics/**/*.*",
     "Events/**/*.*",
-    "Exceptions/**/*.*",
     "FileResources/**/*.*",
     "IO/**/*.*",
     "Logging/**/*.*",
     "Macros/**/*.*",
     "Manifest/**/*.*",
     "Media/**/*.*",
-    "Models/**/*.*",
+
+    "Models/ContentTypeExtensions.cs",
+    "Models/PropertyExtensions.cs",
+    "Models/MediaExtensions.cs",
+    "Models/UserExtensions.cs",
+    "Models/Identity/**/*.*",
+    "Models/Editors/**/*.*",
+    "Models/Mapping/**/*.*",
+    "Models/Membership/**/*.*",
+    "Models/PublishedContent/**/*.*",
+    "Models/Rdbms/**/*.*",
+    "Models/Validation/**/*.*",
+
     "ObjectResolution/**/*.*",
     "Packaging/**/*.*",
     "Persistence/**/*.*",
@@ -36,13 +45,25 @@
     "Serialization/**/*.*",
     "Services/**/*.*",
     "Strategies/**/*.*",
-    "Strings/**/*.*",
+    "Strings/*.cs",
     "Sync/**/*.*",
     "Xml/**/*.*"
   ],
   "compileFiles": [
+    "Models/Membership/IMembershipUser.cs",
+
+    "Models/PublishedContent/IPublishedContentType.cs",
+    "Models/PublishedContent/IPublishedPropertyType.cs",
+
     "Strings/IShortStringHelper.cs",
     "Strings/CleanStringType.cs",
+
+    "Logging/LogHelper.cs",
+
+    "PropertyEditors/LegacyPropertyEditorIdToAliasConverter.cs",
+    "PropertyEditors/LegacyParameterEditorAliasConverter.cs",
+
+    "Sync/IServerAddress.cs",
 
     "StringExtensions.cs",
     "EnumerableExtensions.cs",
@@ -81,10 +102,23 @@
     "MonitorLock.cs",
     "ObjectExtensions.cs",
     "TypeExtensions.cs",
-    "ExpressionHelper.cs"
+    "ExpressionHelper.cs",
+    "NameValueCollectionExtensions.cs",
+    "ObservableDictionary.cs",
+    "ReadLock.cs",
+    "ThreadExtensions.cs",
+    "TopologicalSorter.cs",
+    "UpgradeableReadLock.cs",
+    "WaitHandleExtensions.cs"
   ],
 
   "dependencies": {
+    "System.Runtime": "4.0.21-beta-*",
+    "System.Collections": "4.0.11-beta-*",
+    "System.Linq": "4.0.1-beta-*",
+    "System.Runtime.Serialization.Primitives": "4.1.0",
+    "System.Globalization": "4.0.11-beta-*",
+
     "Newtonsoft.Json": "8.0",
     "NPoco": "3.1.0-u005",
     "AutoMapper": "4.2",
@@ -97,8 +131,11 @@
     "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc1-final",
     "Microsoft.Extensions.Logging": "1.0.0-rc1-final",
     "System.Security.Cryptography.Algorithms": "4.0.0-beta-*",
-    "System.Threading.Thread": "4.0.0-beta-*",
-    "ReflectionBridge": "0.0.9"
+    "ReflectionBridge": "0.0.9",
+    "System.Xml.XDocument": "4.0.11-beta-*",
+    "System.Xml.XmlDocument": "4.0.1-beta-*",
+    "System.Xml.XPath": "4.0.1-beta-*",
+    "System.Xml.XPath.XDocument": "4.0.1-beta-*"
   },
 
   "frameworks": {
@@ -114,10 +151,10 @@
     "dnxcore50": {
       "dependencies": {
         "Microsoft.CSharp": "4.0.1-beta-*",
-        "System.Collections": "4.0.11-beta-*",
-        "System.Linq": "4.0.1-beta-*",
-        "System.Runtime": "4.0.21-beta-*",
-        "System.Threading": "4.0.11-beta-*"
+        "System.Threading": "4.0.11-beta-*",
+        "System.Threading.ThreadPool": "4.0.10-beta-*",
+        "System.Threading.Thread": "4.0.0-beta-*",
+        "System.Reflection.TypeExtensions": "4.1.0-beta-*"
       }
     }
   }

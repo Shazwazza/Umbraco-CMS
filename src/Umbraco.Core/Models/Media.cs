@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Runtime.Serialization;
-using Umbraco.Core.Persistence.Mappers;
 
 namespace Umbraco.Core.Models
 {
     /// <summary>
     /// Represents a Media object
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     public class Media : ContentBase, IMedia
     {

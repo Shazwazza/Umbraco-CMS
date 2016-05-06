@@ -12,7 +12,9 @@ namespace Umbraco.Core.Models
     /// <summary>
     /// Represents a Collection of <see cref="Property"/> objects
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     public class PropertyCollection : KeyedCollection<string, Property>, INotifyCollectionChanged, IDeepCloneable
     {
@@ -21,7 +23,7 @@ namespace Umbraco.Core.Models
         internal Func<Property, bool> ValidateAdd { get; set; }
 
         internal PropertyCollection()
-            : base(StringComparer.InvariantCultureIgnoreCase)
+            : base(StringComparer.OrdinalIgnoreCase)
         {
         }
 

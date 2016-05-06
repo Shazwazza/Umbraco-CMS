@@ -5,14 +5,15 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using Umbraco.Core.Models.EntityBase;
-using Umbraco.Core.Persistence.Mappers;
 
 namespace Umbraco.Core.Models
 {
     /// <summary>
     /// A Property contains a single piece of data
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     public class Property : Entity
     {

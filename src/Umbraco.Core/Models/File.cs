@@ -1,9 +1,6 @@
 ﻿using System;
-using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization;
-using System.Text;
-using Umbraco.Core.IO;
 using Umbraco.Core.Models.EntityBase;
 
 namespace Umbraco.Core.Models
@@ -11,7 +8,9 @@ namespace Umbraco.Core.Models
     /// <summary>
     /// Represents an abstract file which provides basic functionality for a File with an Alias and Name
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     public abstract class File : Entity, IFile
     {
@@ -67,7 +66,7 @@ namespace Umbraco.Core.Models
                 {                   
                     var name = System.IO.Path.GetFileName(Path);
                     if (name == null) return string.Empty;
-                    var lastIndexOf = name.LastIndexOf(".", StringComparison.InvariantCultureIgnoreCase);
+                    var lastIndexOf = name.LastIndexOf(".", StringComparison.OrdinalIgnoreCase);
                     _alias = name.Substring(0, lastIndexOf);
                 }
                 return _alias;

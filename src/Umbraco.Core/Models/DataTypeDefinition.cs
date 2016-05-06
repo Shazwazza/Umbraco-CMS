@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
-using Umbraco.Core.Logging;
 using Umbraco.Core.Models.EntityBase;
-using Umbraco.Core.Persistence;
-using Umbraco.Core.PropertyEditors;
-using Umbraco.Core.Services;
 
 namespace Umbraco.Core.Models
 {
@@ -18,7 +15,9 @@ namespace Umbraco.Core.Models
     /// The definition exists as a database reference between an actual DataType/PropertyEditor 
     /// (identified by its control id), its prevalues (configuration) and the named DataType in the backoffice UI.
     /// </remarks>
-    [Serializable]
+#if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     public class DataTypeDefinition : Entity, IDataTypeDefinition
     {

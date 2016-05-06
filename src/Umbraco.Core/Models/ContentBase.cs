@@ -7,7 +7,6 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
-using System.Web;
 using Umbraco.Core.Models.EntityBase;
 
 namespace Umbraco.Core.Models
@@ -15,7 +14,9 @@ namespace Umbraco.Core.Models
     /// <summary>
     /// Represents an abstract class for base Content properties and methods
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     [DebuggerDisplay("Id: {Id}, Name: {Name}, ContentType: {ContentTypeBase.Alias}")]
     public abstract class ContentBase : Entity, IContentBase
@@ -411,36 +412,25 @@ namespace Umbraco.Core.Models
             SetValueOnProperty(propertyTypeAlias, value);
         }
 
-        /// <summary>
-        /// Sets the <see cref="System.Web.HttpPostedFile"/> value of a Property
-        /// </summary>
-        /// <param name="propertyTypeAlias">Alias of the PropertyType</param>
-        /// <param name="value">Value to set for the Property</param>        
-        public virtual void SetPropertyValue(string propertyTypeAlias, HttpPostedFile value)
-        {
-            ContentExtensions.SetValue(this, propertyTypeAlias, value);
-        }
+        ///// <summary>
+        ///// Sets the <see cref="System.Web.HttpPostedFile"/> value of a Property
+        ///// </summary>
+        ///// <param name="propertyTypeAlias">Alias of the PropertyType</param>
+        ///// <param name="value">Value to set for the Property</param>        
+        //public virtual void SetPropertyValue(string propertyTypeAlias, HttpPostedFile value)
+        //{
+        //    ContentExtensions.SetValue(this, propertyTypeAlias, value);
+        //}
 
-        /// <summary>
-        /// Sets the <see cref="System.Web.HttpPostedFileBase"/> value of a Property
-        /// </summary>
-        /// <param name="propertyTypeAlias">Alias of the PropertyType</param>
-        /// <param name="value">Value to set for the Property</param>
-        public virtual void SetPropertyValue(string propertyTypeAlias, HttpPostedFileBase value)
-        {
-            ContentExtensions.SetValue(this, propertyTypeAlias, value);
-        }
-
-        /// <summary>
-        /// Sets the <see cref="System.Web.HttpPostedFileWrapper"/> value of a Property
-        /// </summary>
-        /// <param name="propertyTypeAlias">Alias of the PropertyType</param>
-        /// <param name="value">Value to set for the Property</param>
-        [Obsolete("There is no reason for this overload since HttpPostedFileWrapper inherits from HttpPostedFileBase")]
-        public virtual void SetPropertyValue(string propertyTypeAlias, HttpPostedFileWrapper value)
-        {
-            ContentExtensions.SetValue(this, propertyTypeAlias, value);
-        }
+        ///// <summary>
+        ///// Sets the <see cref="System.Web.HttpPostedFileBase"/> value of a Property
+        ///// </summary>
+        ///// <param name="propertyTypeAlias">Alias of the PropertyType</param>
+        ///// <param name="value">Value to set for the Property</param>
+        //public virtual void SetPropertyValue(string propertyTypeAlias, HttpPostedFileBase value)
+        //{
+        //    ContentExtensions.SetValue(this, propertyTypeAlias, value);
+        //}
 
         /// <summary>
         /// Private method to set the value of a property

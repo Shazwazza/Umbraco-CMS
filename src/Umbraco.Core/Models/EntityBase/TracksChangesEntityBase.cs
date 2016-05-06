@@ -5,13 +5,16 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
+using Umbraco.Core.Plugins;
 
 namespace Umbraco.Core.Models.EntityBase
 {
     /// <summary>
     /// A base class for use to implement IRememberBeingDirty/ICanBeDirty
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     public abstract class TracksChangesEntityBase : IRememberBeingDirty
     {

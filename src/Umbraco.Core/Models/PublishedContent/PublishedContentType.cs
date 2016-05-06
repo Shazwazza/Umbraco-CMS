@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Umbraco.Core.Cache;
 
 namespace Umbraco.Core.Models.PublishedContent
 {
@@ -10,7 +9,7 @@ namespace Umbraco.Core.Models.PublishedContent
     /// </summary>
     /// <remarks>Instances of the <see cref="PublishedContentType"/> class are immutable, ie
     /// if the content type changes, then a new class needs to be created.</remarks>
-    public class PublishedContentType
+    public class PublishedContentType : IPublishedContentType
     {
         private readonly PublishedPropertyType[] _propertyTypes;
         private readonly HashSet<string> _compositionAliases;
@@ -25,7 +24,7 @@ namespace Umbraco.Core.Models.PublishedContent
         {
             Id = contentType.Id;
             Alias = contentType.Alias;
-            _compositionAliases = new HashSet<string>(contentType.CompositionAliases(), StringComparer.InvariantCultureIgnoreCase);
+            _compositionAliases = new HashSet<string>(contentType.CompositionAliases(), StringComparer.OrdinalIgnoreCase);
             _propertyTypes = contentType.CompositionPropertyTypes
                 .Select(x => new PublishedPropertyType(this, x))
                 .ToArray();
@@ -37,7 +36,7 @@ namespace Umbraco.Core.Models.PublishedContent
         {
             Id = id;
             Alias = alias;
-            _compositionAliases = new HashSet<string>(compositionAliases, StringComparer.InvariantCultureIgnoreCase);
+            _compositionAliases = new HashSet<string>(compositionAliases, StringComparer.OrdinalIgnoreCase);
             _propertyTypes = propertyTypes.ToArray();
             foreach (var propertyType in _propertyTypes)
                 propertyType.ContentType = this;

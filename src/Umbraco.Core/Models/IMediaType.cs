@@ -1,5 +1,4 @@
-﻿using Umbraco.Core.Persistence.Mappers;
-
+﻿
 namespace Umbraco.Core.Models
 {
     /// <summary>

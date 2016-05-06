@@ -5,7 +5,9 @@ namespace Umbraco.Core.Sync
     /// <summary>
     /// Describes <see cref="RefreshInstruction"/> refresh action type.
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     public enum RefreshMethodType
     {
         // NOTE

@@ -1,15 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization;
-using System.Text;
-using Umbraco.Core.Configuration;
-using Umbraco.Core.Configuration.UmbracoSettings;
-using Umbraco.Core.IO;
-using Umbraco.Core.Models.EntityBase;
-using Umbraco.Core.Services;
 using Umbraco.Core.Strings;
 
 namespace Umbraco.Core.Models
@@ -17,7 +8,9 @@ namespace Umbraco.Core.Models
     /// <summary>
     /// Represents a Template file
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     public class Template : File, ITemplate
     {

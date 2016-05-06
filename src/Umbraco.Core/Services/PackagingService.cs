@@ -1152,7 +1152,7 @@ namespace Umbraco.Core.Services
         {
             return translations.All(t =>
                 String.Compare(t.Language.IsoCode, valueElement.Attribute("LanguageCultureAlias").Value,
-                    StringComparison.InvariantCultureIgnoreCase) != 0
+                    StringComparison.OrdinalIgnoreCase) != 0
                 );
         }
 

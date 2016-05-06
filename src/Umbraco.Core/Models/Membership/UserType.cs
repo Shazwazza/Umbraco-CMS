@@ -12,7 +12,9 @@ namespace Umbraco.Core.Models.Membership
     /// <summary>
     /// Represents the Type for a Backoffice User
     /// </summary>    
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     internal class UserType : Entity, IUserType
     {

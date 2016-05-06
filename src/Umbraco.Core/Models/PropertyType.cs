@@ -13,7 +13,9 @@ namespace Umbraco.Core.Models
     /// <summary>
     /// Defines the type of a <see cref="Property"/> object
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     [DebuggerDisplay("Id: {Id}, Name: {Name}, Alias: {Alias}")]
     public class PropertyType : Entity, IEquatable<PropertyType>
@@ -419,7 +421,7 @@ namespace Umbraco.Core.Models
             }
 
             //Fallback for simple value types when no Control Id or Database Type is set
-            if (type.IsPrimitive || value is string)
+            if (type.GetTypeInfo().IsPrimitive || value is string)
                 return true;
 
             return false;

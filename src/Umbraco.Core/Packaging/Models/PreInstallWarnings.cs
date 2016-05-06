@@ -5,7 +5,9 @@ using Umbraco.Core.Models;
 
 namespace Umbraco.Core.Packaging.Models
 {
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     internal class PreInstallWarnings
     {

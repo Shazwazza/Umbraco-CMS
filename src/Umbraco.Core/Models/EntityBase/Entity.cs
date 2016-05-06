@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 
 namespace Umbraco.Core.Models.EntityBase
@@ -11,7 +10,9 @@ namespace Umbraco.Core.Models.EntityBase
     /// <summary>
     /// Base Abstract Entity
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     [DebuggerDisplay("Id: {Id}")]
     public abstract class Entity : TracksChangesEntityBase, IEntity, IRememberBeingDirty, ICanBeDirty

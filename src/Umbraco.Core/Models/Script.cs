@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Runtime.Serialization;
-using Umbraco.Core.Configuration.UmbracoSettings;
-using Umbraco.Core.IO;
 
 namespace Umbraco.Core.Models
 {
     /// <summary>
     /// Represents a Script file
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     public class Script : File
     {

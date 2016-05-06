@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using Umbraco.Core.CodeAnnotations;
 
 namespace Umbraco.Core.Models
@@ -54,12 +56,8 @@ namespace Umbraco.Core.Models
                 {
                     var type = typeof(UmbracoObjectTypes);
                     var memInfo = type.GetMember(umbracoObjectType.ToString());
-                    var attributes = memInfo[0].GetCustomAttributes(typeof(UmbracoObjectTypeAttribute),
-                        false);
-
-                    if (attributes.Length == 0)
-                        return Guid.Empty;
-
+                    var attributes = memInfo[0].GetCustomAttributes(typeof(UmbracoObjectTypeAttribute), false).ToArray();
+                    
                     var attribute = ((UmbracoObjectTypeAttribute)attributes[0]);
                     if (attribute == null)
                         return Guid.Empty;
@@ -87,8 +85,7 @@ namespace Umbraco.Core.Models
         {
             var type = typeof(UmbracoObjectTypes);
             var memInfo = type.GetMember(umbracoObjectType.ToString());
-            var attributes = memInfo[0].GetCustomAttributes(typeof(FriendlyNameAttribute),
-                false);
+            var attributes = memInfo[0].GetCustomAttributes(typeof(FriendlyNameAttribute), false).ToArray();
 
             if (attributes.Length == 0)
                 return string.Empty;

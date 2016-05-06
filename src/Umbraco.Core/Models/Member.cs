@@ -10,7 +10,9 @@ namespace Umbraco.Core.Models
     /// <summary>
     /// Represents a Member object
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     public class Member : ContentBase, IMember
     {

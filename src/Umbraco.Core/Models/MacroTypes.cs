@@ -6,7 +6,9 @@ namespace Umbraco.Core.Models
     /// <summary>
     /// Enum for the various types of Macros
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     public enum MacroTypes
     {

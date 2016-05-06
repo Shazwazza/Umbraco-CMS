@@ -110,7 +110,7 @@ namespace Umbraco.Core.Packaging
             {
                 string fileName = Path.GetFileName(zipEntry.Name);
 
-                int index = retVal.FindIndex(f => f.Equals(fileName, StringComparison.InvariantCultureIgnoreCase));
+                int index = retVal.FindIndex(f => f.Equals(fileName, StringComparison.OrdinalIgnoreCase));
 
                 if (index != -1) { retVal.RemoveAt(index); }
 

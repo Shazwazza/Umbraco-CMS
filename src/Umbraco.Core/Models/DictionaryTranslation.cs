@@ -2,14 +2,15 @@
 using System.Reflection;
 using System.Runtime.Serialization;
 using Umbraco.Core.Models.EntityBase;
-using Umbraco.Core.Persistence.Mappers;
 
 namespace Umbraco.Core.Models
 {
     /// <summary>
     /// Represents a translation for a <see cref="DictionaryItem"/>
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     public class DictionaryTranslation : Entity, IDictionaryTranslation
     {

@@ -7,7 +7,7 @@ namespace Umbraco.Core
     /// </summary>
     /// <typeparam name="T">The type of the attempted operation result.</typeparam>
 #if NET461
-    [Serializable]
+    [Serializable] 
 #endif
     public struct Attempt<T>
 	{

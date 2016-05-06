@@ -11,7 +11,9 @@ namespace Umbraco.Core.Models
     /// <summary>
     /// A group of property types, which corresponds to the properties grouped under a Tab.
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     [DebuggerDisplay("Id: {Id}, Name: {Name}")]
     public class PropertyGroup : Entity, IEquatable<PropertyGroup>

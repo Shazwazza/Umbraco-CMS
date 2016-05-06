@@ -12,7 +12,9 @@ namespace Umbraco.Core.Models
     /// <summary>
     /// Represents a collection of <see cref="PropertyType"/> objects
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract]
     public class PropertyTypeCollection : KeyedCollection<string, PropertyType>, INotifyCollectionChanged, IDeepCloneable
     {

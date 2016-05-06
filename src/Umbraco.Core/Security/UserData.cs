@@ -7,7 +7,9 @@ namespace Umbraco.Core.Security
     /// Data structure used to store information in the authentication cookie
     /// </summary>
     [DataContract(Name = "userData", Namespace = "")]
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     public class UserData
     {
         public UserData()

@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Runtime.Serialization;
-using Umbraco.Core.IO;
+using Umbraco.Core.Exceptions;
 using Umbraco.Core.Strings.Css;
 
 namespace Umbraco.Core.Models
@@ -12,7 +12,9 @@ namespace Umbraco.Core.Models
     /// <summary>
     /// Represents a Stylesheet file
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     public class Stylesheet : File
     {
@@ -133,8 +135,8 @@ namespace Umbraco.Core.Models
         public void AddProperty(StylesheetProperty property)
         {
             if (Properties.Any(x => x.Name.InvariantEquals(property.Name)))
-            {
-                throw new DuplicateNameException("The property with the name " + property.Name + " already exists in the collection");
+            {                
+                throw new DuplicateItemException("The property with the name " + property.Name + " already exists in the collection");
             }
 
             //now we need to serialize out the new property collection over-top of the string Content. 

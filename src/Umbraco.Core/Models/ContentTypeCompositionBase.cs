@@ -10,7 +10,9 @@ namespace Umbraco.Core.Models
     /// <summary>
     /// Represents an abstract class for composition specific ContentType properties and methods
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     public abstract class ContentTypeCompositionBase : ContentTypeBase, IContentTypeComposition
     {
@@ -95,7 +97,7 @@ namespace Umbraco.Core.Models
                 //end up with duplicate PropertyType aliases - in which case we throw an exception.
                 var conflictingPropertyTypeAliases = CompositionPropertyTypes.SelectMany(
                     x => contentType.CompositionPropertyTypes
-                        .Where(y => y.Alias.Equals(x.Alias, StringComparison.InvariantCultureIgnoreCase))
+                        .Where(y => y.Alias.Equals(x.Alias, StringComparison.OrdinalIgnoreCase))
                         .Select(p => p.Alias)).ToList();
 
                 if (conflictingPropertyTypeAliases.Any())

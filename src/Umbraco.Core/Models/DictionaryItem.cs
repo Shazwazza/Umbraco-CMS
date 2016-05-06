@@ -10,7 +10,9 @@ namespace Umbraco.Core.Models
     /// <summary>
     /// Represents a Dictionary Item
     /// </summary>
-    [Serializable]
+#if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     public class DictionaryItem : Entity, IDictionaryItem
     {

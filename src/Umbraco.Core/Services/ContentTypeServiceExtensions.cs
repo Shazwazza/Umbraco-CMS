@@ -89,7 +89,7 @@ namespace Umbraco.Core.Services
                     //ensure that we don't return if there's any overlapping property aliases from the filtered ones specified
                     return filterPropertyTypes.Intersect(
                         x.PropertyTypes.Select(p => p.Alias), 
-                        StringComparer.InvariantCultureIgnoreCase).Any() == false;
+                        StringComparer.OrdinalIgnoreCase).Any() == false;
                 })
                 .OrderBy(x => x.Name)                
                 .ToList();

@@ -121,7 +121,9 @@ namespace Umbraco.Core.Persistence.FaultHandling
     /// <summary>
     /// Implements an object holding the decoded reason code returned from SQL Azure when encountering throttling conditions.
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     public class ThrottlingCondition
     {
         /// <summary>

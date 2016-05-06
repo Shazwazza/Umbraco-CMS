@@ -574,7 +574,7 @@ namespace Umbraco.Core.Services
             var snippetPath = IOHelper.MapPath(string.Format("{0}/PartialViewMacros/Templates/", SystemDirectories.Umbraco));
             var files = Directory.GetFiles(snippetPath, "*.cshtml")
                 .Select(Path.GetFileNameWithoutExtension)
-                .Except(filterNames, StringComparer.InvariantCultureIgnoreCase)
+                .Except(filterNames, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
 
             //Ensure the ones that are called 'Empty' are at the top

@@ -207,14 +207,14 @@ namespace Umbraco.Core.Persistence.Migrations.Initial
 
             //Foreign keys:
 
-            var validForeignKeyDifferences = foreignKeysInDatabase.Intersect(foreignKeysInSchema, StringComparer.InvariantCultureIgnoreCase);
+            var validForeignKeyDifferences = foreignKeysInDatabase.Intersect(foreignKeysInSchema, StringComparer.OrdinalIgnoreCase);
             foreach (var foreignKey in validForeignKeyDifferences)
             {
                 result.ValidConstraints.Add(foreignKey);
             }
             var invalidForeignKeyDifferences =
-                foreignKeysInDatabase.Except(foreignKeysInSchema, StringComparer.InvariantCultureIgnoreCase)
-                                .Union(foreignKeysInSchema.Except(foreignKeysInDatabase, StringComparer.InvariantCultureIgnoreCase));
+                foreignKeysInDatabase.Except(foreignKeysInSchema, StringComparer.OrdinalIgnoreCase)
+                                .Union(foreignKeysInSchema.Except(foreignKeysInDatabase, StringComparer.OrdinalIgnoreCase));
             foreach (var foreignKey in invalidForeignKeyDifferences)
             {
                 result.Errors.Add(new Tuple<string, string>("Constraint", foreignKey));
@@ -224,14 +224,14 @@ namespace Umbraco.Core.Persistence.Migrations.Initial
             //Primary keys:
 
             //Add valid and invalid primary key differences to the result object
-            var validPrimaryKeyDifferences = primaryKeysInDatabase.Intersect(primaryKeysInSchema, StringComparer.InvariantCultureIgnoreCase);
+            var validPrimaryKeyDifferences = primaryKeysInDatabase.Intersect(primaryKeysInSchema, StringComparer.OrdinalIgnoreCase);
             foreach (var primaryKey in validPrimaryKeyDifferences)
             {
                 result.ValidConstraints.Add(primaryKey);
             }
             var invalidPrimaryKeyDifferences =
-                primaryKeysInDatabase.Except(primaryKeysInSchema, StringComparer.InvariantCultureIgnoreCase)
-                                .Union(primaryKeysInSchema.Except(primaryKeysInDatabase, StringComparer.InvariantCultureIgnoreCase));
+                primaryKeysInDatabase.Except(primaryKeysInSchema, StringComparer.OrdinalIgnoreCase)
+                                .Union(primaryKeysInSchema.Except(primaryKeysInDatabase, StringComparer.OrdinalIgnoreCase));
             foreach (var primaryKey in invalidPrimaryKeyDifferences)
             {
                 result.Errors.Add(new Tuple<string, string>("Constraint", primaryKey));
@@ -242,14 +242,14 @@ namespace Umbraco.Core.Persistence.Migrations.Initial
             //NOTE: SD: The colIndex checks above should really take care of this but I need to keep this here because it was here before
             // and some schema validation checks might rely on this data remaining here!
             //Add valid and invalid index differences to the result object
-            var validIndexDifferences = indexesInDatabase.Intersect(indexesInSchema, StringComparer.InvariantCultureIgnoreCase);
+            var validIndexDifferences = indexesInDatabase.Intersect(indexesInSchema, StringComparer.OrdinalIgnoreCase);
             foreach (var index in validIndexDifferences)
             {
                 result.ValidConstraints.Add(index);
             }
             var invalidIndexDifferences =
-                indexesInDatabase.Except(indexesInSchema, StringComparer.InvariantCultureIgnoreCase)
-                                .Union(indexesInSchema.Except(indexesInDatabase, StringComparer.InvariantCultureIgnoreCase));
+                indexesInDatabase.Except(indexesInSchema, StringComparer.OrdinalIgnoreCase)
+                                .Union(indexesInSchema.Except(indexesInDatabase, StringComparer.OrdinalIgnoreCase));
             foreach (var index in invalidIndexDifferences)
             {
                 result.Errors.Add(new Tuple<string, string>("Constraint", index));
@@ -263,15 +263,15 @@ namespace Umbraco.Core.Persistence.Migrations.Initial
             var columnsPerTableInDatabase = columnsInDatabase.Select(x => string.Concat(x.TableName, ",", x.ColumnName)).ToList();
             var columnsPerTableInSchema = result.TableDefinitions.SelectMany(x => x.Columns.Select(y => string.Concat(y.TableName, ",", y.Name))).ToList();
             //Add valid and invalid column differences to the result object
-            var validColumnDifferences = columnsPerTableInDatabase.Intersect(columnsPerTableInSchema, StringComparer.InvariantCultureIgnoreCase);
+            var validColumnDifferences = columnsPerTableInDatabase.Intersect(columnsPerTableInSchema, StringComparer.OrdinalIgnoreCase);
             foreach (var column in validColumnDifferences)
             {
                 result.ValidColumns.Add(column);
             }
 
             var invalidColumnDifferences =
-                columnsPerTableInDatabase.Except(columnsPerTableInSchema, StringComparer.InvariantCultureIgnoreCase)
-                                .Union(columnsPerTableInSchema.Except(columnsPerTableInDatabase, StringComparer.InvariantCultureIgnoreCase));
+                columnsPerTableInDatabase.Except(columnsPerTableInSchema, StringComparer.OrdinalIgnoreCase)
+                                .Union(columnsPerTableInSchema.Except(columnsPerTableInDatabase, StringComparer.OrdinalIgnoreCase));
             foreach (var column in invalidColumnDifferences)
             {
                 result.Errors.Add(new Tuple<string, string>("Column", column));
@@ -284,15 +284,15 @@ namespace Umbraco.Core.Persistence.Migrations.Initial
             var tablesInDatabase = SqlSyntax.GetTablesInSchema(_database).ToList();
             var tablesInSchema = result.TableDefinitions.Select(x => x.Name).ToList();
             //Add valid and invalid table differences to the result object
-            var validTableDifferences = tablesInDatabase.Intersect(tablesInSchema, StringComparer.InvariantCultureIgnoreCase);
+            var validTableDifferences = tablesInDatabase.Intersect(tablesInSchema, StringComparer.OrdinalIgnoreCase);
             foreach (var tableName in validTableDifferences)
             {
                 result.ValidTables.Add(tableName);
             }
 
             var invalidTableDifferences =
-                tablesInDatabase.Except(tablesInSchema, StringComparer.InvariantCultureIgnoreCase)
-                                .Union(tablesInSchema.Except(tablesInDatabase, StringComparer.InvariantCultureIgnoreCase));
+                tablesInDatabase.Except(tablesInSchema, StringComparer.OrdinalIgnoreCase)
+                                .Union(tablesInSchema.Except(tablesInDatabase, StringComparer.OrdinalIgnoreCase));
             foreach (var tableName in invalidTableDifferences)
             {
                 result.Errors.Add(new Tuple<string, string>("Table", tableName));
@@ -307,15 +307,15 @@ namespace Umbraco.Core.Persistence.Migrations.Initial
             var indexesInSchema = result.TableDefinitions.SelectMany(x => x.Indexes.Select(y => y.Name)).ToList();
 
             //Add valid and invalid index differences to the result object
-            var validColIndexDifferences = colIndexesInDatabase.Intersect(indexesInSchema, StringComparer.InvariantCultureIgnoreCase);
+            var validColIndexDifferences = colIndexesInDatabase.Intersect(indexesInSchema, StringComparer.OrdinalIgnoreCase);
             foreach (var index in validColIndexDifferences)
             {
                 result.ValidIndexes.Add(index);
             }
 
             var invalidColIndexDifferences =
-                colIndexesInDatabase.Except(indexesInSchema, StringComparer.InvariantCultureIgnoreCase)
-                                .Union(indexesInSchema.Except(colIndexesInDatabase, StringComparer.InvariantCultureIgnoreCase));
+                colIndexesInDatabase.Except(indexesInSchema, StringComparer.OrdinalIgnoreCase)
+                                .Union(indexesInSchema.Except(colIndexesInDatabase, StringComparer.OrdinalIgnoreCase));
             foreach (var index in invalidColIndexDifferences)
             {
                 result.Errors.Add(new Tuple<string, string>("Index", index));

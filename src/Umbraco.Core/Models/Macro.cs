@@ -7,7 +7,6 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
-using Umbraco.Core.IO;
 using Umbraco.Core.Models.EntityBase;
 using Umbraco.Core.Strings;
 
@@ -16,7 +15,9 @@ namespace Umbraco.Core.Models
     /// <summary>
     /// Represents a Macro
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     public class Macro : Entity, IMacro
     {

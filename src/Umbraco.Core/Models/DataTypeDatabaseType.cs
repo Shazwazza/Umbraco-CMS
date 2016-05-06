@@ -10,7 +10,9 @@ namespace Umbraco.Core.Models
     /// Object is added to support complex values from PropertyEditors, 
     /// but will be saved under the Ntext column.
     /// </remarks>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract]
     public enum DataTypeDatabaseType
     {

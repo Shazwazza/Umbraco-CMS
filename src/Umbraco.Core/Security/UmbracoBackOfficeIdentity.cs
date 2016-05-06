@@ -20,7 +20,9 @@ namespace Umbraco.Core.Security
     /// This inherits from FormsIdentity for backwards compatibility reasons since we still support the forms auth cookie, in v8 we can
     /// change over to 'pure' asp.net identity and just inherit from ClaimsIdentity.
     /// </remarks>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     public class UmbracoBackOfficeIdentity : FormsIdentity
     {
         public static UmbracoBackOfficeIdentity FromClaimsIdentity(ClaimsIdentity identity)

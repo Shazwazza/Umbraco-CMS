@@ -7,6 +7,7 @@ namespace Umbraco.Core
     {
         public static void SanitizeThreadCulture(this Thread thread)
         {
+#if NET461
             // get the current culture
             var currentCulture = CultureInfo.CurrentCulture;
 
@@ -45,7 +46,8 @@ namespace Umbraco.Core
             // the same name, but obtained here and now, with a proper invariant top culture
 
             thread.CurrentCulture = CultureInfo.GetCultureInfo(thread.CurrentCulture.Name);
-            thread.CurrentUICulture = CultureInfo.GetCultureInfo(thread.CurrentUICulture.Name);
+            thread.CurrentUICulture = CultureInfo.GetCultureInfo(thread.CurrentUICulture.Name); 
+#endif
         }
     }
 }

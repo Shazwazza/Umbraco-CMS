@@ -14,7 +14,9 @@ namespace Umbraco.Core.Models
     /// <summary>
     /// Represents an abstract class for base ContentType properties and methods
     /// </summary>
-    [Serializable]
+    #if NET461
+    [Serializable] 
+#endif
     [DataContract(IsReference = true)]
     [DebuggerDisplay("Id: {Id}, Name: {Name}, Alias: {Alias}")]
     public abstract class ContentTypeBase : Entity, IContentTypeBase
