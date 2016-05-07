@@ -26,6 +26,11 @@ namespace Umbraco.Core.Models.Identity
         }
 
         /// <summary>
+        /// Gets or sets the friendly name used in a UI for this login.
+        /// </summary>
+        public string ProviderDisplayName { get; set; }
+
+        /// <summary>
         /// The login provider for the login (i.e. facebook, google)
         /// 
         /// </summary>

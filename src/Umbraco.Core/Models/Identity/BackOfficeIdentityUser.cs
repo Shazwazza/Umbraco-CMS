@@ -4,29 +4,19 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Identity;
 using Umbraco.Core.Security;
 
 namespace Umbraco.Core.Models.Identity
 {
-    public class BackOfficeIdentityUser : IdentityUser<int, IIdentityUserLogin, IdentityUserRole<string>, IdentityUserClaim<int>>
+    public class BackOfficeIdentityUser : IdentityUser<int>
     {
-
         public BackOfficeIdentityUser()
         {
             StartMediaId = -1;
             StartContentId = -1;
-            Culture = Configuration.GlobalSettings.DefaultUILanguage;
+            //Culture = Configuration.GlobalSettings.DefaultUILanguage;
         }
-
-        public virtual async Task<ClaimsIdentity> GenerateUserIdentityAsync(BackOfficeUserManager manager)
-        {
-            // NOTE the authenticationType must match the umbraco one
-            // defined in CookieAuthenticationOptions.AuthenticationType
-            var userIdentity = await manager.CreateIdentityAsync(this, Constants.Security.BackOfficeAuthenticationType);
-            return userIdentity;
-        }
-
+        
         /// <summary>
         /// Gets/sets the user's real name
         /// </summary>
@@ -57,7 +47,7 @@ namespace Umbraco.Core.Models.Identity
         {
             get
             {
-                var isLocked = (LockoutEndDateUtc.HasValue && LockoutEndDateUtc.Value.ToLocalTime() >= DateTime.Now);
+                var isLocked = (LockoutEnd.HasValue && LockoutEnd.Value.ToLocalTime() >= DateTime.Now);
                 return isLocked;
             }
         }

@@ -30,14 +30,14 @@ namespace Umbraco.Core.Persistence
             return Constants.DbProviderNames.SqlServer;
         }
 
-        public static bool IsConnectionAvailable(string connectionString, string providerName)
+        public static bool IsConnectionAvailable(string connectionString, string providerName, IDbProviderFactories dbProviderFactories)
         {
             if (providerName != Constants.DbProviderNames.SqlCe
                 && providerName != Constants.DbProviderNames.MySql
                 && providerName != Constants.DbProviderNames.SqlServer)
                 throw new NotSupportedException($"Provider \"{providerName}\" is not supported.");
 
-            var factory = DbProviderFactories.GetFactory(providerName);
+            var factory = dbProviderFactories.GetFactory(providerName);
             var conn = factory.CreateConnection();
 
             if (conn == null)
@@ -50,7 +50,7 @@ namespace Umbraco.Core.Persistence
             }
         }
 
-        public static bool IsAvailable(this IDbConnection connection)
+        public static bool IsAvailable(this DbConnection connection)
         {
             try
             {
@@ -60,7 +60,7 @@ namespace Umbraco.Core.Persistence
             catch (DbException e)
             {
                 // Don't swallow this error, the exception is super handy for knowing "why" its not available
-                LogHelper.WarnWithException<IDbConnection>("Configured database is reporting as not being available!", e);
+                LogHelper.WarnWithException<DbConnection>("Configured database is reporting as not being available!", e);
                 return false;
             }
 

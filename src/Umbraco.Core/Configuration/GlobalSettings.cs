@@ -3,16 +3,10 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using System.Web;
-using System.Web.Configuration;
-using System.Web.Hosting;
-using System.Web.Routing;
-using System.Web.Security;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
-using Umbraco.Core.IO;
 using Umbraco.Core.Logging;
-using Umbraco.Core.Security;
 
 namespace Umbraco.Core.Configuration
 {

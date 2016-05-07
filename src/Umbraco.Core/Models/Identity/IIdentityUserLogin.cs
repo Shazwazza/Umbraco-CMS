@@ -5,6 +5,11 @@ namespace Umbraco.Core.Models.Identity
     public interface IIdentityUserLogin : IAggregateRoot, IRememberBeingDirty, ICanBeDirty
     {
         /// <summary>
+        /// Gets or sets the friendly name used in a UI for this login.
+        /// </summary>
+        string ProviderDisplayName { get; set; }
+
+        /// <summary>
         /// The login provider for the login (i.e. facebook, google)
         /// 
         /// </summary>

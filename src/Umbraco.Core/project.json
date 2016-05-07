@@ -27,8 +27,9 @@
     "Models/PropertyExtensions.cs",
     "Models/MediaExtensions.cs",
     "Models/UserExtensions.cs",
-    "Models/Identity/**/*.*",
+
     "Models/Mapping/**/*.*",
+    "Models/Identity/**/*.*",
     "Models/Membership/**/*.*",
     "Models/PublishedContent/**/*.*",
 
@@ -55,7 +56,15 @@
     "Xml/**/*.*"
   ],
   "compileFiles": [
+    "Configuration/IUmbracoSettings.cs",
+
     "Models/Membership/IMembershipUser.cs",
+    "Models/Identity/BackOfficeIdentityUser.cs",
+    "Models/Identity/IdentityUser.cs",
+    "Models/Identity/IdentityUserClaim.cs",
+    "Models/Identity/IdentityUserLogin.cs",
+    "Models/Identity/IdentityUserRole.cs",
+    "Models/Identity/IIdentityUserLogin.cs",
 
     "Models/PublishedContent/IPublishedContentType.cs",
     "Models/PublishedContent/IPublishedPropertyType.cs",
@@ -72,14 +81,22 @@
 
     "Sync/IServerAddress.cs",
 
+    "Security/BackOfficeUserManager.cs",
+    "Security/IBackOfficeUserPasswordChecker.cs",
+    "Security/BackOfficeUserPasswordCheckerResult.cs",
+
     "Persistence/SqlContext.cs",
     "Persistence/UmbracoDatabase.cs",
     "Persistence/IUmbracoDatabaseConfig.cs",
+    "Persistence/IDbProviderFactories.cs",
+    "Persistence/DefaultDatabaseFactory.cs",
+    "Persistence/DbConnectionExtensions.cs",
     "Persistence/IDatabaseFactory.cs",
     "Persistence/Querying/TextColumnType.cs",
     "Persistence/Constants-DbProviderNames.cs",
     "Persistence/NPocoDatabaseExtensions.cs",
     "Persistence/RecordPersistenceType.cs",
+    "Persistence/Mappers/PocoMapper.cs",
 
     "IDisposeOnRequestEnd.cs",
     "StringExtensions.cs",
@@ -148,6 +165,7 @@
     "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc1-final",
     "Microsoft.Extensions.Logging": "1.0.0-rc1-final",
     "System.Security.Cryptography.Algorithms": "4.0.0-beta-*",
+    "Microsoft.AspNet.Identity": "3.0.0-rc1-final",
     "ReflectionBridge": "0.0.9",
     "System.Xml.XDocument": "4.0.11-beta-*",
     "System.Xml.XmlDocument": "4.0.1-beta-*",

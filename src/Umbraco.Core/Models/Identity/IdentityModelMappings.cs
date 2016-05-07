@@ -14,7 +14,7 @@ namespace Umbraco.Core.Models.Identity
             config.CreateMap<IUser, BackOfficeIdentityUser>()
                 .ForMember(user => user.Email, expression => expression.MapFrom(user => user.Email))
                 .ForMember(user => user.Id, expression => expression.MapFrom(user => user.Id))
-                .ForMember(user => user.LockoutEndDateUtc, expression => expression.MapFrom(user => user.IsLockedOut ? DateTime.MaxValue.ToUniversalTime() : (DateTime?) null))
+                .ForMember(user => user.LockoutEnd, expression => expression.MapFrom(user => user.IsLockedOut ? DateTime.MaxValue.ToUniversalTime() : (DateTime?) null))
                 .ForMember(user => user.UserName, expression => expression.MapFrom(user => user.Username))
                 .ForMember(user => user.PasswordHash, expression => expression.MapFrom(user => GetPasswordHash(user.RawPasswordValue)))
                 .ForMember(user => user.Culture, expression => expression.MapFrom(user => user.GetUserCulture(applicationContext.Services.TextService)))

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data.Common;
 using System.Linq;
 using System.Threading;
@@ -27,6 +26,7 @@ namespace Umbraco.Core.Persistence
     internal class DefaultDatabaseFactory : DisposableObject, IDatabaseFactory
     {
         private readonly IScopeContextAdapter _scopeContextAdapter;
+        private readonly IDbProviderFactories _dbProviderFactories;
         private readonly ISqlSyntaxProvider[] _sqlSyntaxProviders;
         private readonly ILogger _logger;
 
@@ -58,40 +58,26 @@ namespace Umbraco.Core.Persistence
         /// <param name="sqlSyntaxProviders">The collection of available sql syntax providers.</param>
         /// <param name="logger">A logger.</param>
         /// <param name="scopeContextAdapter"></param>
+        /// <param name="connectionString"></param>
+        /// <param name="dbProviderFactories"></param>
         /// <remarks>Used by LightInject.</remarks>
-        public DefaultDatabaseFactory(IEnumerable<ISqlSyntaxProvider> sqlSyntaxProviders, ILogger logger, IScopeContextAdapter scopeContextAdapter)
-            : this(GlobalSettings.UmbracoConnectionName, sqlSyntaxProviders, logger, scopeContextAdapter)
-        {
-            if (Configured == false)
-                DatabaseContext.GiveLegacyAChance(this, logger);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DefaultDatabaseFactory"/> with a connection string name and a logger.
-        /// </summary>
-        /// <param name="connectionStringName">The name of the connection string in web.config.</param>
-        /// <param name="sqlSyntaxProviders">The collection of available sql syntax providers.</param>
-        /// <param name="logger">A logger</param>
-        /// <param name="scopeContextAdapter"></param>
-        /// <remarks>Used by the other ctor and in tests.</remarks>
-        public DefaultDatabaseFactory(string connectionStringName, IEnumerable<ISqlSyntaxProvider> sqlSyntaxProviders, ILogger logger, IScopeContextAdapter scopeContextAdapter)
-        {
+        public DefaultDatabaseFactory(IEnumerable<ISqlSyntaxProvider> sqlSyntaxProviders, ILogger logger, IScopeContextAdapter scopeContextAdapter, IConnectionString connectionString, IDbProviderFactories dbProviderFactories)
+        {         
             if (sqlSyntaxProviders == null) throw new ArgumentNullException(nameof(sqlSyntaxProviders));
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             if (scopeContextAdapter == null) throw new ArgumentNullException(nameof(scopeContextAdapter));
-            if (string.IsNullOrWhiteSpace(connectionStringName)) throw new ArgumentException("Value cannot be null nor empty.", nameof(connectionStringName));
+            if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
+            if (dbProviderFactories == null) throw new ArgumentNullException(nameof(dbProviderFactories));
+
 
             _sqlSyntaxProviders = sqlSyntaxProviders.ToArray();
             _logger = logger;
             _scopeContextAdapter = scopeContextAdapter;
+            _dbProviderFactories = dbProviderFactories;
 
             _logger.Debug<DefaultDatabaseFactory>("Created!");
 
-            var settings = ConfigurationManager.ConnectionStrings[connectionStringName];
-            if (settings == null)
-                return; // not configured
-
-            Configure(settings.ConnectionString, settings.ProviderName);
+            Configure(connectionString.ConnectionString, connectionString.ProviderName);
         }
 
         /// <summary>
@@ -138,7 +124,7 @@ namespace Umbraco.Core.Persistence
                 _connectionRetryPolicy = RetryPolicyFactory.GetDefaultSqlConnectionRetryPolicyByConnectionString(_connectionString);
                 _commandRetryPolicy = RetryPolicyFactory.GetDefaultSqlCommandRetryPolicyByConnectionString(_connectionString);
 
-                _dbProviderFactory = DbProviderFactories.GetFactory(_providerName);
+                _dbProviderFactory = _dbProviderFactories.GetFactory(_providerName);
                 if (_dbProviderFactory == null)
                     throw new Exception($"Can't find a provider factory for provider name \"{_providerName}\".");
                 _databaseType = DatabaseType.Resolve(_dbProviderFactory.GetType().Name, _providerName);
@@ -188,7 +174,7 @@ namespace Umbraco.Core.Persistence
         /// Gets a value indicating whether it is possible to connect to the database.
         /// </summary>
         /// <returns></returns>
-        public bool CanConnect => Configured && DbConnectionExtensions.IsConnectionAvailable(_connectionString, _providerName);
+        public bool CanConnect => Configured && DbConnectionExtensions.IsConnectionAvailable(_connectionString, _providerName, _dbProviderFactories);
 
         private void EnsureConfigured()
         {
