@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 using LightInject;
 using Umbraco.Core.Logging;
-using Umbraco.Core.Security;
 
 namespace Umbraco.Core.ObjectResolution
 {
@@ -19,30 +16,7 @@ namespace Umbraco.Core.ObjectResolution
     {
         private readonly IServiceContainer _container;
 
-        //TODO: Get rid of these - pretty sure all tests will still fail with these pass throughs, need to update
-        // all tests that use resolvers to use a real container - then update most tests that are not integration tests to not use any resolvers!
-        #region Constructors used for test - ONLY so that a container is not required and will just revert to using the normal ManyObjectsResolverBase
-        [Obsolete("Used for tests only - should remove")]
-        internal ContainerManyObjectsResolver(ILogger logger, IEnumerable<Type> types, ObjectLifetimeScope scope = ObjectLifetimeScope.Application)
-            : base(logger, types, scope)
-        {
-        }
-        [Obsolete("Used for tests only - should remove")]
-        internal ContainerManyObjectsResolver(IServiceProvider serviceProvider, ILogger logger, ObjectLifetimeScope scope = ObjectLifetimeScope.Application)
-            : base(serviceProvider, logger, scope)
-        {
-        }
-        [Obsolete("Used for tests only - should remove")]
-        internal ContainerManyObjectsResolver(IServiceProvider serviceProvider, ILogger logger, HttpContextBase httpContext)
-            : base(serviceProvider, logger, httpContext)
-        {
-        }
-        [Obsolete("Used for tests only - should remove")]
-        internal ContainerManyObjectsResolver(IServiceProvider serviceProvider, ILogger logger, IEnumerable<Type> value, ObjectLifetimeScope scope = ObjectLifetimeScope.Application)
-            : base(serviceProvider, logger, value, scope)
-        {
-        } 
-        #endregion
+       
 
 
         /// <summary>

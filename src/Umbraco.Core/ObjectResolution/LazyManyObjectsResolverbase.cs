@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Web;
+using Microsoft.AspNet.Http;
 using Umbraco.Core.Logging;
 
 namespace Umbraco.Core.ObjectResolution
@@ -67,13 +66,13 @@ namespace Umbraco.Core.ObjectResolution
             _typeListProducerList.Add(typeListProducerList);
         }
 
-        protected LazyManyObjectsResolverBase(IServiceProvider serviceProvider, ILogger logger, HttpContextBase httpContext, IEnumerable<Lazy<Type>> lazyTypeList)
+        protected LazyManyObjectsResolverBase(IServiceProvider serviceProvider, ILogger logger, IHttpContextAccessor httpContext, IEnumerable<Lazy<Type>> lazyTypeList)
             : this(serviceProvider, logger, httpContext)
         {
             AddTypes(lazyTypeList);
         }
 
-        protected LazyManyObjectsResolverBase(IServiceProvider serviceProvider, ILogger logger, HttpContextBase httpContext, Func<IEnumerable<Type>> typeListProducerList)
+        protected LazyManyObjectsResolverBase(IServiceProvider serviceProvider, ILogger logger, IHttpContextAccessor httpContext, Func<IEnumerable<Type>> typeListProducerList)
             : this(serviceProvider, logger, httpContext)
         {
             _typeListProducerList.Add(typeListProducerList);
@@ -94,7 +93,7 @@ namespace Umbraco.Core.ObjectResolution
         /// <param name="logger"></param>
         /// <param name="httpContext">The HttpContextBase corresponding to the HttpRequest.</param>
         /// <exception cref="ArgumentNullException"><paramref name="httpContext"/> is <c>null</c>.</exception>
-        protected LazyManyObjectsResolverBase(IServiceProvider serviceProvider, ILogger logger, HttpContextBase httpContext)
+        protected LazyManyObjectsResolverBase(IServiceProvider serviceProvider, ILogger logger, IHttpContextAccessor httpContext)
             : base(serviceProvider, logger, httpContext)
         {
         }

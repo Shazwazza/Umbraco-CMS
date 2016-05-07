@@ -14,7 +14,7 @@ namespace Umbraco.Core.Models.Membership
     /// <summary>
     /// Represents a backoffice user
     /// </summary>    
-    #if NET461
+#if NET461
     [Serializable] 
 #endif
     [DataContract(IsReference = true)]
@@ -31,7 +31,7 @@ namespace Umbraco.Core.Models.Membership
             _sectionCollection = new ObservableCollection<string>();
             _addedSections = new List<string>();
             _removedSections = new List<string>();
-            _language = GlobalSettings.DefaultUILanguage;
+            //_language = GlobalSettings.DefaultUILanguage;
             _sectionCollection.CollectionChanged += SectionCollectionChanged;
             _isApproved = true;
             _isLockedOut = false;

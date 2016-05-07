@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
-using System.Web;
+using Microsoft.AspNet.Http;
 using Umbraco.Core.Logging;
+using Umbraco.Core.Plugins;
 
 namespace Umbraco.Core.ObjectResolution
 {
@@ -76,11 +77,8 @@ namespace Umbraco.Core.ObjectResolution
             if (logger == null) throw new ArgumentNullException("logger");
             CanResolveBeforeFrozen = false;
             if (scope == ObjectLifetimeScope.HttpRequest)
-            {
-                if (HttpContext.Current == null)
-                    throw new InvalidOperationException("Use alternative constructor accepting a HttpContextBase object in order to set the lifetime scope to HttpRequest when HttpContext.Current is null");
-
-                CurrentHttpContext = new HttpContextWrapper(HttpContext.Current);
+            {                
+                throw new InvalidOperationException("Use alternative constructor accepting a IHttpContextAccessor object in order to set the lifetime scope to HttpRequest");
             }
 
             ServiceProvider = serviceProvider;
@@ -101,7 +99,7 @@ namespace Umbraco.Core.ObjectResolution
         /// <param name="logger"></param>
         /// <param name="httpContext">The HttpContextBase corresponding to the HttpRequest.</param>
         /// <exception cref="ArgumentNullException"><paramref name="httpContext"/> is <c>null</c>.</exception>
-        protected ManyObjectsResolverBase(IServiceProvider serviceProvider, ILogger logger, HttpContextBase httpContext)
+        protected ManyObjectsResolverBase(IServiceProvider serviceProvider, ILogger logger, IHttpContextAccessor httpContext)
         {
             if (serviceProvider == null) throw new ArgumentNullException("serviceProvider");
             if (httpContext == null) throw new ArgumentNullException("httpContext");
@@ -152,10 +150,10 @@ namespace Umbraco.Core.ObjectResolution
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="HttpContextBase"/> used to initialize this object, if any.
+        /// Gets or sets the <see cref="IHttpContextAccessor"/> used to initialize this object, if any.
         /// </summary>
         /// <remarks>If not null, then <c>LifetimeScope</c> will be <c>ObjectLifetimeScope.HttpRequest</c>.</remarks>
-        protected HttpContextBase CurrentHttpContext { get; private set; }
+        protected IHttpContextAccessor CurrentHttpContext { get; private set; }
 
         /// <summary>
         /// Returns the service provider used to instantiate objects
@@ -238,18 +236,19 @@ namespace Umbraco.Core.ObjectResolution
                     case ObjectLifetimeScope.HttpRequest:
 
                         // create new instances per HttpContext
-                        if (CurrentHttpContext.Items[_httpContextKey] == null)
+                        if (CurrentHttpContext.HttpContext.Items[_httpContextKey] == null)
                         {
                             var instances = CreateInstances().ToArray();
                             var disposableInstances = instances.OfType<IDisposable>();
                             //Ensure anything resolved that is IDisposable is disposed when the request termintates
                             foreach (var disposable in disposableInstances)
                             {
-                                CurrentHttpContext.DisposeOnPipelineCompleted(disposable);
+                                throw new NotImplementedException("TODO: implement DisposeOnPipelineCompleted or fix this");
+                                //CurrentHttpContext.HttpContext.DisposeOnPipelineCompleted(disposable);
                             }
-                            CurrentHttpContext.Items[_httpContextKey] = instances;
+                            CurrentHttpContext.HttpContext.Items[_httpContextKey] = instances;
                         }
-                        return (TResolved[])CurrentHttpContext.Items[_httpContextKey];
+                        return (TResolved[])CurrentHttpContext.HttpContext.Items[_httpContextKey];
 
                     case ObjectLifetimeScope.Application:
 

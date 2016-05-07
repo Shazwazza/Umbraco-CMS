@@ -31,7 +31,7 @@ namespace Umbraco.Core
                 catch (Exception ex)
                 {
 
-                    logger.Error<PluginManager>(String.Format("Error creating type {0}", t.FullName), ex);
+                    logger.Error(typeof(ServiceProviderExtensions), string.Format("Error creating type {0}", t.FullName), ex);
 
                     if (throwException)
                     {

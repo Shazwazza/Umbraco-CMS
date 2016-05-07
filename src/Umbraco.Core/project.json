@@ -27,18 +27,15 @@
     "Models/PropertyExtensions.cs",
     "Models/MediaExtensions.cs",
     "Models/UserExtensions.cs",
-
     "Models/Mapping/**/*.*",
     "Models/Identity/**/*.*",
     "Models/Membership/**/*.*",
     "Models/PublishedContent/**/*.*",
 
-    "ObjectResolution/**/*.*",
     "Packaging/**/*.*",
 
     "Persistence/*.cs",
     "Persistence/Factories/**/*.*",
-    "Persistence/Mappers/**/*.*",
     "Persistence/Migrations/**/*.*",
     "Persistence/Querying/**/*.*",
     "Persistence/Repositories/**/*.*",
@@ -59,6 +56,14 @@
     "Configuration/IUmbracoSettings.cs",
 
     "Models/Membership/IMembershipUser.cs",
+    "Models/Membership/EntityPermission.cs",
+    "Models/Membership/EntityPermissionSet.cs",
+    "Models/Membership/IProfile.cs",
+    "Models/Membership/IUser.cs",
+    "Models/Membership/User.cs",
+    "Models/Membership/IUserType.cs",
+    "Models/Membership/UserType.cs",
+
     "Models/Identity/BackOfficeIdentityUser.cs",
     "Models/Identity/IdentityUser.cs",
     "Models/Identity/IdentityUserClaim.cs",
@@ -96,9 +101,9 @@
     "Persistence/Constants-DbProviderNames.cs",
     "Persistence/NPocoDatabaseExtensions.cs",
     "Persistence/RecordPersistenceType.cs",
-    "Persistence/Mappers/PocoMapper.cs",
 
     "IDisposeOnRequestEnd.cs",
+    "ServiceProviderExtensions.cs",
     "StringExtensions.cs",
     "EnumerableExtensions.cs",
     "Attempt{T}.cs",
