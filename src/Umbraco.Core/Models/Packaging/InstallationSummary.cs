@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using Umbraco.Core.Models;
 
-namespace Umbraco.Core.Packaging.Models
+namespace Umbraco.Core.Models.Packaging
 {
     #if NET461
     [Serializable] 

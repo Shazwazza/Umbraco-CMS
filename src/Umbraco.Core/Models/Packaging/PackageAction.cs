@@ -2,7 +2,7 @@
 using System.Runtime.Serialization;
 using System.Xml.Linq;
 
-namespace Umbraco.Core.Packaging.Models
+namespace Umbraco.Core.Models.Packaging
 {
     internal enum ActionRunAt
     {
