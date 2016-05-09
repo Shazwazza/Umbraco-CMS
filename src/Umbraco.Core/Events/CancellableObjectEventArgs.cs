@@ -1,7 +1,4 @@
 using System.Collections.Generic;
-using System.Security.Permissions;
-using Umbraco.Core.Models;
-using Umbraco.Core.Models.EntityBase;
 
 namespace Umbraco.Core.Events
 {
@@ -9,7 +6,6 @@ namespace Umbraco.Core.Events
 	/// Event args for a strongly typed object that can support cancellation
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
-	[HostProtection(SecurityAction.LinkDemand, SharedState = true)]
 	public class CancellableObjectEventArgs<T> : CancellableEventArgs
 	{
 	    public CancellableObjectEventArgs(T eventObject, bool canCancel, EventMessages messages, IDictionary<string, object> additionalData)

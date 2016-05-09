@@ -1,15 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Security.Permissions;
-using Umbraco.Core.Models.PublishedContent;
 
 namespace Umbraco.Core.Events
 {
     /// <summary>
 	/// Event args for that can support cancellation
 	/// </summary>
-	[HostProtection(SecurityAction.LinkDemand, SharedState = true)]
 	public class CancellableEventArgs : EventArgs
 	{
 		private bool _cancel;
