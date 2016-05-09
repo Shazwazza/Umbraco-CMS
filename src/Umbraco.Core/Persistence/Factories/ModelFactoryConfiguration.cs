@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Umbraco.Core.Models.Mapping;
 
 namespace Umbraco.Core.Persistence.Factories
 {

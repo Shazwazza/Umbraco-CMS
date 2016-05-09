@@ -35,7 +35,6 @@
     "Packaging/**/*.*",
 
     "Persistence/*.cs",
-    "Persistence/Factories/**/*.*",
     "Persistence/Migrations/**/*.*",
     "Persistence/Querying/**/*.*",
     "Persistence/Repositories/**/*.*",
@@ -184,7 +183,6 @@
       "dependencies": {
         "HtmlAgilityPack": "1.4",
         "MiniProfiler": "3.2",
-        "semver": "1.0",
         "Microsoft.SqlServer.Compact": "4.0",
         "MySql.Data": "6.9",
         "Microsoft.DataAnnotations": "1.0.0-beta1"

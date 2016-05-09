@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using Umbraco.Core.Models;
+
 //using System.Collections.Generic;
 //using Umbraco.Core.Models;
 
@@ -206,76 +209,76 @@ namespace Umbraco.Core
                 /// </summary>
                 internal const string StandardPropertiesGroupName = "Membership";
 
-		        //public static Dictionary<string, PropertyType> GetStandardPropertyTypeStubs()
-		        //{
-		        //    return new Dictionary<string, PropertyType>
-		        //        {
-		        //            {
-		        //                Comments,
-		        //                new PropertyType(PropertyEditors.TextboxMultipleAlias, DataTypeDatabaseType.Ntext, true, Comments)
-		        //                    {
-		        //                        Name = CommentsLabel
-		        //                    }
-		        //            },
-		        //            {
-		        //                FailedPasswordAttempts,
-		        //                new PropertyType(PropertyEditors.NoEditAlias, DataTypeDatabaseType.Integer, true, FailedPasswordAttempts)
-		        //                    {
-		        //                        Name = FailedPasswordAttemptsLabel
-		        //                    }
-		        //            },
-		        //            {
-		        //                IsApproved,
-		        //                new PropertyType(PropertyEditors.TrueFalseAlias, DataTypeDatabaseType.Integer, true, IsApproved)
-		        //                    {
-		        //                        Name = IsApprovedLabel
-		        //                    }
-		        //            },
-		        //            {
-		        //                IsLockedOut,
-		        //                new PropertyType(PropertyEditors.TrueFalseAlias, DataTypeDatabaseType.Integer, true, IsLockedOut)
-		        //                    {
-		        //                        Name = IsLockedOutLabel
-		        //                    }
-		        //            },
-		        //            {
-		        //                LastLockoutDate,
-		        //                new PropertyType(PropertyEditors.NoEditAlias, DataTypeDatabaseType.Date, true, LastLockoutDate)
-		        //                    {
-		        //                        Name = LastLockoutDateLabel
-		        //                    }
-		        //            },
-		        //            {
-		        //                LastLoginDate,
-		        //                new PropertyType(PropertyEditors.NoEditAlias, DataTypeDatabaseType.Date, true, LastLoginDate)
-		        //                    {
-		        //                        Name = LastLoginDateLabel
-		        //                    }
-		        //            },
-		        //            {
-		        //                LastPasswordChangeDate,
-		        //                new PropertyType(PropertyEditors.NoEditAlias, DataTypeDatabaseType.Date, true, LastPasswordChangeDate)
-		        //                    {
-		        //                        Name = LastPasswordChangeDateLabel
-		        //                    }
-		        //            },
-		        //            {
-		        //                PasswordAnswer,
-		        //                new PropertyType(PropertyEditors.NoEditAlias, DataTypeDatabaseType.Nvarchar, true, PasswordAnswer)
-		        //                    {
-		        //                        Name = PasswordAnswerLabel
-		        //                    }
-		        //            },
-		        //            {
-		        //                PasswordQuestion,
-		        //                new PropertyType(PropertyEditors.NoEditAlias, DataTypeDatabaseType.Nvarchar, true, PasswordQuestion)
-		        //                    {
-		        //                        Name = PasswordQuestionLabel
-		        //                    }
-		        //            }
-		        //        };
-		        //} 
-		    }
+                public static Dictionary<string, PropertyType> GetStandardPropertyTypeStubs()
+                {
+                    return new Dictionary<string, PropertyType>
+                        {
+                            {
+                                Comments,
+                                new PropertyType(PropertyEditors.TextboxMultipleAlias, DataTypeDatabaseType.Ntext, true, Comments)
+                                    {
+                                        Name = CommentsLabel
+                                    }
+                            },
+                            {
+                                FailedPasswordAttempts,
+                                new PropertyType(PropertyEditors.NoEditAlias, DataTypeDatabaseType.Integer, true, FailedPasswordAttempts)
+                                    {
+                                        Name = FailedPasswordAttemptsLabel
+                                    }
+                            },
+                            {
+                                IsApproved,
+                                new PropertyType(PropertyEditors.TrueFalseAlias, DataTypeDatabaseType.Integer, true, IsApproved)
+                                    {
+                                        Name = IsApprovedLabel
+                                    }
+                            },
+                            {
+                                IsLockedOut,
+                                new PropertyType(PropertyEditors.TrueFalseAlias, DataTypeDatabaseType.Integer, true, IsLockedOut)
+                                    {
+                                        Name = IsLockedOutLabel
+                                    }
+                            },
+                            {
+                                LastLockoutDate,
+                                new PropertyType(PropertyEditors.NoEditAlias, DataTypeDatabaseType.Date, true, LastLockoutDate)
+                                    {
+                                        Name = LastLockoutDateLabel
+                                    }
+                            },
+                            {
+                                LastLoginDate,
+                                new PropertyType(PropertyEditors.NoEditAlias, DataTypeDatabaseType.Date, true, LastLoginDate)
+                                    {
+                                        Name = LastLoginDateLabel
+                                    }
+                            },
+                            {
+                                LastPasswordChangeDate,
+                                new PropertyType(PropertyEditors.NoEditAlias, DataTypeDatabaseType.Date, true, LastPasswordChangeDate)
+                                    {
+                                        Name = LastPasswordChangeDateLabel
+                                    }
+                            },
+                            {
+                                PasswordAnswer,
+                                new PropertyType(PropertyEditors.NoEditAlias, DataTypeDatabaseType.Nvarchar, true, PasswordAnswer)
+                                    {
+                                        Name = PasswordAnswerLabel
+                                    }
+                            },
+                            {
+                                PasswordQuestion,
+                                new PropertyType(PropertyEditors.NoEditAlias, DataTypeDatabaseType.Nvarchar, true, PasswordQuestion)
+                                    {
+                                        Name = PasswordQuestionLabel
+                                    }
+                            }
+                        };
+                }
+            }
 
 			/// <summary>
 			/// Defines the alias identifiers for Umbraco member types.

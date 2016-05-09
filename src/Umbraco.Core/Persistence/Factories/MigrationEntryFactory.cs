@@ -1,5 +1,4 @@
 ﻿using System;
-using Semver;
 using Umbraco.Core.Models;
 using Umbraco.Core.Models.Rdbms;
 
@@ -9,7 +8,7 @@ namespace Umbraco.Core.Persistence.Factories
     {
         public MigrationEntry BuildEntity(MigrationDto dto)
         {
-            SemVersion parsed;
+            ISemVersion parsed;
             if (SemVersion.TryParse(dto.Version, out parsed) == false)
             {
                 throw new FormatException("Cannot parse the version string in the database to a SemVersion object: " + dto.Version);

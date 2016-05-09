@@ -18,8 +18,12 @@ namespace Umbraco.Core.Persistence.Factories
                     Name = dto.Name,
                     Permissions = dto.DefaultPermissions.IsNullOrWhiteSpace()
                                       ? Enumerable.Empty<string>()
-                                      : dto.DefaultPermissions.ToCharArray().Select(x => x.ToString(CultureInfo.InvariantCulture))
-                };
+#if NET461
+                                        : dto.DefaultPermissions.ToCharArray().Select(x => x.ToString(CultureInfo.InvariantCulture)) 
+#else
+                                        : dto.DefaultPermissions.ToCharArray().Select(x => x.ToString())
+#endif
+            };
             //on initial construction we don't want to have dirty properties tracked
             // http://issues.umbraco.org/issue/U4-1946
             userType.ResetDirtyProperties(false);
