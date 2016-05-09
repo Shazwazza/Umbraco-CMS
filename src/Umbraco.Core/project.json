@@ -34,7 +34,6 @@
 
     "Persistence/*.cs",
     "Persistence/Migrations/**/*.*",
-    "Persistence/Querying/**/*.*",
     "Persistence/Repositories/**/*.*",
 
     "Profiling/**/*.*",
@@ -94,7 +93,6 @@
     "Persistence/DefaultDatabaseFactory.cs",
     "Persistence/DbConnectionExtensions.cs",
     "Persistence/IDatabaseFactory.cs",
-    "Persistence/Querying/TextColumnType.cs",
     "Persistence/Constants-DbProviderNames.cs",
     "Persistence/NPocoDatabaseExtensions.cs",
     "Persistence/RecordPersistenceType.cs",
