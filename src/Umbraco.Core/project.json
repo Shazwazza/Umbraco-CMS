@@ -36,7 +36,6 @@
     "Persistence/Migrations/**/*.*",
     "Persistence/Querying/**/*.*",
     "Persistence/Repositories/**/*.*",
-    "Persistence/UnitOfWork/**/*.*",
 
     "Profiling/**/*.*",
     "PropertyEditors/**/*.*",
@@ -87,6 +86,7 @@
     "Security/IBackOfficeUserPasswordChecker.cs",
     "Security/BackOfficeUserPasswordCheckerResult.cs",
 
+    "Persistence/RepositoryFactory.cs",
     "Persistence/SqlContext.cs",
     "Persistence/UmbracoDatabase.cs",
     "Persistence/IUmbracoDatabaseConfig.cs",
@@ -99,6 +99,9 @@
     "Persistence/NPocoDatabaseExtensions.cs",
     "Persistence/RecordPersistenceType.cs",
 
+    "Persistence/Repositories/Interfaces/IRepository.cs",
+
+    "MacroErrorBehaviour.cs",
     "IDisposeOnRequestEnd.cs",
     "ServiceProviderExtensions.cs",
     "StringExtensions.cs",

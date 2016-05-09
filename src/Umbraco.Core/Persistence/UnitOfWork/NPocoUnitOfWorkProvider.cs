@@ -27,20 +27,20 @@ namespace Umbraco.Core.Persistence.UnitOfWork
             _repositoryFactory = repositoryFactory;
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="NPocoUnitOfWorkProvider"/> class with a logger.
-        /// </summary>
-        /// <param name="logger">A logger.</param>
-        /// <remarks>
-        /// <para>FOR UNIT TESTS ONLY</para>
-        /// <para>Creates a new <see cref="IDatabaseFactory"/> each time it is called, by initializing a new
-        /// <see cref="DefaultDatabaseFactory"/> with the default connection name, and default sql syntax providers.</para>
-        /// </remarks>
-        internal NPocoUnitOfWorkProvider(ILogger logger)
-        {
-            _databaseFactory = new DefaultDatabaseFactory(GlobalSettings.UmbracoConnectionName, GetDefaultSqlSyntaxProviders(logger), logger, new DefaultScopeContextAdapter());
-            // careful, _repositoryFactory remains null!
-        }
+        ///// <summary>
+        ///// Initializes a new instance of the <see cref="NPocoUnitOfWorkProvider"/> class with a logger.
+        ///// </summary>
+        ///// <param name="logger">A logger.</param>
+        ///// <remarks>
+        ///// <para>FOR UNIT TESTS ONLY</para>
+        ///// <para>Creates a new <see cref="IDatabaseFactory"/> each time it is called, by initializing a new
+        ///// <see cref="DefaultDatabaseFactory"/> with the default connection name, and default sql syntax providers.</para>
+        ///// </remarks>
+        //internal NPocoUnitOfWorkProvider(ILogger logger)
+        //{
+        //    _databaseFactory = new DefaultDatabaseFactory(GlobalSettings.UmbracoConnectionName, GetDefaultSqlSyntaxProviders(logger), logger, new DefaultScopeContextAdapter());
+        //    // careful, _repositoryFactory remains null!
+        //}
 
         // this should NOT be here, all tests should supply the appropriate providers,
         // however the above ctor is used in hundreds of tests at the moment, so...
