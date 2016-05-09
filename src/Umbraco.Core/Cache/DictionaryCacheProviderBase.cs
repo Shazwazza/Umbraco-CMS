@@ -2,7 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
+using Umbraco.Core.Plugins;
 
 namespace Umbraco.Core.Cache
 {
@@ -17,7 +19,7 @@ namespace Umbraco.Core.Cache
         // manupulate the underlying cache entries
         // these *must* be called from within the appropriate locks
         // and use the full prefixed cache keys
-        protected abstract IEnumerable<DictionaryEntry> GetDictionaryEntries();
+        protected abstract IEnumerable<KeyValuePair<object, object>> GetDictionaryEntries();
         protected abstract void RemoveEntry(string key);
         protected abstract object GetEntry(string key);
 
@@ -105,9 +107,12 @@ namespace Umbraco.Core.Cache
 
         public virtual void ClearCacheObjectTypes(string typeName)
         {
-            var type = TypeFinder.GetTypeByName(typeName);
+            //var type = TypeFinder.GetTypeByName(typeName);
+            //TODO: Does this work in aspnetcore?
+            var type = Type.GetType(typeName);
+
             if (type == null) return;
-            var isInterface = type.IsInterface;
+            var isInterface = type.GetTypeInfo().IsInterface;
             using (WriteLock)
             {
                 foreach (var entry in GetDictionaryEntries()
@@ -130,7 +135,7 @@ namespace Umbraco.Core.Cache
         public virtual void ClearCacheObjectTypes<T>()
         {
             var typeOfT = typeof(T);
-            var isInterface = typeOfT.IsInterface;
+            var isInterface = typeOfT.GetTypeInfo().IsInterface;
             using (WriteLock)
             {
                 foreach (var entry in GetDictionaryEntries()
@@ -154,7 +159,7 @@ namespace Umbraco.Core.Cache
         public virtual void ClearCacheObjectTypes<T>(Func<string, T, bool> predicate)
         {
             var typeOfT = typeof(T);
-            var isInterface = typeOfT.IsInterface;
+            var isInterface = typeOfT.GetTypeInfo().IsInterface;
             var plen = CacheItemPrefix.Length + 1;
             using (WriteLock)
             {
@@ -209,7 +214,7 @@ namespace Umbraco.Core.Cache
         public virtual IEnumerable<object> GetCacheItemsByKeySearch(string keyStartsWith)
         {
             var plen = CacheItemPrefix.Length + 1;
-            IEnumerable<DictionaryEntry> entries;
+            IEnumerable<KeyValuePair<object, object>> entries;
             using (ReadLock)
             {
                 entries = GetDictionaryEntries()
@@ -225,7 +230,7 @@ namespace Umbraco.Core.Cache
         {
             const string prefix = CacheItemPrefix + "-";
             var plen = prefix.Length;
-            IEnumerable<DictionaryEntry> entries;
+            IEnumerable<KeyValuePair<object, object>> entries;
             using (ReadLock)
             {
                 entries = GetDictionaryEntries()

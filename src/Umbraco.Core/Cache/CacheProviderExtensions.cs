@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web.Caching;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Umbraco.Core.Cache
 {
@@ -16,10 +16,11 @@ namespace Umbraco.Core.Cache
             TimeSpan? timeout,
             bool isSliding = false,
             CacheItemPriority priority = CacheItemPriority.Normal,
-            CacheItemRemovedCallback removedCallback = null,
+            //CacheItemRemovedCallback removedCallback = null,
             string[] dependentFiles = null)
         {
-            var result = provider.GetCacheItem(cacheKey, () => getCacheItem(), timeout, isSliding, priority, removedCallback, dependentFiles);
+            //var result = provider.GetCacheItem(cacheKey, () => getCacheItem(), timeout, isSliding, priority, removedCallback, dependentFiles);
+            var result = provider.GetCacheItem(cacheKey, () => getCacheItem(), timeout, isSliding, priority, dependentFiles);
             return result == null ? default(T) : result.TryConvertTo<T>().Result;
         }
 
@@ -29,10 +30,11 @@ namespace Umbraco.Core.Cache
             TimeSpan? timeout = null,
             bool isSliding = false,
             CacheItemPriority priority = CacheItemPriority.Normal,
-            CacheItemRemovedCallback removedCallback = null,
+            //CacheItemRemovedCallback removedCallback = null,
             string[] dependentFiles = null)
         {
-            provider.InsertCacheItem(cacheKey, () => getCacheItem(), timeout, isSliding, priority, removedCallback, dependentFiles);
+            //provider.InsertCacheItem(cacheKey, () => getCacheItem(), timeout, isSliding, priority, removedCallback, dependentFiles);
+            provider.InsertCacheItem(cacheKey, () => getCacheItem(), timeout, isSliding, priority, dependentFiles);
         }
 
         public static IEnumerable<T> GetCacheItemsByKeySearch<T>(this ICacheProvider provider, string keyStartsWith)

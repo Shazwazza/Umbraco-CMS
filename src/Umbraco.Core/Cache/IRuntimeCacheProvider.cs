@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Runtime.Caching;
 using System.Text;
-using System.Web.Caching;
-using CacheItemPriority = System.Web.Caching.CacheItemPriority;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Umbraco.Core.Cache
 {
@@ -19,7 +17,7 @@ namespace Umbraco.Core.Cache
             TimeSpan? timeout,
             bool isSliding = false,
             CacheItemPriority priority = CacheItemPriority.Normal,
-            CacheItemRemovedCallback removedCallback = null,
+            PostEvictionCallbackRegistration removedCallback = null,
             string[] dependentFiles = null);
 
         void InsertCacheItem(
@@ -28,7 +26,7 @@ namespace Umbraco.Core.Cache
             TimeSpan? timeout = null,
             bool isSliding = false,
             CacheItemPriority priority = CacheItemPriority.Normal,
-            CacheItemRemovedCallback removedCallback = null,
+            PostEvictionCallbackRegistration removedCallback = null,
             string[] dependentFiles = null);
 
     }

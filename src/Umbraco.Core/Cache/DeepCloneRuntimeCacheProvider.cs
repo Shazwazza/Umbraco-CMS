@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web.Caching;
+using Microsoft.Extensions.Caching.Memory;
 using Umbraco.Core.Models;
 using Umbraco.Core.Models.EntityBase;
 
@@ -97,7 +97,7 @@ namespace Umbraco.Core.Cache
             return CheckCloneableAndTracksChanges(cached);
         }
 
-        public object GetCacheItem(string cacheKey, Func<object> getCacheItem, TimeSpan? timeout, bool isSliding = false, CacheItemPriority priority = CacheItemPriority.Normal, CacheItemRemovedCallback removedCallback = null, string[] dependentFiles = null)
+        public object GetCacheItem(string cacheKey, Func<object> getCacheItem, TimeSpan? timeout, bool isSliding = false, CacheItemPriority priority = CacheItemPriority.Normal, PostEvictionCallbackRegistration removedCallback = null, string[] dependentFiles = null)
         {
             var cached = InnerProvider.GetCacheItem(cacheKey, () =>
             {
@@ -106,12 +106,13 @@ namespace Umbraco.Core.Cache
                 if (value == null) return null; // do not store null values (backward compat)
 
                 return CheckCloneableAndTracksChanges(value);
-            }, timeout, isSliding, priority, removedCallback, dependentFiles);
+            //}, timeout, isSliding, priority, removedCallback, dependentFiles);
+            }, timeout, isSliding, priority, dependentFiles);
 
             return CheckCloneableAndTracksChanges(cached);
         }
 
-        public void InsertCacheItem(string cacheKey, Func<object> getCacheItem, TimeSpan? timeout = null, bool isSliding = false, CacheItemPriority priority = CacheItemPriority.Normal, CacheItemRemovedCallback removedCallback = null, string[] dependentFiles = null)
+        public void InsertCacheItem(string cacheKey, Func<object> getCacheItem, TimeSpan? timeout = null, bool isSliding = false, CacheItemPriority priority = CacheItemPriority.Normal, PostEvictionCallbackRegistration removedCallback = null, string[] dependentFiles = null)
         {
             InnerProvider.InsertCacheItem(cacheKey, () =>
             {
@@ -120,7 +121,8 @@ namespace Umbraco.Core.Cache
                 if (value == null) return null; // do not store null values (backward compat)
 
                 return CheckCloneableAndTracksChanges(value);
-            }, timeout, isSliding, priority, removedCallback, dependentFiles);   
+            //}, timeout, isSliding, priority, removedCallback, dependentFiles);   
+            }, timeout, isSliding, priority, dependentFiles);   
         }
 
         private static object CheckCloneableAndTracksChanges(object input)

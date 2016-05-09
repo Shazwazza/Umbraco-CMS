@@ -10,7 +10,6 @@
     "*.cs",
     "_Legacy/**/*.cs",
     "Auditing/**/*.*",
-    "Cache/**/*.*",
     "Configuration/**/*.*",
     "DependencyInjection/**/*.*",    
     "Dynamics/**/*.*",
@@ -80,6 +79,7 @@
     "PropertyEditors/LegacyParameterEditorAliasConverter.cs",
 
     "Sync/IServerAddress.cs",
+    "Sync/MessageType.cs",
 
     "Security/BackOfficeUserManager.cs",
     "Security/IBackOfficeUserPasswordChecker.cs",
@@ -167,6 +167,7 @@
     "Microsoft.Extensions.WebEncoders.Core": "1.0.0-rc1-final",
     "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc1-final",
     "Microsoft.Extensions.Logging": "1.0.0-rc1-final",
+    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc1-final",
     "System.Security.Cryptography.Algorithms": "4.0.0-beta-*",
     "Microsoft.AspNet.Identity": "3.0.0-rc1-final",
     "ReflectionBridge": "0.0.9",

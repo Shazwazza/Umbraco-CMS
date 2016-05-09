@@ -71,7 +71,8 @@ namespace Umbraco.Core.Cache
         internal void ClearAllIsolatedCacheByEntityType<TEntity>()
             where TEntity : class, IAggregateRoot
         {
-            ApplicationContext.Current.ApplicationCache.IsolatedRuntimeCache.ClearCache<TEntity>();
+            throw new NotImplementedException("FIX ME! ClearAllIsolatedCacheByEntityType");
+            //ApplicationContext.Current.ApplicationCache.IsolatedRuntimeCache.ClearCache<TEntity>();
         }
     }
 }
