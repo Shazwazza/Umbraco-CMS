@@ -1,20 +1,15 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Web.Caching;
-using NPoco;
+using Microsoft.Extensions.Caching.Memory;
 using Umbraco.Core.Events;
 using Umbraco.Core.Models.EntityBase;
 using Umbraco.Core.Models.Membership;
 using Umbraco.Core.Models.Rdbms;
 using Umbraco.Core.Persistence.SqlSyntax;
 using Umbraco.Core.Persistence.UnitOfWork;
-using Umbraco.Core.Services;
 using CacheKeys = Umbraco.Core.Cache.CacheKeys;
 using Umbraco.Core.Cache;
 
@@ -94,7 +89,7 @@ namespace Umbraco.Core.Persistence.Repositories
                 // then it will refresh from the database.
                 new TimeSpan(0, 20, 0),
                 //Since this cache can be quite large (http://issues.umbraco.org/issue/U4-2161) we will make this priority below average
-                priority: CacheItemPriority.BelowNormal);
+                priority: CacheItemPriority.Low);
 
         } 
 
@@ -145,7 +140,11 @@ namespace Umbraco.Core.Persistence.Repositories
                         toInsert.Add(new User2NodePermissionDto
                         {
                             NodeId = e,
-                            Permission = p.ToString(CultureInfo.InvariantCulture),
+#if NET461
+                            Permission = p.ToString(CultureInfo.InvariantCulture), 
+#else
+                            Permission = p.ToString(),
+#endif
                             UserId = userId
                         });
                     }
@@ -176,14 +175,23 @@ namespace Umbraco.Core.Persistence.Repositories
                     new
                     {
                         userId = userId,
-                        permission = permission.ToString(CultureInfo.InvariantCulture),
+#if NET461
+                        permission = permission.ToString(CultureInfo.InvariantCulture), 
+#else
+                        permission = permission.ToString(),
+#endif
                         entityIds = entityIds
                     });
 
                 var actions = entityIds.Select(id => new User2NodePermissionDto
                 {
                     NodeId = id,
-                    Permission = permission.ToString(CultureInfo.InvariantCulture),
+#if NET461
+                    Permission = permission.ToString(CultureInfo.InvariantCulture), 
+#else
+                    Permission = permission.ToString(),
+
+#endif
                     UserId = userId
                 }).ToArray();
 
@@ -211,15 +219,23 @@ namespace Umbraco.Core.Persistence.Repositories
                 db.Execute("DELETE FROM umbracoUser2NodePermission WHERE nodeId=@nodeId AND permission=@permission AND userId in (@userIds)",
                     new
                     {
-                        nodeId = entity.Id, 
-                        permission = permission.ToString(CultureInfo.InvariantCulture),
+                        nodeId = entity.Id,
+#if NET461
+                        permission = permission.ToString(CultureInfo.InvariantCulture), 
+#else
+                        permission = permission.ToString(),
+#endif
                         userIds = userIds
                     });
 
                 var actions = userIds.Select(id => new User2NodePermissionDto
                 {
                     NodeId = entity.Id,
-                    Permission = permission.ToString(CultureInfo.InvariantCulture),
+#if NET461
+                    Permission = permission.ToString(CultureInfo.InvariantCulture), 
+#else
+                    Permission = permission.ToString(),
+#endif
                     UserId = id
                 }).ToArray();
 

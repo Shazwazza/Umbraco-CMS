@@ -12,6 +12,13 @@ namespace Umbraco.Core.Manifest
     /// </summary>
     internal class GridEditorConverter : JsonCreationConverter<GridEditor>
     {
+        private readonly IOHelper _ioHelper;
+
+        public GridEditorConverter(IOHelper ioHelper)
+        {
+            _ioHelper = ioHelper;
+        }
+
         protected override GridEditor Create(Type objectType, JObject jObject)
         {
             return new GridEditor();
@@ -23,12 +30,12 @@ namespace Umbraco.Core.Manifest
 
             if (target.View.IsNullOrWhiteSpace() == false && target.View.StartsWith("~/"))
             {
-                target.View = IOHelper.ResolveUrl(target.View);
+                target.View = _ioHelper.ResolveUrl(target.View);
             }
 
             if (target.Render.IsNullOrWhiteSpace() == false && target.Render.StartsWith("~/"))
             {
-                target.Render = IOHelper.ResolveUrl(target.Render);
+                target.Render = _ioHelper.ResolveUrl(target.Render);
             }             
         }
     }

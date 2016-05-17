@@ -258,7 +258,7 @@ namespace Umbraco.Core.Plugins
         }
 
         /// <summary>
-        /// Gets (and caches) <see cref="PropertyInfo"/> discoverable in the current <see cref="AppDomain"/> for a given <paramref name="type"/>.
+        /// Gets (and caches) <see cref="PropertyInfo"/> 
         /// </summary>
         /// <param name="type">The source.</param>
         /// <param name="mustRead">true if the properties discovered are readable</param>

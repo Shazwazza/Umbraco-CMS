@@ -3,21 +3,25 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using System.IO;
-using System.Configuration;
-using System.Web;
 using System.Text.RegularExpressions;
-using System.Web.Hosting;
-using ICSharpCode.SharpZipLib.Zip;
-using Umbraco.Core.Configuration;
-using Umbraco.Core.Logging;
+using Microsoft.AspNet.Hosting;
+using Microsoft.Extensions.PlatformAbstractions;
+using Umbraco.Core.Exceptions;
 
 namespace Umbraco.Core.IO
 {
-	public static class IOHelper
+	public class IOHelper
     {
-        private static string _rootDir = "";
+	    private readonly IHostingEnvironment _hostingEnvironment;
+	    private readonly IApplicationEnvironment _appEnv;
 
-        // static compiled regex for faster performance
+	    public IOHelper(IHostingEnvironment hostingEnvironment, IApplicationEnvironment appEnv)
+	    {
+	        _hostingEnvironment = hostingEnvironment;
+	        _appEnv = appEnv;
+	    }
+
+	    // static compiled regex for faster performance
         private readonly static Regex ResolveUrlPattern = new Regex("(=[\"\']?)(\\W?\\~(?:.(?![\"\']?\\s+(?:\\S+)=|[>\"\']))+.)[\"\']?", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace);
 
         public static char DirSepChar
@@ -28,93 +32,67 @@ namespace Umbraco.Core.IO
             }
         }
 
-	    internal static void UnZip(string zipFilePath, string unPackDirectory, bool deleteZipFile)
-	    {
-	        // Unzip
-	        string tempDir = unPackDirectory;
-	        Directory.CreateDirectory(tempDir);
+	    //internal static void UnZip(string zipFilePath, string unPackDirectory, bool deleteZipFile)
+	    //{
+	    //    // Unzip
+	    //    string tempDir = unPackDirectory;
+	    //    Directory.CreateDirectory(tempDir);
 
-	        using (ZipInputStream s = new ZipInputStream(File.OpenRead(zipFilePath)))
-	        {
-                ZipEntry theEntry;
-                while ((theEntry = s.GetNextEntry()) != null)
-                {
-                    string directoryName = Path.GetDirectoryName(theEntry.Name);
-                    string fileName = Path.GetFileName(theEntry.Name);
+	    //    using (ZipInputStream s = new ZipInputStream(File.OpenRead(zipFilePath)))
+	    //    {
+     //           ZipEntry theEntry;
+     //           while ((theEntry = s.GetNextEntry()) != null)
+     //           {
+     //               string directoryName = Path.GetDirectoryName(theEntry.Name);
+     //               string fileName = Path.GetFileName(theEntry.Name);
 
-                    if (fileName != String.Empty)
-                    {
-                        FileStream streamWriter = File.Create(tempDir + Path.DirectorySeparatorChar + fileName);
+     //               if (fileName != String.Empty)
+     //               {
+     //                   FileStream streamWriter = File.Create(tempDir + Path.DirectorySeparatorChar + fileName);
 
-                        int size = 2048;
-                        byte[] data = new byte[2048];
-                        while (true)
-                        {
-                            size = s.Read(data, 0, data.Length);
-                            if (size > 0)
-                            {
-                                streamWriter.Write(data, 0, size);
-                            }
-                            else
-                            {
-                                break;
-                            }
-                        }
+     //                   int size = 2048;
+     //                   byte[] data = new byte[2048];
+     //                   while (true)
+     //                   {
+     //                       size = s.Read(data, 0, data.Length);
+     //                       if (size > 0)
+     //                       {
+     //                           streamWriter.Write(data, 0, size);
+     //                       }
+     //                       else
+     //                       {
+     //                           break;
+     //                       }
+     //                   }
 
-                        streamWriter.Close();
+     //                   streamWriter.Close();
 
-                    }
-                }
+     //               }
+     //           }
 
-                // Clean up
-                s.Close();
-                if (deleteZipFile)
-                    File.Delete(zipFilePath);
-            }
-	    }
-
-	    //helper to try and match the old path to a new virtual one
-        public static string FindFile(string virtualPath)
-        {
-            string retval = virtualPath;
-
-            if (virtualPath.StartsWith("~"))
-                retval = virtualPath.Replace("~", SystemDirectories.Root);
-
-            if (virtualPath.StartsWith("/") && virtualPath.StartsWith(SystemDirectories.Root) == false)
-                retval = SystemDirectories.Root + "/" + virtualPath.TrimStart('/');
-
-            return retval;
-        }
+     //           // Clean up
+     //           s.Close();
+     //           if (deleteZipFile)
+     //               File.Delete(zipFilePath);
+     //       }
+	    //}
 
         //Replaces tildes with the root dir
-        public static string ResolveUrl(string virtualPath)
+        public string ResolveUrl(string virtualPath)
         {
-             if (virtualPath.StartsWith("~"))
-                return virtualPath.Replace("~", SystemDirectories.Root).Replace("//", "/");
-            else if (Uri.IsWellFormedUriString(virtualPath, UriKind.Absolute))
+            if (virtualPath.StartsWith("~"))
+                return ToAbsolute(virtualPath);
+            if (Uri.IsWellFormedUriString(virtualPath, UriKind.Absolute))
                 return virtualPath;
-            else
-                return VirtualPathUtility.ToAbsolute(virtualPath, SystemDirectories.Root);
+            return ToAbsolute(virtualPath);
         }
 
-        public static Attempt<string> TryResolveUrl(string virtualPath)
-        {
-            try
-            {
-                if (virtualPath.StartsWith("~"))
-                    return Attempt.Succeed(virtualPath.Replace("~", SystemDirectories.Root).Replace("//", "/"));
-                if (Uri.IsWellFormedUriString(virtualPath, UriKind.Absolute))
-                    return Attempt.Succeed(virtualPath);
-                return Attempt.Succeed(VirtualPathUtility.ToAbsolute(virtualPath, SystemDirectories.Root));
-            }
-            catch (Exception ex)
-            {
-                return Attempt.Fail(virtualPath, ex);
-            }
-        }
+	    private string ToAbsolute(string virtualPath)
+	    {
+	        return string.Concat(_appEnv.ApplicationBasePath, virtualPath.TrimStart('~')).Replace("//", "/");
+	    }
 
-        public static string MapPath(string path, bool useHttpContext)
+        public string MapPath(string path)
         {
             // Check if the path is already mapped
             if ((path.Length >= 2 && path[1] == Path.VolumeSeparatorChar)
@@ -122,46 +100,26 @@ namespace Umbraco.Core.IO
             {
                 return path;
             }
-			// Check that we even have an HttpContext! otherwise things will fail anyways
-			// http://umbraco.codeplex.com/workitem/30946
 
-            if (useHttpContext && HttpContext.Current != null)
-            {
-                //string retval;
-                if (String.IsNullOrEmpty(path) == false && (path.StartsWith("~") || path.StartsWith(SystemDirectories.Root)))
-                    return HostingEnvironment.MapPath(path);
-                else
-                    return HostingEnvironment.MapPath("~/" + path.TrimStart('/'));
-            }
-
-        	var root = GetRootDirectorySafe();
-        	var newPath = path.TrimStart('~', '/').Replace('/', IOHelper.DirSepChar);
-        	var retval = root + IOHelper.DirSepChar.ToString(CultureInfo.InvariantCulture) + newPath;
-
-        	return retval;
+            return _hostingEnvironment.MapPath(path);
         }
 
-        public static string MapPath(string path)
-        {
-            return MapPath(path, true);
-        }
+  //      //use a tilde character instead of the complete path
+		//internal static string ReturnPath(string settingsKey, string standardPath, bool useTilde)
+  //      {
+  //          string retval = ConfigurationManager.AppSettings[settingsKey];
 
-        //use a tilde character instead of the complete path
-		internal static string ReturnPath(string settingsKey, string standardPath, bool useTilde)
-        {
-            string retval = ConfigurationManager.AppSettings[settingsKey];
+  //          if (String.IsNullOrEmpty(retval))
+  //              retval = standardPath;
 
-            if (String.IsNullOrEmpty(retval))
-                retval = standardPath;
+  //          return retval.TrimEnd('/');
+  //      }
 
-            return retval.TrimEnd('/');
-        }
+        //internal static string ReturnPath(string settingsKey, string standardPath)
+        //{
+        //    return ReturnPath(settingsKey, standardPath, false);
 
-        internal static string ReturnPath(string settingsKey, string standardPath)
-        {
-            return ReturnPath(settingsKey, standardPath, false);
-
-        }
+        //}
 
         /// <summary>
         /// Verifies that the current filepath matches a directory where the user is allowed to edit a file.
@@ -169,32 +127,33 @@ namespace Umbraco.Core.IO
         /// <param name="filePath">The filepath to validate.</param>
         /// <param name="validDir">The valid directory.</param>
         /// <returns>A value indicating whether the filepath is valid.</returns>
-        internal static bool VerifyEditPath(string filePath, string validDir)
+        internal bool VerifyEditPath(string filePath, string validDir)
         {
             return VerifyEditPath(filePath, new[] { validDir });
         }
 
-        /// <summary>
-        /// Validates that the current filepath matches a directory where the user is allowed to edit a file.
-        /// </summary>
-        /// <param name="filePath">The filepath to validate.</param>
-        /// <param name="validDir">The valid directory.</param>
-        /// <returns>True, if the filepath is valid, else an exception is thrown.</returns>
-        /// <exception cref="FileSecurityException">The filepath is invalid.</exception>
-        internal static bool ValidateEditPath(string filePath, string validDir)
+	    /// <summary>
+	    /// Validates that the current filepath matches a directory where the user is allowed to edit a file.
+	    /// </summary>
+	    /// <param name="filePath">The filepath to validate.</param>
+	    /// <param name="validDir">The valid directory.</param>
+	    /// <returns>True, if the filepath is valid, else an exception is thrown.</returns>
+	    internal bool ValidateEditPath(string filePath, string validDir)
         {
             if (VerifyEditPath(filePath, validDir) == false)
-                throw new FileSecurityException(String.Format("The filepath '{0}' is not within an allowed directory for this type of files", filePath.Replace(MapPath(SystemDirectories.Root), "")));
+                throw new FileSecurityException(
+                    string.Format("The filepath '{0}' is not within an allowed directory for this type of files", 
+                    filePath.Replace(_hostingEnvironment.WebRootPath, "")));
             return true;
         }
 
-        /// <summary>
-        /// Verifies that the current filepath matches one of several directories where the user is allowed to edit a file.
-        /// </summary>
-        /// <param name="filePath">The filepath to validate.</param>
-        /// <param name="validDirs">The valid directories.</param>
-        /// <returns>A value indicating whether the filepath is valid.</returns>
-        internal static bool VerifyEditPath(string filePath, IEnumerable<string> validDirs)
+	    /// <summary>
+	    /// Verifies that the current filepath matches one of several directories where the user is allowed to edit a file.
+	    /// </summary>
+	    /// <param name="filePath">The filepath to validate.</param>
+	    /// <param name="validDirs">The valid directories.</param>
+	    /// <returns>A value indicating whether the filepath is valid.</returns>
+	    internal bool VerifyEditPath(string filePath, IEnumerable<string> validDirs)
         {
             // this is called from ScriptRepository, PartialViewRepository, etc.
             // filePath is the fullPath (rooted, filesystem path, can be trusted)
@@ -206,7 +165,7 @@ namespace Umbraco.Core.IO
             // what's below is dirty, there are too many ways to get the root dir, etc.
             // not going to fix everything today
 
-            var mappedRoot = MapPath(SystemDirectories.Root);
+            var mappedRoot = _hostingEnvironment.WebRootPath;
             if (filePath.StartsWith(mappedRoot) == false)
                 filePath = MapPath(filePath);
 
@@ -233,7 +192,7 @@ namespace Umbraco.Core.IO
         /// <param name="filePath">The filepath to validate.</param>
         /// <param name="validFileExtensions">The valid extensions.</param>
         /// <returns>A value indicating whether the filepath is valid.</returns>
-        internal static bool VerifyFileExtension(string filePath, List<string> validFileExtensions)
+        internal bool VerifyFileExtension(string filePath, List<string> validFileExtensions)
         {
             var ext = Path.GetExtension(filePath);
             return ext != null && validFileExtensions.Contains(ext.TrimStart('.'));
@@ -246,10 +205,12 @@ namespace Umbraco.Core.IO
         /// <param name="validFileExtensions">The valid extensions.</param>
         /// <returns>True, if the filepath is valid, else an exception is thrown.</returns>
         /// <exception cref="FileSecurityException">The filepath is invalid.</exception>
-        internal static bool ValidateFileExtension(string filePath, List<string> validFileExtensions)
+        internal bool ValidateFileExtension(string filePath, List<string> validFileExtensions)
         {
             if (VerifyFileExtension(filePath, validFileExtensions) == false)
-                throw new FileSecurityException(String.Format("The extension for the current file '{0}' is not of an allowed type for this editor. This is typically controlled from either the installed MacroEngines or based on configuration in /config/umbracoSettings.config", filePath.Replace(MapPath(SystemDirectories.Root), "")));
+                throw new FileSecurityException(
+                    string.Format("The extension for the current file '{0}' is not of an allowed type for this editor. This is typically controlled from either the installed MacroEngines or based on configuration in /config/umbracoSettings.config", 
+                    filePath.Replace(_hostingEnvironment.WebRootPath, "")));
             return true;
         }
 
@@ -270,63 +231,10 @@ namespace Umbraco.Core.IO
         /// even if the assembly is in a /bin/debug or /bin/release folder
         /// </summary>
         /// <returns></returns>
-        internal static string GetRootDirectorySafe()
+        internal string GetRootDirectorySafe()
         {
-            if (String.IsNullOrEmpty(_rootDir) == false)
-            {
-                return _rootDir;
-            }
-
-			var codeBase = Assembly.GetExecutingAssembly().CodeBase;
-			var uri = new Uri(codeBase);
-			var path = uri.LocalPath;
-        	var baseDirectory = Path.GetDirectoryName(path);
-            if (String.IsNullOrEmpty(baseDirectory))
-                throw new Exception("No root directory could be resolved. Please ensure that your Umbraco solution is correctly configured.");
-
-            _rootDir = baseDirectory.Contains("bin")
-                           ? baseDirectory.Substring(0, baseDirectory.LastIndexOf("bin", StringComparison.OrdinalIgnoreCase) - 1)
-                           : baseDirectory;
-
-            return _rootDir;
-        }
-
-        internal static string GetRootDirectoryBinFolder()
-        {
-            string binFolder = String.Empty;
-            if (String.IsNullOrEmpty(_rootDir))
-            {
-                binFolder = Assembly.GetExecutingAssembly().GetAssemblyFile().Directory.FullName;
-                return binFolder;
-            }
-
-            binFolder = Path.Combine(GetRootDirectorySafe(), "bin");
-
-#if DEBUG
-            var debugFolder = Path.Combine(binFolder, "debug");
-            if (Directory.Exists(debugFolder))
-                return debugFolder;
-#endif   
-            var releaseFolder = Path.Combine(binFolder, "release");
-            if (Directory.Exists(releaseFolder))
-                return releaseFolder;
-
-            if (Directory.Exists(binFolder))
-                return binFolder;
-
-            return _rootDir;
-        }
-
-        /// <summary>
-        /// Allows you to overwrite RootDirectory, which would otherwise be resolved
-        /// automatically upon application start.
-        /// </summary>
-        /// <remarks>The supplied path should be the absolute path to the root of the umbraco site.</remarks>
-        /// <param name="rootPath"></param>
-        internal static void SetRootDirectory(string rootPath)
-	    {
-            _rootDir = rootPath;
-	    }
+        	return Path.GetDirectoryName(_hostingEnvironment.WebRootPath);
+        }        
 
         /// <summary>
         /// Check to see if filename passed has any special chars in it and strips them to create a safe filename.  Used to overcome an issue when Umbraco is used in IE in an intranet environment.
@@ -339,16 +247,16 @@ namespace Umbraco.Core.IO
             return filePath.ToSafeFileName();
         }
 
-	    public static void EnsurePathExists(string path)
+	    public void EnsurePathExists(string path)
 	    {
-	        var absolutePath = IOHelper.MapPath(path);
+	        var absolutePath = MapPath(path);
 	        if (Directory.Exists(absolutePath) == false)
 	            Directory.CreateDirectory(absolutePath);
 	    }
 
-	    public static void EnsureFileExists(string path, string contents)
+	    public void EnsureFileExists(string path, string contents)
 	    {
-	        var absolutePath = IOHelper.MapPath(path);
+	        var absolutePath = MapPath(path);
 	        if (File.Exists(absolutePath) == false)
 	        {
                 using (var writer = File.CreateText(absolutePath))

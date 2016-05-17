@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using NPoco;
 using Umbraco.Core.Cache;
+using Umbraco.Core.Exceptions;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
 using Umbraco.Core.Models.EntityBase;
@@ -98,7 +99,7 @@ namespace Umbraco.Core.Persistence.Repositories
         protected override void PersistNewItem(IDomain entity)
         {
             var exists = Database.ExecuteScalar<int>("SELECT COUNT(*) FROM umbracoDomains WHERE domainName = @domainName", new { domainName = entity.DomainName });
-            if (exists > 0) throw new DuplicateNameException(string.Format("The domain name {0} is already assigned", entity.DomainName));
+            if (exists > 0) throw new DuplicateItemException(string.Format("The domain name {0} is already assigned", entity.DomainName));
 
             if (entity.RootContentId.HasValue)
             {
@@ -136,7 +137,7 @@ namespace Umbraco.Core.Persistence.Repositories
             var exists = Database.ExecuteScalar<int>("SELECT COUNT(*) FROM umbracoDomains WHERE domainName = @domainName AND umbracoDomains.id <> @id", 
                 new { domainName = entity.DomainName, id = entity.Id });
             //ensure there is no other domain with the same name on another entity
-            if (exists > 0) throw new DuplicateNameException(string.Format("The domain name {0} is already assigned", entity.DomainName));
+            if (exists > 0) throw new DuplicateItemException(string.Format("The domain name {0} is already assigned", entity.DomainName));
 
             if (entity.RootContentId.HasValue)
             {

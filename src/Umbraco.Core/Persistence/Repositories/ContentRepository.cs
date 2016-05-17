@@ -1,17 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Globalization;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Net.Http.Headers;
-using System.Text;
 using System.Xml.Linq;
 using NPoco;
-using StackExchange.Profiling.Helpers.Dapper;
-using Umbraco.Core.Configuration;
-using Umbraco.Core.Dynamics;
-using Umbraco.Core.IO;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
 using Umbraco.Core.Models.EntityBase;
@@ -23,6 +15,7 @@ using Umbraco.Core.Persistence.Factories;
 using Umbraco.Core.Persistence.Querying;
 using Umbraco.Core.Cache;
 using Umbraco.Core.Configuration.UmbracoSettings;
+using Umbraco.Core.IO;
 using Umbraco.Core.Persistence.Mappers;
 using Umbraco.Core.Persistence.SqlSyntax;
 using Umbraco.Core.Persistence.UnitOfWork;
@@ -41,8 +34,8 @@ namespace Umbraco.Core.Persistence.Repositories
         private readonly ContentPreviewRepository<IContent> _contentPreviewRepository;
         private readonly ContentXmlRepository<IContent> _contentXmlRepository;
 
-        public ContentRepository(IDatabaseUnitOfWork work, CacheHelper cacheHelper, ILogger logger, IContentTypeRepository contentTypeRepository, ITemplateRepository templateRepository, ITagRepository tagRepository, IContentSection contentSection, IMappingResolver mappingResolver)
-            : base(work, cacheHelper, logger, contentSection, mappingResolver)
+        public ContentRepository(IDatabaseUnitOfWork work, CacheHelper cacheHelper, ILogger logger, IContentTypeRepository contentTypeRepository, ITemplateRepository templateRepository, ITagRepository tagRepository, IContentSection contentSection, IMappingResolver mappingResolver, MediaFileSystem mediaFileSystem)
+            : base(work, cacheHelper, logger, contentSection, mappingResolver, mediaFileSystem)
         {
             if (contentTypeRepository == null) throw new ArgumentNullException("contentTypeRepository");
             if (templateRepository == null) throw new ArgumentNullException("templateRepository");

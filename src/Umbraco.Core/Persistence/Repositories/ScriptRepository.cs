@@ -14,12 +14,14 @@ namespace Umbraco.Core.Persistence.Repositories
     /// </summary>
     internal class ScriptRepository : FileRepository<string, Script>, IScriptRepository
     {
+        private readonly IOHelper _ioHelper;
         private readonly IContentSection _contentConfig;
 
-        public ScriptRepository(IUnitOfWork work, [Inject("ScriptFileSystem")] IFileSystem fileSystem, IContentSection contentConfig)
+        public ScriptRepository(IUnitOfWork work, [Inject("ScriptFileSystem")] IFileSystem fileSystem, IOHelper ioHelper, IContentSection contentConfig)
 			: base(work, fileSystem)
         {
             if (contentConfig == null) throw new ArgumentNullException(nameof(contentConfig));
+            _ioHelper = ioHelper;
             _contentConfig = contentConfig;
         }
 
@@ -104,9 +106,9 @@ namespace Umbraco.Core.Persistence.Repositories
 
             // validate path & extension
             var validDir = SystemDirectories.Scripts;
-            var isValidPath = IOHelper.VerifyEditPath(fullPath, validDir);
+            var isValidPath = _ioHelper.VerifyEditPath(fullPath, validDir);
             var validExts = _contentConfig.ScriptFileTypes.ToList();
-            var isValidExtension = IOHelper.VerifyFileExtension(script.Path, validExts);
+            var isValidExtension = _ioHelper.VerifyFileExtension(script.Path, validExts);
             return isValidPath && isValidExtension;
         }
 

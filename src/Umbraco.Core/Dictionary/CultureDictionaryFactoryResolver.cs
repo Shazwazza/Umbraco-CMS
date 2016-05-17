@@ -31,7 +31,7 @@ namespace Umbraco.Core.Dictionary
 	    /// </summary>
 	    /// <param name="container"></param>
 	    /// <param name="implementationType"></param>
-        internal CultureDictionaryFactoryResolver(IServiceContainer container, Expression<Func<IServiceFactory, ICultureDictionaryFactory>> implementationType)
+        internal CultureDictionaryFactoryResolver(IServiceContainer container, Func<IServiceFactory, ICultureDictionaryFactory> implementationType)
             : base(container, implementationType)
 	    {
 	    }

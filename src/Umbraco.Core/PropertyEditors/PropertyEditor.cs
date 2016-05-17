@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Umbraco.Core.IO;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
+using Umbraco.Core.Plugins;
 
 namespace Umbraco.Core.PropertyEditors
 {
@@ -18,6 +19,9 @@ namespace Umbraco.Core.PropertyEditors
     [DebuggerDisplay("{DebuggerDisplay(),nq}")]
     public class PropertyEditor : IParameterEditor
     {
+        private readonly IOHelper _ioHelper;
+        private readonly TypeHelper _typeHelper;
+
         /// <summary>
         /// Exposes a logger
         /// </summary>
@@ -28,9 +32,11 @@ namespace Umbraco.Core.PropertyEditors
         /// <summary>
         /// The constructor will setup the property editor based on the attribute if one is found
         /// </summary>
-        public PropertyEditor(ILogger logger)             
-        {
+        public PropertyEditor(ILogger logger, IOHelper ioHelper, TypeHelper typeHelper)
+        {            
             if (logger == null) throw new ArgumentNullException("logger");
+            _ioHelper = ioHelper;
+            _typeHelper = typeHelper;
             Logger = logger;
             //defaults
             Icon = Constants.Icons.PropertyEditor;
@@ -130,7 +136,7 @@ namespace Umbraco.Core.PropertyEditors
                 //detect if the view is a virtual path (in most cases, yes) then convert it
                 if (ManifestDefinedPropertyValueEditor.View.StartsWith("~/"))
                 {
-                    ManifestDefinedPropertyValueEditor.View = IOHelper.ResolveUrl(ManifestDefinedPropertyValueEditor.View);
+                    ManifestDefinedPropertyValueEditor.View = _ioHelper.ResolveUrl(ManifestDefinedPropertyValueEditor.View);
                 }
                 return ManifestDefinedPropertyValueEditor;
             }
@@ -143,7 +149,7 @@ namespace Umbraco.Core.PropertyEditors
                 throw new NotImplementedException("This method must be implemented if a view is not explicitly set");
             }
 
-            editor.View = _attribute.EditorView.StartsWith("~/") ? IOHelper.ResolveUrl(_attribute.EditorView) : _attribute.EditorView;
+            editor.View = _attribute.EditorView.StartsWith("~/") ? _ioHelper.ResolveUrl(_attribute.EditorView) : _attribute.EditorView;
             editor.ValueType = _attribute.ValueType;
             editor.HideLabel = _attribute.HideLabel;
             return editor;
@@ -164,14 +170,14 @@ namespace Umbraco.Core.PropertyEditors
                     //detect if the view is a virtual path (in most cases, yes) then convert it
                     if (f.View.StartsWith("~/"))
                     {
-                        f.View = IOHelper.ResolveUrl(f.View);
+                        f.View = _ioHelper.ResolveUrl(f.View);
                     }    
                 }
                 return ManifestDefinedPreValueEditor;
             }
 
             //There's no manifest, just return an empty one
-            return new PreValueEditor();
+            return new PreValueEditor(_typeHelper, _ioHelper);
         }
 
         protected bool Equals(PropertyEditor other)

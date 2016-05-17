@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -27,7 +28,7 @@ namespace Umbraco.Core.Serialization
 
         public override bool CanConvert(Type objectType)
         {
-            return typeof(string).IsAssignableFrom(objectType);
+            return typeof(string).GetTypeInfo().IsAssignableFrom(objectType.GetTypeInfo());
         }
     }
 }

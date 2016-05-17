@@ -1,6 +1,4 @@
-﻿using System;
-using Semver;
-using Umbraco.Core.Models;
+﻿using Umbraco.Core.Models;
 
 namespace Umbraco.Core.Persistence.Repositories
 {

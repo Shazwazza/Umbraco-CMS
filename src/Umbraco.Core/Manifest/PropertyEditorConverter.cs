@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Umbraco.Core.IO;
 using Umbraco.Core.Logging;
+using Umbraco.Core.Plugins;
 using Umbraco.Core.PropertyEditors;
 using Umbraco.Core.Serialization;
 
@@ -15,15 +17,19 @@ namespace Umbraco.Core.Manifest
     internal class PropertyEditorConverter : JsonCreationConverter<PropertyEditor>
     {
         private readonly ILogger _logger;
+        private readonly IOHelper _ioHelper;
+        private readonly TypeHelper _typeHelper;
 
-        public PropertyEditorConverter(ILogger logger)
+        public PropertyEditorConverter(ILogger logger, IOHelper ioHelper, TypeHelper typeHelper)
         {
             _logger = logger;
+            _ioHelper = ioHelper;
+            _typeHelper = typeHelper;
         }
 
         protected override PropertyEditor Create(Type objectType, JObject jObject)
         {
-            return new PropertyEditor(_logger);
+            return new PropertyEditor(_logger, _ioHelper, _typeHelper);
         }
 
         protected override void Deserialize(JObject jObject, PropertyEditor target, JsonSerializer serializer)
@@ -49,7 +55,7 @@ namespace Umbraco.Core.Manifest
             }
             if (jObject["prevalues"] != null)
             {
-                target.ManifestDefinedPreValueEditor = new PreValueEditor();
+                target.ManifestDefinedPreValueEditor = new PreValueEditor(_typeHelper, _ioHelper);
 
                 //the manifest JSON is a simplified json for the validators which is actually a dictionary, however, the
                 //c# model requires an array of validators not a dictionary so we need to change the json to an array 

@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using Umbraco.Core.Models;
 
 namespace Umbraco.Core.IO
@@ -36,7 +35,6 @@ namespace Umbraco.Core.IO
                 using (var tr = new StreamReader(_viewFileSystem.OpenFile(path)))
                 {
                     viewContent = tr.ReadToEnd();
-                    tr.Close();
                 }
             }
 

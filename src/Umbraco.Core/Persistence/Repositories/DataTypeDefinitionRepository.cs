@@ -164,7 +164,7 @@ INNER JOIN umbracoNode ON cmsDataType.nodeId = umbracoNode.id
 WHERE umbracoNode." + SqlSyntax.GetQuotedColumnName("text") + "= @name", new { name = entity.Name });
             if (exists > 0)
             {
-                throw new DuplicateNameException("A data type with the name " + entity.Name + " already exists");
+                throw new DuplicateItemException("A data type with the name " + entity.Name + " already exists");
             }
 
             var factory = new DataTypeDefinitionFactory(NodeObjectTypeId);
@@ -213,7 +213,7 @@ AND umbracoNode.id <> @id",
                     new { id = entity.Id, name = entity.Name });
             if (exists > 0)
             {
-                throw new DuplicateNameException("A data type with the name " + entity.Name + " already exists");
+                throw new DuplicateItemException("A data type with the name " + entity.Name + " already exists");
             }
 
             //Updates Modified date and Version Guid

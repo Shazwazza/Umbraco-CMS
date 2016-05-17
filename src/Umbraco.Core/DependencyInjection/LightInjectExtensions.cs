@@ -4,6 +4,8 @@ using LightInject;
 
 namespace Umbraco.Core.DependencyInjection
 {
+    
+
     internal static class LightInjectExtensions
     {
         /// <summary>

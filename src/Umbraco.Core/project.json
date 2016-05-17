@@ -11,13 +11,13 @@
     "_Legacy/**/*.cs",
     "Auditing/**/*.*",
     "Configuration/**/*.*",
-    "DependencyInjection/**/*.*",    
+    "DependencyInjection/**/*.*",
     "Dynamics/**/*.*",
     "FileResources/**/*.*",
     "IO/**/*.*",
     "Logging/**/*.*",
     "Macros/**/*.*",
-    "Manifest/**/*.*",
+    "Manifest/ManifestWatcher.cs",
     "Media/**/*.*",
 
     "Models/ContentTypeExtensions.cs",
@@ -33,10 +33,10 @@
 
     "Persistence/*.cs",
     "Persistence/Migrations/**/*.*",
-    "Persistence/Repositories/**/*.*",
+    
+    "PropertyEditors/ValueConverters/**/*.*",
 
     "Profiling/**/*.*",
-    "PropertyEditors/**/*.*",
     "Publishing/**/*.*",
     "Security/**/*.*",
     "Serialization/**/*.*",
@@ -48,6 +48,25 @@
   ],
   "compileFiles": [
     "Configuration/IUmbracoSettings.cs",
+    "Configuration/UmbracoSettings/IContentSection.cs",
+    "Configuration/UmbracoSettings/IImagingAutoFillUploadField.cs",
+    "Configuration/UmbracoSettings/IContentErrorPage.cs",
+    "Configuration/Grid/IGridEditorConfig.cs",
+    "Configuration/UmbracoConfigurationSection.cs",
+
+    "DependencyInjection/LightInjectExtensions.cs",
+    "DependencyInjection/TEMP_Annotation.cs",
+    "DependencyInjection/RepositoryCompositionRoot.cs",
+
+    "IO/IFileSystem.cs",
+    "IO/SystemDirectories.cs",
+    "IO/FileSystemExtensions.cs",
+    "IO/IOHelper.cs",
+    "IO/ViewHelper.cs",
+    "IO/MediaFileSystem.cs",
+    "IO/FileSystemWrapper.cs",
+    "IO/FileSystemProviderAttribute.cs",
+    "IO/FileSystemProviderManager.cs",
 
     "Models/Membership/IMembershipUser.cs",
     "Models/Membership/EntityPermission.cs",
@@ -75,15 +94,22 @@
     "Logging/ILogger.cs",
     "Logging/LoggerExtensions.cs",
 
-    "PropertyEditors/LegacyPropertyEditorIdToAliasConverter.cs",
-    "PropertyEditors/LegacyParameterEditorAliasConverter.cs",
-
     "Sync/IServerAddress.cs",
     "Sync/MessageType.cs",
 
     "Security/BackOfficeUserManager.cs",
     "Security/IBackOfficeUserPasswordChecker.cs",
     "Security/BackOfficeUserPasswordCheckerResult.cs",
+
+    "Services/MoveOperationStatusType.cs",
+    "Services/TagExtractor.cs",
+    "Services/IDataTypeService.cs",
+    "Services/IService.cs",
+    "Services/OperationStatus.cs",
+    "Services/OperationStatusType.cs",
+
+    "Serialization/JsonToStringConverter.cs",
+    "Serialization/JsonCreationConverter.cs",
 
     "Persistence/RepositoryFactory.cs",
     "Persistence/SqlContext.cs",
@@ -96,9 +122,9 @@
     "Persistence/Constants-DbProviderNames.cs",
     "Persistence/NPocoDatabaseExtensions.cs",
     "Persistence/RecordPersistenceType.cs",
+    "Persistence/NPocoSqlExtensions.cs",
 
-    "Persistence/Repositories/Interfaces/IRepository.cs",
-
+    "CacheHelper.cs",
     "MacroErrorBehaviour.cs",
     "IDisposeOnRequestEnd.cs",
     "ServiceProviderExtensions.cs",
@@ -146,7 +172,8 @@
     "ThreadExtensions.cs",
     "TopologicalSorter.cs",
     "UpgradeableReadLock.cs",
-    "WaitHandleExtensions.cs"
+    "WaitHandleExtensions.cs",
+    "XmlExtensions.cs"
   ],
 
   "dependencies": {
@@ -159,8 +186,7 @@
     "Newtonsoft.Json": "8.0",
     "NPoco": "3.1.0-u005",
     "AutoMapper": "4.2",
-    "LightInject.Annotation": "1.0",
-    "LightInject": "4.0",
+    "LightInject": "4.0.9",
     "Microsoft.Extensions.Configuration.Abstractions": "1.0.0-rc1-final",
     "Microsoft.Extensions.Configuration.Json": "1.0.0-rc1-final",
     "Microsoft.Extensions.DependencyInjection": "1.0.0-rc1-final",
@@ -175,7 +201,8 @@
     "System.Xml.XmlDocument": "4.0.1-beta-*",
     "System.Xml.XPath": "4.0.1-beta-*",
     "System.Xml.XPath.XDocument": "4.0.1-beta-*",
-    "System.ComponentModel.Annotations": "4.0.11-beta-*"
+    "System.ComponentModel.Annotations": "4.0.11-beta-*",
+    "System.Threading.Tasks.Parallel" :  "4.0.1-beta-*" 
   },
 
   "frameworks": {

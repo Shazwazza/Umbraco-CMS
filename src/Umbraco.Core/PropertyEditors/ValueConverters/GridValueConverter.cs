@@ -1,14 +1,12 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Web;
+using Microsoft.AspNet.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Umbraco.Core.Configuration;
-using Umbraco.Core.Configuration.Grid;
 using Umbraco.Core.IO;
 using Umbraco.Core.Logging;
-using Umbraco.Core.Models.PublishedContent;
 
 namespace Umbraco.Core.PropertyEditors.ValueConverters
 {
@@ -20,6 +18,17 @@ namespace Umbraco.Core.PropertyEditors.ValueConverters
     [PropertyValueCache(PropertyCacheValue.All, PropertyCacheLevel.Content)]
     public class GridValueConverter : JsonValueConverter
     {
+        private readonly IOHelper _ioHelper;
+        private readonly ILogger _logger;
+        private readonly IUmbracoSettings _umbracoSettings;
+
+        public GridValueConverter(IOHelper ioHelper, ILogger logger, IUmbracoSettings umbracoSettings)
+        {
+            _ioHelper = ioHelper;
+            _logger = logger;
+            _umbracoSettings = umbracoSettings;
+        }
+
         public override bool IsConverter(PublishedPropertyType propertyType)
         {
             return propertyType.PropertyEditorAlias.InvariantEquals(Constants.PropertyEditors.GridAlias);
@@ -42,11 +51,11 @@ namespace Umbraco.Core.PropertyEditors.ValueConverters
                     //TODO: Change all singleton access to use ctor injection in v8!!!
                     //TODO: That would mean that property value converters would need to be request lifespan, hrm....
                     var gridConfig = UmbracoConfig.For.GridConfig(
-                        ApplicationContext.Current.ProfilingLogger.Logger,
+                        _logger,
                         ApplicationContext.Current.ApplicationCache.RuntimeCache,
-                        new DirectoryInfo(HttpContext.Current.Server.MapPath(SystemDirectories.AppPlugins)),
-                        new DirectoryInfo(HttpContext.Current.Server.MapPath(SystemDirectories.Config)),
-                        HttpContext.Current.IsDebuggingEnabled);
+                        new DirectoryInfo(_ioHelper.MapPath(SystemDirectories.AppPlugins)),
+                        new DirectoryInfo(_ioHelper.MapPath(SystemDirectories.Config)),
+                        _umbracoSettings.IsDebuggingEnabled);
                     
                     var sections = GetArray(obj, "sections");
                     foreach (var section in sections.Cast<JObject>())

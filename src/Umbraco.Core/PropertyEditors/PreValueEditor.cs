@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Umbraco.Core.IO;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
+using Umbraco.Core.Plugins;
 
 namespace Umbraco.Core.PropertyEditors
 {
@@ -20,12 +21,15 @@ namespace Umbraco.Core.PropertyEditors
     /// </remarks>
     public class PreValueEditor
     {
-        public PreValueEditor()
+        private readonly IOHelper _ioHelper;
+
+        public PreValueEditor(TypeHelper typeHelper, IOHelper ioHelper)
         {
+            _ioHelper = ioHelper;
             var fields = new List<PreValueField>();
                
             //the ctor checks if we have PreValueFieldAttributes applied and if so we construct our fields from them
-            var props = TypeHelper.CachedDiscoverableProperties(GetType())
+            var props = typeHelper.CachedDiscoverableProperties(GetType())
                 .Where(x => x.Name != "Fields");
             foreach (var p in props)
             {
@@ -76,7 +80,7 @@ namespace Umbraco.Core.PropertyEditors
             Fields = fields;
         }
 
-        private static PreValueField MapAttributeToField(PreValueFieldAttribute att, PropertyInfo prop)
+        private PreValueField MapAttributeToField(PreValueFieldAttribute att, PropertyInfo prop)
         {
             return new PreValueField
                 {
@@ -85,7 +89,7 @@ namespace Umbraco.Core.PropertyEditors
                     Name = att.Name,
                     Description = att.Description,
                     HideLabel = att.HideLabel,
-                    View = att.View.StartsWith("~/") ? IOHelper.ResolveUrl(att.View) : att.View
+                    View = att.View.StartsWith("~/") ? _ioHelper.ResolveUrl(att.View) : att.View
                 };
         }
 

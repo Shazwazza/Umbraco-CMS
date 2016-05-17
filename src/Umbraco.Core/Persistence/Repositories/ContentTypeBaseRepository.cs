@@ -127,7 +127,7 @@ AND umbracoNode.nodeObjectType = @objectType",
                 new { alias = entity.Alias, objectType = NodeObjectTypeId });
             if (exists > 0)
             {
-                throw new DuplicateNameException("An item with the alias " + entity.Alias + " already exists");
+                throw new DuplicateItemException("An item with the alias " + entity.Alias + " already exists");
             }
 
             //Logic for setting Path, Level and SortOrder
@@ -243,7 +243,7 @@ AND umbracoNode.nodeObjectType = @objectType
 AND umbracoNode.id <> @id",
                 new { id = dto.NodeId, alias = dto.Alias, objectType = NodeObjectTypeId });
             if (exists > 0)
-                throw new DuplicateNameException("An item with the alias " + dto.Alias + " already exists");
+                throw new DuplicateItemException("An item with the alias " + dto.Alias + " already exists");
 
             // handle (update) the node
             var nodeDto = dto.NodeDto;

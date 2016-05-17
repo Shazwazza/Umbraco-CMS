@@ -7,19 +7,14 @@ using Umbraco.Core.Configuration.UmbracoSettings;
 
 namespace Umbraco.Core.IO
 {
-	/// <summary>
-	/// A custom file system provider for media
-	/// </summary>
-	[FileSystemProvider("media")]
+    /// <summary>
+    /// A custom file system provider for media
+    /// </summary>
+    [FileSystemProvider("media")]
 	public class MediaFileSystem : FileSystemWrapper
 	{
 	    private readonly IContentSection _contentConfig;
-
-	    public MediaFileSystem(IFileSystem wrapped)
-			: this(wrapped, UmbracoConfig.For.UmbracoSettings().Content)
-		{
-		}
-
+        
         public MediaFileSystem(IFileSystem wrapped, IContentSection contentConfig) : base(wrapped)
         {
             _contentConfig = contentConfig;

@@ -10,14 +10,16 @@ namespace Umbraco.Core.PropertyEditors
     /// </summary>
     public class ParameterEditor : IParameterEditor
     {
+        private readonly IOHelper _ioHelper;
 
         private readonly ParameterEditorAttribute _attribute;
 
         /// <summary>
         /// The constructor will setup the property editor based on the attribute if one is found
         /// </summary>
-        public ParameterEditor()             
+        public ParameterEditor(IOHelper ioHelper)             
         {
+            _ioHelper = ioHelper;
             Configuration = new Dictionary<string, object>();
             //assign properties based on the attribute if it is found
             _attribute = GetType().GetCustomAttribute<ParameterEditorAttribute>(false);
@@ -76,7 +78,7 @@ namespace Umbraco.Core.PropertyEditors
                 //detect if the view is a virtual path (in most cases, yes) then convert it
                 if (ManifestDefinedParameterValueEditor.View.StartsWith("~/"))
                 {
-                    ManifestDefinedParameterValueEditor.View = IOHelper.ResolveUrl(ManifestDefinedParameterValueEditor.View);
+                    ManifestDefinedParameterValueEditor.View = _ioHelper.ResolveUrl(ManifestDefinedParameterValueEditor.View);
                 }
                 return ManifestDefinedParameterValueEditor;
             }

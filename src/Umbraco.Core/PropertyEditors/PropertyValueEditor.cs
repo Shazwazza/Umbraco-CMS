@@ -128,7 +128,7 @@ namespace Umbraco.Core.PropertyEditors
         /// <returns></returns>
         public DataTypeDatabaseType GetDatabaseType()
         {
-            switch (ValueType.ToUpper(CultureInfo.InvariantCulture))
+            switch (ValueType.ToUpper())
             {
                 case "INT":
                 case "INTEGER":

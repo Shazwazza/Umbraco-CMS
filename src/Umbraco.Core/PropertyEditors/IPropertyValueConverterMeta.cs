@@ -16,7 +16,7 @@ namespace Umbraco.Core.PropertyEditors
         /// </summary>
         /// <param name="propertyType">The property type.</param>
         /// <returns>The CLR type of values returned by the converter.</returns>
-        Type GetPropertyValueType(PublishedPropertyType propertyType);
+        Type GetPropertyValueType(IPublishedPropertyType propertyType);
 
         /// <summary>
         /// Gets the property cache level of a specified value.
@@ -24,6 +24,6 @@ namespace Umbraco.Core.PropertyEditors
         /// <param name="propertyType">The property type.</param>
         /// <param name="cacheValue">The property value.</param>
         /// <returns>The property cache level of the specified value.</returns>
-        PropertyCacheLevel GetPropertyCacheLevel(PublishedPropertyType propertyType, PropertyCacheValue cacheValue);
+        PropertyCacheLevel GetPropertyCacheLevel(IPublishedPropertyType propertyType, PropertyCacheValue cacheValue);
     }
 }

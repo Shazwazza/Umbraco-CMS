@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 
 namespace Umbraco.Core.IO
 {
@@ -21,7 +22,10 @@ namespace Umbraco.Core.IO
 		protected FileSystemWrapper(IFileSystem wrapped)
 		{
 			_wrapped = wrapped;
+		    Alias = GetType().GetCustomAttribute<FileSystemProviderAttribute>(false).Alias;
 		}
+
+        public string Alias { get; private set; }
 
 		public IEnumerable<string> GetDirectories(string path)
 		{

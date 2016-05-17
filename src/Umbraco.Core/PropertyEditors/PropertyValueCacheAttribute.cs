@@ -1,5 +1,4 @@
 ﻿using System;
-using log4net.Core;
 
 namespace Umbraco.Core.PropertyEditors
 {

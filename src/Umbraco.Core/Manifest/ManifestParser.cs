@@ -9,6 +9,7 @@ using Newtonsoft.Json.Linq;
 using Umbraco.Core.Cache;
 using Umbraco.Core.IO;
 using Umbraco.Core.Logging;
+using Umbraco.Core.Plugins;
 using Umbraco.Core.PropertyEditors;
 
 namespace Umbraco.Core.Manifest
@@ -22,18 +23,22 @@ namespace Umbraco.Core.Manifest
         
         private readonly DirectoryInfo _pluginsDir;
         private readonly IRuntimeCacheProvider _cache;
+        private readonly IOHelper _ioHelper;
+        private readonly TypeHelper _typeHelper;
 
         //used to strip comments
         private static readonly Regex CommentsSurround = new Regex(@"/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/", RegexOptions.Compiled);
         private static readonly Regex CommentsLine = new Regex(@"^\s*//.*?$", RegexOptions.Compiled | RegexOptions.Multiline);
 
-        public ManifestParser(ILogger logger, DirectoryInfo pluginsDir, IRuntimeCacheProvider cache)
+        public ManifestParser(ILogger logger, DirectoryInfo pluginsDir, IRuntimeCacheProvider cache, IOHelper ioHelper, TypeHelper typeHelper)
         {
             if (logger == null) throw new ArgumentNullException("logger");
             if (pluginsDir == null) throw new ArgumentNullException("pluginsDir");
             _pluginsDir = pluginsDir;
             _logger = logger;
             _cache = cache;
+            _ioHelper = ioHelper;
+            _typeHelper = typeHelper;
         }
 
         /// <summary>
@@ -45,7 +50,7 @@ namespace Umbraco.Core.Manifest
         {
             return JsonConvert.DeserializeObject<IEnumerable<GridEditor>>(
                 jsonEditors.ToString(),
-                new GridEditorConverter());
+                new GridEditorConverter(_ioHelper));
         }
 
         /// <summary>
@@ -57,7 +62,7 @@ namespace Umbraco.Core.Manifest
         {
             return JsonConvert.DeserializeObject<IEnumerable<PropertyEditor>>(
                 jsonEditors.ToString(),
-                new PropertyEditorConverter(_logger),
+                new PropertyEditorConverter(_logger, _ioHelper, _typeHelper),
                 new PreValueFieldConverter());
         }
 
@@ -70,7 +75,7 @@ namespace Umbraco.Core.Manifest
         {
             return JsonConvert.DeserializeObject<IEnumerable<ParameterEditor>>(
                 jsonEditors.ToString(),
-                new ParameterEditorConverter());
+                new ParameterEditorConverter(_ioHelper));
         }
         
         /// <summary>
@@ -293,7 +298,7 @@ namespace Umbraco.Core.Manifest
                         if (value.Value<string>().StartsWith("~/"))
                         {
                             //replace the virtual path
-                            value.Value = IOHelper.ResolveUrl(value.Value<string>());
+                            value.Value = _ioHelper.ResolveUrl(value.Value<string>());
                         }
                     }
                 }

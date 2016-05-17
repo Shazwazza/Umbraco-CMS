@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using NPoco;
 using Umbraco.Core.Configuration;
 using Umbraco.Core.Configuration.UmbracoSettings;
+using Umbraco.Core.IO;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
 using Umbraco.Core.Models.Editors;
@@ -20,10 +21,8 @@ using Umbraco.Core.Persistence.Querying;
 using Umbraco.Core.Persistence.SqlSyntax;
 using Umbraco.Core.Persistence.UnitOfWork;
 using Umbraco.Core.PropertyEditors;
-using Umbraco.Core.Services;
-using Umbraco.Core.Dynamics;
-using Umbraco.Core.IO;
 using Umbraco.Core.Persistence.Mappers;
+using Umbraco.Core.Services;
 
 namespace Umbraco.Core.Persistence.Repositories
 {
@@ -51,11 +50,13 @@ namespace Umbraco.Core.Persistence.Repositories
         where TEntity : class, IAggregateRoot
     {
         private readonly IContentSection _contentSection;
+        private readonly MediaFileSystem _mediaFileSystem;
 
-        protected VersionableRepositoryBase(IDatabaseUnitOfWork work, CacheHelper cache, ILogger logger, IContentSection contentSection, IMappingResolver mappingResolver)
+        protected VersionableRepositoryBase(IDatabaseUnitOfWork work, CacheHelper cache, ILogger logger, IContentSection contentSection, IMappingResolver mappingResolver, MediaFileSystem mediaFileSystem)
             : base(work, cache, logger, mappingResolver)
         {
             _contentSection = contentSection;
+            _mediaFileSystem = mediaFileSystem;
         }
 
         #region IRepositoryVersionable Implementation
@@ -528,28 +529,27 @@ namespace Umbraco.Core.Persistence.Repositories
             files = files.Distinct();
 
             var allsuccess = true;
-
-            var fs = FileSystemProviderManager.Current.GetFileSystemProvider<MediaFileSystem>();
+            
             Parallel.ForEach(files, file =>
             {
                 try
                 {
                     if (file.IsNullOrWhiteSpace()) return;
 
-                    var relativeFilePath = fs.GetRelativePath(file);
-                    if (fs.FileExists(relativeFilePath) == false) return;
+                    var relativeFilePath = _mediaFileSystem.GetRelativePath(file);
+                    if (_mediaFileSystem.FileExists(relativeFilePath) == false) return;
 
                     var parentDirectory = System.IO.Path.GetDirectoryName(relativeFilePath);
 
                     // don't want to delete the media folder if not using directories.
-                    if (_contentSection.UploadAllowDirectories && parentDirectory != fs.GetRelativePath("/"))
+                    if (_contentSection.UploadAllowDirectories && parentDirectory != _mediaFileSystem.GetRelativePath("/"))
                     {
                         //issue U4-771: if there is a parent directory the recursive parameter should be true
-                        fs.DeleteDirectory(parentDirectory, String.IsNullOrEmpty(parentDirectory) == false);
+                        _mediaFileSystem.DeleteDirectory(parentDirectory, String.IsNullOrEmpty(parentDirectory) == false);
                     }
                     else
                     {
-                        fs.DeleteFile(file, true);
+                        _mediaFileSystem.DeleteFile(file, true);
                     }
                 }
                 catch (Exception e)

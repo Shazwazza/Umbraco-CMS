@@ -12,7 +12,7 @@ namespace Umbraco.Core.PropertyEditors
         /// </summary>
         /// <param name="propertyType">The property type.</param>
         /// <returns>A value indicating whether the converter supports a property type.</returns>
-        bool IsConverter(PublishedPropertyType propertyType);
+        bool IsConverter(IPublishedPropertyType propertyType);
 
         /// <summary>
         /// Converts a property Data value to a Source value.
@@ -32,7 +32,7 @@ namespace Umbraco.Core.PropertyEditors
         /// strings, and xml-whitespace strings appropriately, ie it should know whether to preserve
         /// whitespaces.</para>
         /// </remarks>
-        object ConvertDataToSource(PublishedPropertyType propertyType, object source, bool preview);
+        object ConvertDataToSource(IPublishedPropertyType propertyType, object source, bool preview);
 
         /// <summary>
         /// Converts a property Source value to an Object value.
@@ -44,7 +44,7 @@ namespace Umbraco.Core.PropertyEditors
         /// <remarks>The converter should know how to convert a <c>null</c> source value, or any source value
         /// indicating that no value has been assigned to the property. It is up to the converter to determine
         /// what to return in that case: either <c>null</c>, or the default value...</remarks>
-        object ConvertSourceToObject(PublishedPropertyType propertyType, object source, bool preview);
+        object ConvertSourceToObject(IPublishedPropertyType propertyType, object source, bool preview);
 
         /// <summary>
         /// Converts a property Source value to an XPath value.
@@ -63,6 +63,6 @@ namespace Umbraco.Core.PropertyEditors
         /// <para>The converter may want to return an XML fragment that represent a part of the content tree,
         /// but should pay attention not to create infinite loops that would kill XPath and XSLT.</para>
         /// </remarks>
-        object ConvertSourceToXPath(PublishedPropertyType propertyType, object source, bool preview);
+        object ConvertSourceToXPath(IPublishedPropertyType propertyType, object source, bool preview);
     }
 }

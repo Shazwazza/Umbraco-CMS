@@ -11,9 +11,13 @@ using Umbraco.Core.Persistence.UnitOfWork;
 namespace Umbraco.Core.Persistence.Repositories
 {
     internal class PartialViewRepository : FileRepository<string, IPartialView>, IPartialViewRepository
-    {      
-        public PartialViewRepository(IUnitOfWork work, [Inject("PartialViewFileSystem")] IFileSystem fileSystem) : base(work, fileSystem)
-        { }
+    {
+        private readonly IOHelper _ioHelper;
+
+        public PartialViewRepository(IUnitOfWork work, [Inject("PartialViewFileSystem")] IFileSystem fileSystem, IOHelper ioHelper) : base(work, fileSystem)
+        {
+            _ioHelper = ioHelper;
+        }
 
         protected virtual PartialViewType ViewType => PartialViewType.PartialView;
 
@@ -103,8 +107,8 @@ namespace Umbraco.Core.Persistence.Repositories
 
             // validate path & extension
             var validDir = SystemDirectories.MvcViews;
-            var isValidPath = IOHelper.VerifyEditPath(fullPath, validDir);
-            var isValidExtension = IOHelper.VerifyFileExtension(fullPath, ValidExtensions);
+            var isValidPath = _ioHelper.VerifyEditPath(fullPath, validDir);
+            var isValidExtension = _ioHelper.VerifyFileExtension(fullPath, ValidExtensions);
             return isValidPath && isValidExtension;
         }
 

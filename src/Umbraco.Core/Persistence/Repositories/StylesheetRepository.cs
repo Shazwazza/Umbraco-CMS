@@ -16,9 +16,13 @@ namespace Umbraco.Core.Persistence.Repositories
     /// </summary>
     internal class StylesheetRepository : FileRepository<string, Stylesheet>, IStylesheetRepository
     {
-        public StylesheetRepository(IUnitOfWork work, [Inject("StylesheetFileSystem")] IFileSystem fileSystem)
+        private readonly IOHelper _ioHelper;
+
+        public StylesheetRepository(IUnitOfWork work, [Inject("StylesheetFileSystem")] IFileSystem fileSystem, IOHelper ioHelper)
             : base(work, fileSystem)
-        { }
+        {
+            _ioHelper = ioHelper;
+        }
 
         #region Overrides of FileRepository<string,Stylesheet>
 
@@ -120,8 +124,8 @@ namespace Umbraco.Core.Persistence.Repositories
 
             // validate path and extension
             var validDir = SystemDirectories.Css;
-            var isValidPath = IOHelper.VerifyEditPath(fullPath, validDir);
-            var isValidExtension = IOHelper.VerifyFileExtension(stylesheet.Path, ValidExtensions);
+            var isValidPath = _ioHelper.VerifyEditPath(fullPath, validDir);
+            var isValidExtension = _ioHelper.VerifyFileExtension(stylesheet.Path, ValidExtensions);
             return isValidPath && isValidExtension;
         }
 

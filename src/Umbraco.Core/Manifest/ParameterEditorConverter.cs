@@ -1,6 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Umbraco.Core.IO;
 using Umbraco.Core.PropertyEditors;
 using Umbraco.Core.Serialization;
 
@@ -11,9 +12,16 @@ namespace Umbraco.Core.Manifest
     /// </summary>
     internal class ParameterEditorConverter : JsonCreationConverter<ParameterEditor>
     {
+        private readonly IOHelper _ioHelper;
+
+        public ParameterEditorConverter(IOHelper ioHelper)
+        {
+            _ioHelper = ioHelper;
+        }
+
         protected override ParameterEditor Create(Type objectType, JObject jObject)
         {
-            return new ParameterEditor();
+            return new ParameterEditor(_ioHelper);
         }
 
         protected override void Deserialize(JObject jObject, ParameterEditor target, JsonSerializer serializer)
