@@ -60,9 +60,16 @@ namespace Umbraco.Core.Services
                     }
                     else
                     {
-                        //if a property was deleted or alias changed, then update all content of the current content type
-                        // and all of it's desscendant doc types.     
-                        toUpdate.AddRange(contentType.DescendantsAndSelf());
+                        //HACK!
+                        //TODO: Put this someplace else
+                        var contentTypeService = this as IContentTypeService;
+                        if (contentTypeService != null)
+                        {
+                            //if a property was deleted or alias changed, then update all content of the current content type
+                            // and all of it's desscendant doc types.     
+                            toUpdate.AddRange(contentType.DescendantsAndSelf(contentTypeService));
+                        }
+                        
                     }
                 }
             }

@@ -124,7 +124,7 @@ namespace Umbraco.Core.Persistence.Repositories
             entity.ResetDirtyProperties();
         }
 
-        public IMigrationEntry FindEntry(string migrationName, SemVersion version)
+        public IMigrationEntry FindEntry(string migrationName, ISemVersion version)
         {
             var versionString = version.ToString();
 

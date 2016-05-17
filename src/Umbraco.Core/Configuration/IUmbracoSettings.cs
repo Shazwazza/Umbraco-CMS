@@ -7,6 +7,8 @@ namespace Umbraco.Core.Configuration
     {
         IConnectionString ConnectionString { get; }
         bool IsDebuggingEnabled { get; }
+        bool UseSSL { get; }
+        string DefaultUILanguage { get; }
     }
 
     /// <summary>

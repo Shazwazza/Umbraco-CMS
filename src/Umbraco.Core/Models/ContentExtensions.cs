@@ -8,6 +8,8 @@ using System.Xml.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Umbraco.Core.Models.EntityBase;
+using Umbraco.Core.Models.Membership;
+using Umbraco.Core.Services;
 
 //using Umbraco.Core.Configuration;
 //using Umbraco.Core.Configuration.UmbracoSettings;
@@ -444,169 +446,169 @@ namespace Umbraco.Core.Models
 
         #region SetValue for setting file contents
 
-       // /// <summary>
-       // /// Sets and uploads the file from a HttpPostedFileBase object as the property value
-       // /// </summary>
-       // /// <param name="content"><see cref="IContentBase"/> to add property value to</param>
-       // /// <param name="propertyTypeAlias">Alias of the property to save the value on</param>
-       // /// <param name="value">The <see cref="HttpPostedFileBase"/> containing the file that will be uploaded</param>
-       // public static void SetValue(this IContentBase content, string propertyTypeAlias, HttpPostedFileBase value)
-       // {
-       //     // Ensure we get the filename without the path in IE in intranet mode 
-       //     // http://stackoverflow.com/questions/382464/httppostedfile-filename-different-from-ie
-       //     var fileName = value.FileName;
-       //     if (fileName.LastIndexOf(@"\") > 0)
-       //         fileName = fileName.Substring(fileName.LastIndexOf(@"\") + 1);
+        // /// <summary>
+        // /// Sets and uploads the file from a HttpPostedFileBase object as the property value
+        // /// </summary>
+        // /// <param name="content"><see cref="IContentBase"/> to add property value to</param>
+        // /// <param name="propertyTypeAlias">Alias of the property to save the value on</param>
+        // /// <param name="value">The <see cref="HttpPostedFileBase"/> containing the file that will be uploaded</param>
+        // public static void SetValue(this IContentBase content, string propertyTypeAlias, HttpPostedFileBase value)
+        // {
+        //     // Ensure we get the filename without the path in IE in intranet mode 
+        //     // http://stackoverflow.com/questions/382464/httppostedfile-filename-different-from-ie
+        //     var fileName = value.FileName;
+        //     if (fileName.LastIndexOf(@"\") > 0)
+        //         fileName = fileName.Substring(fileName.LastIndexOf(@"\") + 1);
 
-       //     var name =
-       //         IOHelper.SafeFileName(
-       //             fileName.Substring(fileName.LastIndexOf(IOHelper.DirSepChar) + 1,
-       //                                fileName.Length - fileName.LastIndexOf(IOHelper.DirSepChar) - 1)
-       //                     .ToLower());
+        //     var name =
+        //         IOHelper.SafeFileName(
+        //             fileName.Substring(fileName.LastIndexOf(IOHelper.DirSepChar) + 1,
+        //                                fileName.Length - fileName.LastIndexOf(IOHelper.DirSepChar) - 1)
+        //                     .ToLower());
 
-       //     if (string.IsNullOrEmpty(name) == false)
-       //         SetFileOnContent(content, propertyTypeAlias, name, value.InputStream);
-       // }
+        //     if (string.IsNullOrEmpty(name) == false)
+        //         SetFileOnContent(content, propertyTypeAlias, name, value.InputStream);
+        // }
 
-       // /// <summary>
-       // /// Sets and uploads the file from a HttpPostedFile object as the property value
-       // /// </summary>
-       // /// <param name="content"><see cref="IContentBase"/> to add property value to</param>
-       // /// <param name="propertyTypeAlias">Alias of the property to save the value on</param>
-       // /// <param name="value">The <see cref="HttpPostedFile"/> containing the file that will be uploaded</param>
-       // public static void SetValue(this IContentBase content, string propertyTypeAlias, HttpPostedFile value)
-       // {
-       //     SetValue(content, propertyTypeAlias, (HttpPostedFileBase)new HttpPostedFileWrapper(value));
-       // }
+        // /// <summary>
+        // /// Sets and uploads the file from a HttpPostedFile object as the property value
+        // /// </summary>
+        // /// <param name="content"><see cref="IContentBase"/> to add property value to</param>
+        // /// <param name="propertyTypeAlias">Alias of the property to save the value on</param>
+        // /// <param name="value">The <see cref="HttpPostedFile"/> containing the file that will be uploaded</param>
+        // public static void SetValue(this IContentBase content, string propertyTypeAlias, HttpPostedFile value)
+        // {
+        //     SetValue(content, propertyTypeAlias, (HttpPostedFileBase)new HttpPostedFileWrapper(value));
+        // }
 
-       // /// <summary>
-       // /// Sets and uploads the file from a <see cref="Stream"/> as the property value
-       // /// </summary>
-       // /// <param name="content"><see cref="IContentBase"/> to add property value to</param>
-       // /// <param name="propertyTypeAlias">Alias of the property to save the value on</param>
-       // /// <param name="fileName">Name of the file</param>
-       // /// <param name="fileStream"><see cref="Stream"/> to save to disk</param>
-       // public static void SetValue(this IContentBase content, string propertyTypeAlias, string fileName, Stream fileStream)
-       // {
-       //     var name = IOHelper.SafeFileName(fileName);
+        // /// <summary>
+        // /// Sets and uploads the file from a <see cref="Stream"/> as the property value
+        // /// </summary>
+        // /// <param name="content"><see cref="IContentBase"/> to add property value to</param>
+        // /// <param name="propertyTypeAlias">Alias of the property to save the value on</param>
+        // /// <param name="fileName">Name of the file</param>
+        // /// <param name="fileStream"><see cref="Stream"/> to save to disk</param>
+        // public static void SetValue(this IContentBase content, string propertyTypeAlias, string fileName, Stream fileStream)
+        // {
+        //     var name = IOHelper.SafeFileName(fileName);
 
-       //     if (string.IsNullOrEmpty(name) == false && fileStream != null)
-       //         SetFileOnContent(content, propertyTypeAlias, name, fileStream);
-       // }
+        //     if (string.IsNullOrEmpty(name) == false && fileStream != null)
+        //         SetFileOnContent(content, propertyTypeAlias, name, fileStream);
+        // }
 
-       // private static void SetFileOnContent(IContentBase content, string propertyTypeAlias, string filename, Stream fileStream)
-       // {
-       //     var property = content.Properties.FirstOrDefault(x => x.Alias == propertyTypeAlias);
-       //     if (property == null)
-       //         return;
+        // private static void SetFileOnContent(IContentBase content, string propertyTypeAlias, string filename, Stream fileStream)
+        // {
+        //     var property = content.Properties.FirstOrDefault(x => x.Alias == propertyTypeAlias);
+        //     if (property == null)
+        //         return;
 
-       //     //TODO: ALl of this naming logic needs to be put into the ImageHelper and then we need to change FileUploadPropertyValueEditor to do the same!
+        //     //TODO: ALl of this naming logic needs to be put into the ImageHelper and then we need to change FileUploadPropertyValueEditor to do the same!
 
-       //     var numberedFolder = MediaSubfolderCounter.Current.Increment();
-       //     var fileName = UmbracoConfig.For.UmbracoSettings().Content.UploadAllowDirectories
-       //                                       ? Path.Combine(numberedFolder.ToString(CultureInfo.InvariantCulture), filename)
-       //                                       : numberedFolder + "-" + filename;
+        //     var numberedFolder = MediaSubfolderCounter.Current.Increment();
+        //     var fileName = UmbracoConfig.For.UmbracoSettings().Content.UploadAllowDirectories
+        //                                       ? Path.Combine(numberedFolder.ToString(CultureInfo.InvariantCulture), filename)
+        //                                       : numberedFolder + "-" + filename;
 
-       //     var extension = Path.GetExtension(filename).Substring(1).ToLowerInvariant();
+        //     var extension = Path.GetExtension(filename).Substring(1).ToLowerInvariant();
 
-       //     //the file size is the length of the stream in bytes
-       //     var fileSize = fileStream.Length;
+        //     //the file size is the length of the stream in bytes
+        //     var fileSize = fileStream.Length;
 
-       //     var fs = FileSystemProviderManager.Current.GetFileSystemProvider<MediaFileSystem>();
-       //     fs.AddFile(fileName, fileStream);
+        //     var fs = FileSystemProviderManager.Current.GetFileSystemProvider<MediaFileSystem>();
+        //     fs.AddFile(fileName, fileStream);
 
-       //     //Check if file supports resizing and create thumbnails
-       //     var supportsResizing = UmbracoConfig.For.UmbracoSettings().Content.ImageFileTypes.InvariantContains(extension);
+        //     //Check if file supports resizing and create thumbnails
+        //     var supportsResizing = UmbracoConfig.For.UmbracoSettings().Content.ImageFileTypes.InvariantContains(extension);
 
-       //     //the config section used to auto-fill properties
-       //     IImagingAutoFillUploadField uploadFieldConfigNode = null;
+        //     //the config section used to auto-fill properties
+        //     IImagingAutoFillUploadField uploadFieldConfigNode = null;
 
-       //     //Check for auto fill of additional properties
-       //     if (UmbracoConfig.For.UmbracoSettings().Content.ImageAutoFillProperties != null)
-       //     {
-       //         uploadFieldConfigNode = UmbracoConfig.For.UmbracoSettings().Content.ImageAutoFillProperties
-       //                             .FirstOrDefault(x => x.Alias == propertyTypeAlias);
+        //     //Check for auto fill of additional properties
+        //     if (UmbracoConfig.For.UmbracoSettings().Content.ImageAutoFillProperties != null)
+        //     {
+        //         uploadFieldConfigNode = UmbracoConfig.For.UmbracoSettings().Content.ImageAutoFillProperties
+        //                             .FirstOrDefault(x => x.Alias == propertyTypeAlias);
 
-       //     }
+        //     }
 
-       //     if (supportsResizing)
-       //     {
-       //         //get the original image from the original stream
-       //         if (fileStream.CanSeek) fileStream.Seek(0, 0);
-       //         using (var originalImage = Image.FromStream(fileStream))
-       //         {
-       //             var additionalSizes = new List<int>();
+        //     if (supportsResizing)
+        //     {
+        //         //get the original image from the original stream
+        //         if (fileStream.CanSeek) fileStream.Seek(0, 0);
+        //         using (var originalImage = Image.FromStream(fileStream))
+        //         {
+        //             var additionalSizes = new List<int>();
 
-       //             //Look up Prevalues for this upload datatype - if it is an upload datatype - get additional configured sizes
-       //             if (property.PropertyType.PropertyEditorAlias == Constants.PropertyEditors.UploadFieldAlias)
-       //             {
-       //                 //Get Prevalues by the DataType's Id: property.PropertyType.DataTypeId
-       //                 var values = ApplicationContext.Current.Services.DataTypeService.GetPreValuesByDataTypeId(property.PropertyType.DataTypeDefinitionId);
-       //                 var thumbnailSizes = values.FirstOrDefault();
-       //                 //Additional thumbnails configured as prevalues on the DataType
-       //                 if (thumbnailSizes != null)
-       //                 {
-							//foreach (var thumb in thumbnailSizes.Split(new[] { ";", "," }, StringSplitOptions.RemoveEmptyEntries))
-       //                     {
-       //                         int thumbSize;
-       //                         if (thumb != "" && int.TryParse(thumb, out thumbSize))
-       //                         {
-       //                             additionalSizes.Add(thumbSize);
-       //                         }
-       //                     }
-       //                 }
-       //             }
+        //             //Look up Prevalues for this upload datatype - if it is an upload datatype - get additional configured sizes
+        //             if (property.PropertyType.PropertyEditorAlias == Constants.PropertyEditors.UploadFieldAlias)
+        //             {
+        //                 //Get Prevalues by the DataType's Id: property.PropertyType.DataTypeId
+        //                 var values = ApplicationContext.Current.Services.DataTypeService.GetPreValuesByDataTypeId(property.PropertyType.DataTypeDefinitionId);
+        //                 var thumbnailSizes = values.FirstOrDefault();
+        //                 //Additional thumbnails configured as prevalues on the DataType
+        //                 if (thumbnailSizes != null)
+        //                 {
+        //foreach (var thumb in thumbnailSizes.Split(new[] { ";", "," }, StringSplitOptions.RemoveEmptyEntries))
+        //                     {
+        //                         int thumbSize;
+        //                         if (thumb != "" && int.TryParse(thumb, out thumbSize))
+        //                         {
+        //                             additionalSizes.Add(thumbSize);
+        //                         }
+        //                     }
+        //                 }
+        //             }
 
-       //             ImageHelper.GenerateMediaThumbnails(fs, fileName, extension, originalImage, additionalSizes);
+        //             ImageHelper.GenerateMediaThumbnails(fs, fileName, extension, originalImage, additionalSizes);
 
-       //             //while the image is still open, we'll check if we need to auto-populate the image properties
-       //             if (uploadFieldConfigNode != null)
-       //             {
-       //                 content.SetValue(uploadFieldConfigNode.WidthFieldAlias, originalImage.Width.ToString(CultureInfo.InvariantCulture));
-       //                 content.SetValue(uploadFieldConfigNode.HeightFieldAlias, originalImage.Height.ToString(CultureInfo.InvariantCulture));
-       //             }
+        //             //while the image is still open, we'll check if we need to auto-populate the image properties
+        //             if (uploadFieldConfigNode != null)
+        //             {
+        //                 content.SetValue(uploadFieldConfigNode.WidthFieldAlias, originalImage.Width.ToString(CultureInfo.InvariantCulture));
+        //                 content.SetValue(uploadFieldConfigNode.HeightFieldAlias, originalImage.Height.ToString(CultureInfo.InvariantCulture));
+        //             }
 
-       //         }
-       //     }
+        //         }
+        //     }
 
-       //     //if auto-fill is true, then fill the remaining, non-image properties
-       //     if (uploadFieldConfigNode != null)
-       //     {
-       //         content.SetValue(uploadFieldConfigNode.LengthFieldAlias, fileSize.ToString(CultureInfo.InvariantCulture));
-       //         content.SetValue(uploadFieldConfigNode.ExtensionFieldAlias, extension);
-       //     }
+        //     //if auto-fill is true, then fill the remaining, non-image properties
+        //     if (uploadFieldConfigNode != null)
+        //     {
+        //         content.SetValue(uploadFieldConfigNode.LengthFieldAlias, fileSize.ToString(CultureInfo.InvariantCulture));
+        //         content.SetValue(uploadFieldConfigNode.ExtensionFieldAlias, extension);
+        //     }
 
-       //     //Set the value of the property to that of the uploaded file's url
-       //     property.Value = fs.GetUrl(fileName);
-       // }
+        //     //Set the value of the property to that of the uploaded file's url
+        //     property.Value = fs.GetUrl(fileName);
+        // }
 
         #endregion
 
         #region User/Profile methods
-      
-        ///// <summary>
-        ///// Gets the <see cref="IProfile"/> for the Creator of this media item.
-        ///// </summary>
-        //public static IProfile GetCreatorProfile(this IMedia media, IUserService userService)
-        //{
-        //    return userService.GetProfileById(media.CreatorId);
-        //}
 
-        ///// <summary>
-        ///// Gets the <see cref="IProfile"/> for the Creator of this content item.
-        ///// </summary>
-        //public static IProfile GetCreatorProfile(this IContentBase content, IUserService userService)
-        //{
-        //    return userService.GetProfileById(content.CreatorId);
-        //}
+        /// <summary>
+        /// Gets the <see cref="IProfile"/> for the Creator of this media item.
+        /// </summary>
+        public static IProfile GetCreatorProfile(this IMedia media, IUserService userService)
+        {
+            return userService.GetProfileById(media.CreatorId);
+        }
 
-        ///// <summary>
-        ///// Gets the <see cref="IProfile"/> for the Writer of this content.
-        ///// </summary>
-        //public static IProfile GetWriterProfile(this IContent content, IUserService userService)
-        //{
-        //    return userService.GetProfileById(content.WriterId);
-        //}
+        /// <summary>
+        /// Gets the <see cref="IProfile"/> for the Creator of this content item.
+        /// </summary>
+        public static IProfile GetCreatorProfile(this IContentBase content, IUserService userService)
+        {
+            return userService.GetProfileById(content.CreatorId);
+        }
+
+        /// <summary>
+        /// Gets the <see cref="IProfile"/> for the Writer of this content.
+        /// </summary>
+        public static IProfile GetWriterProfile(this IContent content, IUserService userService)
+        {
+            return userService.GetProfileById(content.WriterId);
+        }
 
         #endregion
 

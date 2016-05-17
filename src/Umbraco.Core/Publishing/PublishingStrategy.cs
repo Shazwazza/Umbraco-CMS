@@ -172,7 +172,7 @@ namespace Umbraco.Core.Publishing
                     }
 
                     //Check if this item has never been published (and that it is not at the root level)
-                    if (item.Level != firstLevel && !includeUnpublishedDocuments && !item.HasPublishedVersion())
+                    if (item.Level != firstLevel && !includeUnpublishedDocuments && !item.HasPublishedVersion)
                     {
                         //this item does not have a published version and the flag is set to not include them
                         parentsIdsCancelled.Add(item.Id);
@@ -275,22 +275,23 @@ namespace Umbraco.Core.Publishing
         /// </remarks> 
         private void CheckCancellingOfChildPublishing(IContent content, List<int> parentsIdsCancelled, bool includeUnpublishedDocuments)
         {
-            //Does this document apply to our rule to cancel it's children being published?
-            //TODO: We're going back to the service layer here... not sure how to avoid this? And this will add extra overhead to 
-            // any document that fails to publish...
-            var hasPublishedVersion = ApplicationContext.Current.Services.ContentService.HasPublishedVersion(content.Id);
+            throw new NotImplementedException("Fix PublishingStrategy CheckCancellingOfChildPublishing - pretty sure this is already fixed in v8");
+            ////Does this document apply to our rule to cancel it's children being published?
+            ////TODO: We're going back to the service layer here... not sure how to avoid this? And this will add extra overhead to 
+            //// any document that fails to publish...
+            //var hasPublishedVersion = ApplicationContext.Current.Services.ContentService.HasPublishedVersion(content.Id);
 
-            if (hasPublishedVersion && !includeUnpublishedDocuments)
-            {
-                //it has a published version but our flag tells us to not include un-published documents and therefore we should
-                // not be forcing decendant/child documents to be published if their parent fails.
-                parentsIdsCancelled.Add(content.Id);
-            }
-            else if (!hasPublishedVersion)
-            {
-                //it doesn't have a published version so we certainly cannot publish it's children.
-                parentsIdsCancelled.Add(content.Id);
-            }
+            //if (hasPublishedVersion && !includeUnpublishedDocuments)
+            //{
+            //    //it has a published version but our flag tells us to not include un-published documents and therefore we should
+            //    // not be forcing decendant/child documents to be published if their parent fails.
+            //    parentsIdsCancelled.Add(content.Id);
+            //}
+            //else if (!hasPublishedVersion)
+            //{
+            //    //it doesn't have a published version so we certainly cannot publish it's children.
+            //    parentsIdsCancelled.Add(content.Id);
+            //}
         }
 
         /// <summary>

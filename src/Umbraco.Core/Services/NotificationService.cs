@@ -2,21 +2,15 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Net.Mail;
 using System.Text;
-using System.Threading;
-using System.Web;
 using Umbraco.Core.Configuration;
-using Umbraco.Core.IO;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
 using Umbraco.Core.Models.EntityBase;
 using Umbraco.Core.Models.Membership;
 using Umbraco.Core.Persistence.Repositories;
 using Umbraco.Core.Persistence.UnitOfWork;
-using Umbraco.Core.Strings;
 using Umbraco.Core.Persistence;
-using Umbraco.Core.Persistence.SqlSyntax;
 
 namespace Umbraco.Core.Services
 {
@@ -27,8 +21,9 @@ namespace Umbraco.Core.Services
         private readonly IContentService _contentService;
         private readonly RepositoryFactory _repositoryFactory;
         private readonly ILogger _logger;
+        private readonly IUmbracoSettings _umbracoSettings;
 
-        public NotificationService(IDatabaseUnitOfWorkProvider provider, IUserService userService, IContentService contentService, RepositoryFactory repositoryFactory,  ILogger logger)
+        public NotificationService(IDatabaseUnitOfWorkProvider provider, IUserService userService, IContentService contentService, RepositoryFactory repositoryFactory,  ILogger logger, IUmbracoSettings umbracoSettings)
         {
             if (provider == null) throw new ArgumentNullException("provider");
             if (userService == null) throw new ArgumentNullException("userService");
@@ -40,6 +35,7 @@ namespace Umbraco.Core.Services
             _contentService = contentService;
             _repositoryFactory = repositoryFactory;
             _logger = logger;
+            _umbracoSettings = umbracoSettings;
         }
 
         /// <summary>
@@ -55,7 +51,7 @@ namespace Umbraco.Core.Services
         /// <remarks>
         /// Currently this will only work for Content entities!
         /// </remarks>
-        public void SendNotifications(IUser operatingUser, IUmbracoEntity entity, string action, string actionName, HttpContextBase http,
+        public void SendNotifications(IUser operatingUser, IUmbracoEntity entity, string action, string actionName, 
             Func<IUser, string[], string> createSubject,
             Func<IUser, string[], string> createBody)
         {
@@ -87,7 +83,7 @@ namespace Umbraco.Core.Services
                         SendNotification(
                             operatingUser, u, content,                            
                             allVersions, 
-                            actionName, http, createSubject, createBody);
+                            actionName, createSubject, createBody);
 
 
                         _logger.Debug<NotificationService>(string.Format("Notification type: {0} sent to {1} ({2})", action, u.Name, u.Email));
@@ -231,7 +227,7 @@ namespace Umbraco.Core.Services
         /// <param name="http"></param>
         /// <param name="createSubject">Callback to create the mail subject</param>
         /// <param name="createBody">Callback to create the mail body</param>
-        private void SendNotification(IUser performingUser, IUser mailingUser, IContent content, IEnumerable<IContent> allVersions, string actionName, HttpContextBase http, 
+        private void SendNotification(IUser performingUser, IUser mailingUser, IContent content, IEnumerable<IContent> allVersions, string actionName,  
             Func<IUser, string[], string> createSubject,
             Func<IUser, string[], string> createBody)
         {
@@ -239,7 +235,6 @@ namespace Umbraco.Core.Services
             if (mailingUser == null) throw new ArgumentNullException("mailingUser");
             if (content == null) throw new ArgumentNullException("content");
             if (allVersions == null) throw new ArgumentNullException("allVersions");
-            if (http == null) throw new ArgumentNullException("http");
             if (createSubject == null) throw new ArgumentNullException("createSubject");
             if (createBody == null) throw new ArgumentNullException("createBody");
 
@@ -283,14 +278,14 @@ namespace Umbraco.Core.Services
                     summary.Append("<th style='text-align: left; vertical-align: top; width: 25%;'> New " +
                                    p.PropertyType.Name + "</th>");
                     summary.Append("<td style='text-align: left; vertical-align: top;'>" +
-                                   ReplaceLinks(CompareText(oldText, newText, true, false, "<span style='background-color:yellow;'>", string.Empty), http.Request) +
+                                   ReplaceLinks(CompareText(oldText, newText, true, false, "<span style='background-color:yellow;'>", string.Empty)) +
                                    "</td>");
                     summary.Append("</tr>");
                     summary.Append("<tr>");
                     summary.Append("<th style='text-align: left; vertical-align: top; width: 25%;'> Old " +
                                    p.PropertyType.Name + "</th>");
                     summary.Append("<td style='text-align: left; vertical-align: top;'>" +
-                                   ReplaceLinks(CompareText(newText, oldText, true, false, "<span style='background-color:red;'>", string.Empty), http.Request) +
+                                   ReplaceLinks(CompareText(newText, oldText, true, false, "<span style='background-color:red;'>", string.Empty)) +
                                    "</td>");
                     summary.Append("</tr>");
                 }
@@ -306,91 +301,93 @@ namespace Umbraco.Core.Services
                     "<tr><td colspan=\"2\" style=\"border-bottom: 1px solid #CCC; font-size: 2px;\">&nbsp;</td></tr>");
             }
 
-            string protocol = GlobalSettings.UseSSL ? "https" : "http";
+            string protocol = _umbracoSettings.UseSSL ? "https" : "http";
 
+            throw new NotImplementedException("Fix sending notifications, there is no SMTP Server here right now");
 
-            string[] subjectVars = {
-                                       http.Request.ServerVariables["SERVER_NAME"] + ":" +
-                                       http.Request.Url.Port +
-                                       IOHelper.ResolveUrl(SystemDirectories.Umbraco), 
-                                       actionName,
-                                       content.Name
-                                   };
-            string[] bodyVars = {
-                                    mailingUser.Name, 
-                                    actionName, 
-                                    content.Name, 
-                                    performingUser.Name,
-                                    http.Request.ServerVariables["SERVER_NAME"] + ":" + http.Request.Url.Port + IOHelper.ResolveUrl(SystemDirectories.Umbraco),
-                                    content.Id.ToString(CultureInfo.InvariantCulture), summary.ToString(),
-                                    string.Format("{2}://{0}/{1}",
-                                                  http.Request.ServerVariables["SERVER_NAME"] + ":" + http.Request.Url.Port,
-                                                  //TODO: RE-enable this so we can have a nice url
-                                                  /*umbraco.library.NiceUrl(documentObject.Id))*/
-                                                  content.Id + ".aspx",
-                                                  protocol)
+//            string[] subjectVars = {
+//                                       http.Request.ServerVariables["SERVER_NAME"] + ":" +
+//                                       http.Request.Url.Port +
+//                                       IOHelper.ResolveUrl(SystemDirectories.Umbraco), 
+//                                       actionName,
+//                                       content.Name
+//                                   };
+//            string[] bodyVars = {
+//                                    mailingUser.Name, 
+//                                    actionName, 
+//                                    content.Name, 
+//                                    performingUser.Name,
+//                                    http.Request.ServerVariables["SERVER_NAME"] + ":" + http.Request.Url.Port + IOHelper.ResolveUrl(SystemDirectories.Umbraco),
+//                                    content.Id.ToString(CultureInfo.InvariantCulture), summary.ToString(),
+//                                    string.Format("{2}://{0}/{1}",
+//                                                  http.Request.ServerVariables["SERVER_NAME"] + ":" + http.Request.Url.Port,
+//                                                  //TODO: RE-enable this so we can have a nice url
+//                                                  /*umbraco.library.NiceUrl(documentObject.Id))*/
+//                                                  content.Id + ".aspx",
+//                                                  protocol)
                                     
-                                };
+//                                };
 
-            // create the mail message 
-            var mail = new MailMessage(UmbracoConfig.For.UmbracoSettings().Content.NotificationEmailAddress, mailingUser.Email);
+//            // create the mail message 
+//            var mail = new MailMessage(UmbracoConfig.For.UmbracoSettings().Content.NotificationEmailAddress, mailingUser.Email);
 
-            // populate the message
-            mail.Subject = createSubject(mailingUser, subjectVars);
-            if (UmbracoConfig.For.UmbracoSettings().Content.DisableHtmlEmail)
-            {
-                mail.IsBodyHtml = false;
-                mail.Body = createBody(mailingUser, bodyVars);
-            }
-            else
-            {
-                mail.IsBodyHtml = true;
-                mail.Body =
-                    @"<html><head>
-</head>
-<body style='font-family: Trebuchet MS, arial, sans-serif; font-color: black;'>
-" + createBody(mailingUser, bodyVars);
-            }
+//            // populate the message
+//            mail.Subject = createSubject(mailingUser, subjectVars);
+//            if (UmbracoConfig.For.UmbracoSettings().Content.DisableHtmlEmail)
+//            {
+//                mail.IsBodyHtml = false;
+//                mail.Body = createBody(mailingUser, bodyVars);
+//            }
+//            else
+//            {
+//                mail.IsBodyHtml = true;
+//                mail.Body =
+//                    @"<html><head>
+//</head>
+//<body style='font-family: Trebuchet MS, arial, sans-serif; font-color: black;'>
+//" + createBody(mailingUser, bodyVars);
+//            }
 
-            // nh, issue 30724. Due to hardcoded http strings in resource files, we need to check for https replacements here
-            // adding the server name to make sure we don't replace external links
-            if (GlobalSettings.UseSSL && string.IsNullOrEmpty(mail.Body) == false)
-            {
-                string serverName = http.Request.ServerVariables["SERVER_NAME"];
-                mail.Body = mail.Body.Replace(
-                    string.Format("http://{0}", serverName),
-                    string.Format("https://{0}", serverName));
-            }
+//            // nh, issue 30724. Due to hardcoded http strings in resource files, we need to check for https replacements here
+//            // adding the server name to make sure we don't replace external links
+//            if (_umbracoSettings.UseSSL && string.IsNullOrEmpty(mail.Body) == false)
+//            {
+//                string serverName = http.Request.ServerVariables["SERVER_NAME"];
+//                mail.Body = mail.Body.Replace(
+//                    string.Format("http://{0}", serverName),
+//                    string.Format("https://{0}", serverName));
+//            }
 
 
-            // send it  asynchronously, we don't want to got up all of the request time to send emails!
-            ThreadPool.QueueUserWorkItem(state =>
-                {
-                    try
-                    {
-                        using (mail)
-                        {
-                            using (var sender = new SmtpClient())
-                            {
-                                sender.Send(mail);
-                            }    
-                        }
+//            // send it  asynchronously, we don't want to got up all of the request time to send emails!
+//            ThreadPool.QueueUserWorkItem(state =>
+//                {
+//                    try
+//                    {
+//                        using (mail)
+//                        {
+//                            using (var sender = new SmtpClient())
+//                            {
+//                                sender.Send(mail);
+//                            }    
+//                        }
                         
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.Error<NotificationService>("An error occurred sending notification", ex);
-                    }
-                });
+//                    }
+//                    catch (Exception ex)
+//                    {
+//                        _logger.Error<NotificationService>("An error occurred sending notification", ex);
+//                    }
+//                });
         }
 
-        private static string ReplaceLinks(string text, HttpRequestBase request)
+        private string ReplaceLinks(string text)
         {
-            string domain = GlobalSettings.UseSSL ? "https://" : "http://";
-            domain += request.ServerVariables["SERVER_NAME"] + ":" + request.Url.Port + "/";
-            text = text.Replace("href=\"/", "href=\"" + domain);
-            text = text.Replace("src=\"/", "src=\"" + domain);
-            return text;
+            throw new NotImplementedException("Fix notification service ReplaceLinks - need an HttpContextAccessor or similar");
+            //string domain = _umbracoSettings.UseSSL ? "https://" : "http://";
+            //domain += request.ServerVariables["SERVER_NAME"] + ":" + request.Url.Port + "/";
+            //text = text.Replace("href=\"/", "href=\"" + domain);
+            //text = text.Replace("src=\"/", "src=\"" + domain);
+            //return text;
         }
 
         /// <summary>
@@ -420,53 +417,55 @@ namespace Umbraco.Core.Services
         private static string CompareText(string oldText, string newText, bool displayInsertedText,
                                           bool displayDeletedText, string insertedStyle, string deletedStyle)
         {
-            var sb = new StringBuilder();
-            var diffs = Diff.DiffText1(oldText, newText);
+            throw new NotImplementedException("Fix notification service DIFF, there is no diff right now");
 
-            int pos = 0;
-            for (int n = 0; n < diffs.Length; n++)
-            {
-                Diff.Item it = diffs[n];
+            //var sb = new StringBuilder();
+            //var diffs = Diff.DiffText1(oldText, newText);
 
-                // write unchanged chars
-                while ((pos < it.StartB) && (pos < newText.Length))
-                {
-                    sb.Append(newText[pos]);
-                    pos++;
-                } // while
+            //int pos = 0;
+            //for (int n = 0; n < diffs.Length; n++)
+            //{
+            //    Diff.Item it = diffs[n];
 
-                // write deleted chars
-                if (displayDeletedText && it.DeletedA > 0)
-                {
-                    sb.Append(deletedStyle);
-                    for (int m = 0; m < it.DeletedA; m++)
-                    {
-                        sb.Append(oldText[it.StartA + m]);
-                    } // for
-                    sb.Append("</span>");
-                }
+            //    // write unchanged chars
+            //    while ((pos < it.StartB) && (pos < newText.Length))
+            //    {
+            //        sb.Append(newText[pos]);
+            //        pos++;
+            //    } // while
 
-                // write inserted chars
-                if (displayInsertedText && pos < it.StartB + it.InsertedB)
-                {
-                    sb.Append(insertedStyle);
-                    while (pos < it.StartB + it.InsertedB)
-                    {
-                        sb.Append(newText[pos]);
-                        pos++;
-                    } // while
-                    sb.Append("</span>");
-                } // if                
-            } // while
+            //    // write deleted chars
+            //    if (displayDeletedText && it.DeletedA > 0)
+            //    {
+            //        sb.Append(deletedStyle);
+            //        for (int m = 0; m < it.DeletedA; m++)
+            //        {
+            //            sb.Append(oldText[it.StartA + m]);
+            //        } // for
+            //        sb.Append("</span>");
+            //    }
 
-            // write rest of unchanged chars
-            while (pos < newText.Length)
-            {
-                sb.Append(newText[pos]);
-                pos++;
-            } // while
+            //    // write inserted chars
+            //    if (displayInsertedText && pos < it.StartB + it.InsertedB)
+            //    {
+            //        sb.Append(insertedStyle);
+            //        while (pos < it.StartB + it.InsertedB)
+            //        {
+            //            sb.Append(newText[pos]);
+            //            pos++;
+            //        } // while
+            //        sb.Append("</span>");
+            //    } // if                
+            //} // while
 
-            return sb.ToString();
+            //// write rest of unchanged chars
+            //while (pos < newText.Length)
+            //{
+            //    sb.Append(newText[pos]);
+            //    pos++;
+            //} // while
+
+            //return sb.ToString();
         }
 
         #endregion

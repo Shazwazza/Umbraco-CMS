@@ -10,10 +10,10 @@ namespace Umbraco.Core.Models
         /// Get all descendant content types
         /// </summary>
         /// <param name="contentType"></param>
+        /// <param name="contentTypeService"></param>
         /// <returns></returns>
-        public static IEnumerable<IContentTypeBase> Descendants(this IContentTypeBase contentType)
+        public static IEnumerable<IContentTypeBase> Descendants(this IContentTypeBase contentType, IContentTypeService contentTypeService)
         {
-            var contentTypeService = ApplicationContext.Current.Services.ContentTypeService;
             var descendants = contentTypeService.GetContentTypeChildren(contentType.Id)
                                                 .SelectRecursive(type => contentTypeService.GetContentTypeChildren(type.Id));
             return descendants;
@@ -23,10 +23,11 @@ namespace Umbraco.Core.Models
         /// Get all descendant and self content types
         /// </summary>
         /// <param name="contentType"></param>
+        /// <param name="contentTypeService"></param>
         /// <returns></returns>
-        public static IEnumerable<IContentTypeBase> DescendantsAndSelf(this IContentTypeBase contentType)
+        public static IEnumerable<IContentTypeBase> DescendantsAndSelf(this IContentTypeBase contentType, IContentTypeService contentTypeService)
         {
-            var descendantsAndSelf = new[] { contentType }.Concat(contentType.Descendants());
+            var descendantsAndSelf = new[] { contentType }.Concat(contentType.Descendants(contentTypeService));
             return descendantsAndSelf;
         }
 

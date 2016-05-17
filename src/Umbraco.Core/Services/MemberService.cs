@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
-using System.Web.Security;
 using System.Xml.Linq;
 using Umbraco.Core.Configuration;
 using Umbraco.Core.Events;
@@ -16,6 +15,7 @@ using Umbraco.Core.Persistence.Querying;
 using Umbraco.Core.Persistence.SqlSyntax;
 using Umbraco.Core.Persistence.UnitOfWork;
 using System.Linq;
+using Umbraco.Core.Configuration.UmbracoSettings;
 using Umbraco.Core.Persistence.Repositories;
 using Umbraco.Core.Security;
 
@@ -29,15 +29,17 @@ namespace Umbraco.Core.Services
         private readonly IMemberGroupService _memberGroupService;
         private readonly EntityXmlSerializer _entitySerializer = new EntityXmlSerializer();
         private readonly IDataTypeService _dataTypeService;
+        private readonly IContentSection _contentSection;
         private static readonly ReaderWriterLockSlim Locker = new ReaderWriterLockSlim();
 
-        public MemberService(IDatabaseUnitOfWorkProvider provider, ILogger logger, IEventMessagesFactory eventMessagesFactory, IMemberGroupService memberGroupService, IDataTypeService dataTypeService)
+        public MemberService(IDatabaseUnitOfWorkProvider provider, ILogger logger, IEventMessagesFactory eventMessagesFactory, IMemberGroupService memberGroupService, IDataTypeService dataTypeService, IContentSection contentSection)
             : base(provider, logger, eventMessagesFactory)
         {
             if (memberGroupService == null) throw new ArgumentNullException("memberGroupService");
             if (dataTypeService == null) throw new ArgumentNullException("dataTypeService");
             _memberGroupService = memberGroupService;
             _dataTypeService = dataTypeService;
+            _contentSection = contentSection;
         }
 
         #region IMemberService Implementation
@@ -94,15 +96,16 @@ namespace Umbraco.Core.Services
         {
             if (member == null) throw new ArgumentNullException("member");
 
-            var provider = MembershipProviderExtensions.GetMembersMembershipProvider();
-            if (provider.IsUmbracoMembershipProvider())
-            {
-                provider.ChangePassword(member.Username, "", password);
-            }
-            else
-            {
-                throw new NotSupportedException("When using a non-Umbraco membership provider you must change the member password by using the MembershipProvider.ChangePassword method");
-            }
+            throw new NotImplementedException("FIX MEMBER SERVICE FOR CHANGING PASSWORD - REQUIRES ACCESS TO IDENTITY PROVIDER");
+            //var provider = MembershipProviderExtensions.GetMembersMembershipProvider();
+            //if (provider.IsUmbracoMembershipProvider())
+            //{
+            //    provider.ChangePassword(member.Username, "", password);
+            //}
+            //else
+            //{
+            //    throw new NotSupportedException("When using a non-Umbraco membership provider you must change the member password by using the MembershipProvider.ChangePassword method");
+            //}
 
             //go re-fetch the member and update the properties that may have changed
             var result = GetByUsername(member.Username);
@@ -652,13 +655,14 @@ namespace Umbraco.Core.Services
                         query = repository.Query;
                         return repository.Count(query);
                     case MemberCountType.Online:
-                        var fromDate = DateTime.Now.AddMinutes(-Membership.UserIsOnlineTimeWindow);
-                        query =
-                            repository.Query.Where(
-                                x =>
-                                ((Member)x).PropertyTypeAlias == Constants.Conventions.Member.LastLoginDate &&
-                                ((Member)x).DateTimePropertyValue > fromDate);
-                        return repository.GetCountByQuery(query);
+                        throw new NotImplementedException("Fix MemberService, cannot get a count of online members! this is legacy if we want this we need to implement it");
+                        //var fromDate = DateTime.Now.AddMinutes(-Membership.UserIsOnlineTimeWindow);
+                        //query =
+                        //    repository.Query.Where(
+                        //        x =>
+                        //        ((Member)x).PropertyTypeAlias == Constants.Conventions.Member.LastLoginDate &&
+                        //        ((Member)x).DateTimePropertyValue > fromDate);
+                        //return repository.GetCountByQuery(query);
                     case MemberCountType.LockedOut:
                         query =
                             repository.Query.Where(
@@ -880,7 +884,7 @@ namespace Umbraco.Core.Services
                 //insert the xml
                 repository.AddOrUpdateContentXml(member, m => _entitySerializer.Serialize(_dataTypeService, m));
                 // generate preview for blame history?
-                if (UmbracoConfig.For.UmbracoSettings().Content.GlobalPreviewStorageEnabled)
+                if (_contentSection.GlobalPreviewStorageEnabled)
                 {
                     repository.AddOrUpdatePreviewXml(member, m => _entitySerializer.Serialize(_dataTypeService, m));
                 }
@@ -998,7 +1002,7 @@ namespace Umbraco.Core.Services
                 repository.AddOrUpdate(entity);
                 repository.AddOrUpdateContentXml(entity, m => _entitySerializer.Serialize(_dataTypeService, m));
                 // generate preview for blame history?
-                if (UmbracoConfig.For.UmbracoSettings().Content.GlobalPreviewStorageEnabled)
+                if (_contentSection.GlobalPreviewStorageEnabled)
                 {
                     repository.AddOrUpdatePreviewXml(entity, m => _entitySerializer.Serialize(_dataTypeService, m));
                 }
@@ -1035,7 +1039,7 @@ namespace Umbraco.Core.Services
                         repository.AddOrUpdate(member);
                         repository.AddOrUpdateContentXml(member, m => _entitySerializer.Serialize(_dataTypeService, m));
                         // generate preview for blame history?
-                        if (UmbracoConfig.For.UmbracoSettings().Content.GlobalPreviewStorageEnabled)
+                        if (_contentSection.GlobalPreviewStorageEnabled)
                         {
                             repository.AddOrUpdatePreviewXml(member, m => _entitySerializer.Serialize(_dataTypeService, m));
                         }

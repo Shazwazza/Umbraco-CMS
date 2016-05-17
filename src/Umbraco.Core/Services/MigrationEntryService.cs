@@ -1,12 +1,7 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using Semver;
 using Umbraco.Core.Events;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
-using Umbraco.Core.Persistence;
-using Umbraco.Core.Persistence.Querying;
 using Umbraco.Core.Persistence.Repositories;
 using Umbraco.Core.Persistence.UnitOfWork;
 
@@ -28,7 +23,7 @@ namespace Umbraco.Core.Services
         /// <param name="migrationName"></param>
         /// <param name="version"></param>
         /// <returns></returns>
-        public IMigrationEntry CreateEntry(string migrationName, SemVersion version)
+        public IMigrationEntry CreateEntry(string migrationName, ISemVersion version)
         {
             var entry = new MigrationEntry
             {
@@ -52,7 +47,7 @@ namespace Umbraco.Core.Services
         /// <param name="migrationName"></param>
         /// <param name="version"></param>
         /// <returns></returns>
-        public IMigrationEntry FindEntry(string migrationName, SemVersion version)
+        public IMigrationEntry FindEntry(string migrationName, ISemVersion version)
         {
             using (var uow = UowProvider.CreateUnitOfWork())
             {

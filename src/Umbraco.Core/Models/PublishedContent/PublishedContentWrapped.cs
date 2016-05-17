@@ -59,7 +59,7 @@ namespace Umbraco.Core.Models.PublishedContent
 
         #region ContentType
 
-        public virtual PublishedContentType ContentType { get { return Content.ContentType; } }
+        public virtual IPublishedContentType ContentType { get { return Content.ContentType; } }
 
         #endregion
 

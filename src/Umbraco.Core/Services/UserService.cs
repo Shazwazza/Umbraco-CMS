@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Linq;
+using Umbraco.Core.Configuration;
 using Umbraco.Core.Events;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models.Membership;
@@ -20,15 +21,17 @@ namespace Umbraco.Core.Services
     /// </summary>
     public class UserService : RepositoryService, IUserService
     {
+        private readonly IUmbracoSettings _umbracoSettings;
 
         //TODO: We need to change the isUpgrading flag to use an app state enum as described here: http://issues.umbraco.org/issue/U4-6816
         // in the meantime, we will use a boolean which we are currently using during upgrades to ensure that a user object is not persisted during this phase, otherwise
         // exceptions can occur if the db is not in it's correct state.
         internal bool IsUpgrading { get; set; }
 
-        public UserService(IDatabaseUnitOfWorkProvider provider, ILogger logger, IEventMessagesFactory eventMessagesFactory)
+        public UserService(IDatabaseUnitOfWorkProvider provider, ILogger logger, IEventMessagesFactory eventMessagesFactory, IUmbracoSettings umbracoSettings)
             : base(provider, logger, eventMessagesFactory)
         {
+            _umbracoSettings = umbracoSettings;
             IsUpgrading = false;
         }
 
@@ -142,7 +145,7 @@ namespace Umbraco.Core.Services
                 {
                     DefaultToLiveEditing = false,
                     Email = email,
-                    Language = Configuration.GlobalSettings.DefaultUILanguage,
+                    Language = _umbracoSettings.DefaultUILanguage,
                     Name = username,
                     RawPasswordValue = passwordValue,                    
                     Username = username,
@@ -260,12 +263,14 @@ namespace Umbraco.Core.Services
         {
             if (user == null) throw new ArgumentNullException("user");
 
-            var provider = MembershipProviderExtensions.GetUsersMembershipProvider();
+            throw new NotImplementedException("Fix UserService.SavePassword - we'll need the identity provider to perform this");
 
-            if (provider.IsUmbracoMembershipProvider() == false)
-                throw new NotSupportedException("When using a non-Umbraco membership provider you must change the user password by using the MembershipProvider.ChangePassword method");
+            //var provider = MembershipProviderExtensions.GetUsersMembershipProvider();
 
-            provider.ChangePassword(user.Username, "", password);
+            //if (provider.IsUmbracoMembershipProvider() == false)
+            //    throw new NotSupportedException("When using a non-Umbraco membership provider you must change the user password by using the MembershipProvider.ChangePassword method");
+
+            //provider.ChangePassword(user.Username, "", password);
 
             //go re-fetch the member and update the properties that may have changed
             var result = GetByUsername(user.Username);

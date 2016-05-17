@@ -1,14 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
 using Umbraco.Core.Models;
 using Umbraco.Core.Models.EntityBase;
 using Umbraco.Core.Models.Membership;
-using Umbraco.Core.Models.Rdbms;
-using Umbraco.Core.Persistence;
 
 namespace Umbraco.Core.Services
 {
@@ -24,7 +18,7 @@ namespace Umbraco.Core.Services
         /// <param name="http"></param>
         /// <param name="createSubject"></param>
         /// <param name="createBody"></param>
-        void SendNotifications(IUser operatingUser, IUmbracoEntity entity, string action, string actionName, HttpContextBase http,
+        void SendNotifications(IUser operatingUser, IUmbracoEntity entity, string action, string actionName, 
                                Func<IUser, string[], string> createSubject,
                                Func<IUser, string[], string> createBody);
 

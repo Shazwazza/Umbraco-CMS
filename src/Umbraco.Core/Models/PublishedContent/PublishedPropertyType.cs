@@ -344,11 +344,11 @@ namespace Umbraco.Core.Models.PublishedContent
                 return b;
 
             //TODO: We can change this just like we do for the JSON converter - but to maintain compatibility might mean this still has to remain here
-
-            // try xml - that is expensive, performance-wise
-            XElement elt;
-            if (XmlHelper.TryCreateXElementFromPropertyValue(stringSource, out elt))
-                return new DynamicXml(elt); // xml => return DynamicXml for compatiblity's sake
+            //TODO: Don't really think we want to support this anymore
+            //// try xml - that is expensive, performance-wise
+            //XElement elt;
+            //if (XmlHelper.TryCreateXElementFromPropertyValue(stringSource, out elt))
+            //    return new DynamicXml(elt); // xml => return DynamicXml for compatiblity's sake
 
             return source;
         }

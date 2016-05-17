@@ -2,12 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Web;
-using System.Xml;
 using System.Xml.Linq;
-using Umbraco.Core.Configuration;
 using Umbraco.Core.Models;
-using Umbraco.Core.Persistence.Repositories;
 using Umbraco.Core.PropertyEditors;
 using Umbraco.Core.Strings;
 
@@ -44,7 +40,7 @@ namespace Umbraco.Core.Services
             if (content == null) throw new ArgumentNullException("content");
             if (urlSegmentProviders == null) throw new ArgumentNullException("urlSegmentProviders");
             //nodeName should match Casing.SafeAliasWithForcingCheck(content.ContentType.Alias);
-            var nodeName = content.ContentType.Alias.ToSafeAliasWithForcingCheck();
+            var nodeName = content.ContentType.Alias.ToSafeAlias();
 
             var xml = Serialize(dataTypeService, content, content.GetUrlSegment(urlSegmentProviders), nodeName);
             xml.Add(new XAttribute("nodeType", content.ContentType.Id));
@@ -88,7 +84,7 @@ namespace Umbraco.Core.Services
             if (media == null) throw new ArgumentNullException("media");
             if (urlSegmentProviders == null) throw new ArgumentNullException("urlSegmentProviders");
             //nodeName should match Casing.SafeAliasWithForcingCheck(content.ContentType.Alias);
-            var nodeName = media.ContentType.Alias.ToSafeAliasWithForcingCheck();
+            var nodeName = media.ContentType.Alias.ToSafeAlias();
 
             var xml = Serialize(dataTypeService, media, media.GetUrlSegment(urlSegmentProviders), nodeName);
             xml.Add(new XAttribute("nodeType", media.ContentType.Id));
@@ -117,7 +113,7 @@ namespace Umbraco.Core.Services
         public XElement Serialize(IDataTypeService dataTypeService, IMember member)
         {
             //nodeName should match Casing.SafeAliasWithForcingCheck(content.ContentType.Alias);
-            var nodeName = member.ContentType.Alias.ToSafeAliasWithForcingCheck();
+            var nodeName = member.ContentType.Alias.ToSafeAlias();
 
             var xml = Serialize(dataTypeService, member, "", nodeName);
             xml.Add(new XAttribute("nodeType", member.ContentType.Id));
@@ -187,7 +183,7 @@ namespace Umbraco.Core.Services
                 //get url encoded folder names
                 var folders = dataTypeService.GetContainers(dataTypeDefinition)
                     .OrderBy(x => x.Level)
-                    .Select(x => HttpUtility.UrlEncode(x.Name));
+                    .Select(x => System.Net.WebUtility.UrlEncode(x.Name));
 
                 folderNames = string.Join("/", folders.ToArray());
             }
@@ -448,7 +444,7 @@ namespace Umbraco.Core.Services
                 //get url encoded folder names
                 var folders = contentTypeService.GetContentTypeContainers(contentType)
                     .OrderBy(x => x.Level)
-                    .Select(x => HttpUtility.UrlEncode(x.Name));
+                    .Select(x => System.Net.WebUtility.UrlEncode(x.Name));
 
                 folderNames = string.Join("/", folders.ToArray());
             }

@@ -81,7 +81,7 @@ namespace Umbraco.Core.Services
                                         var cultureVal = reader.Value;
                                         try
                                         {
-                                            culture = CultureInfo.GetCultureInfo(cultureVal);
+                                            culture = new CultureInfo(cultureVal);
                                             //add to the tracked dictionary
                                             _twoLetterCultureConverter[filename] = culture;
                                         }
@@ -99,7 +99,7 @@ namespace Umbraco.Core.Services
                     }
                     if (culture == null)
                     {
-                        culture = CultureInfo.GetCultureInfo(filename);
+                        culture = new CultureInfo(filename);
                     }
 
                     //get the lazy value from cache                

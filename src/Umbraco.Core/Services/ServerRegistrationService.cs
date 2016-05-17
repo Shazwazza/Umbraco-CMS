@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 using Umbraco.Core.Events;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
-using Umbraco.Core.Persistence;
 using Umbraco.Core.Persistence.Repositories;
 using Umbraco.Core.Persistence.UnitOfWork;
 using Umbraco.Core.Sync;
@@ -17,8 +15,11 @@ namespace Umbraco.Core.Services
     /// </summary>
     public sealed class ServerRegistrationService : RepositoryService, IServerRegistrationService
     {
-        private readonly static string CurrentServerIdentityValue = NetworkHelper.MachineName // eg DOMAIN\SERVER
-                                                            + "/" + HttpRuntime.AppDomainAppId; // eg /LM/S3SVC/11/ROOT
+        private readonly NetworkHelper _networkHelper;
+        //private readonly static string CurrentServerIdentityValue = NetworkHelper.MachineName // eg DOMAIN\SERVER
+        //                                                    + "/" + HttpRuntime.AppDomainAppId; // eg /LM/S3SVC/11/ROOT
+
+        private string CurrentServerIdentityValue => _networkHelper.FileSafeMachineName;
 
         private ServerRole _currentServerRole = ServerRole.Unknown;
 
@@ -28,9 +29,12 @@ namespace Umbraco.Core.Services
         /// <param name="uowProvider">A UnitOfWork provider.</param>
         /// <param name="logger">A logger.</param>
         /// <param name="eventMessagesFactory"></param>
-        public ServerRegistrationService(IDatabaseUnitOfWorkProvider uowProvider, ILogger logger, IEventMessagesFactory eventMessagesFactory)
+        /// <param name="networkHelper"></param>
+        public ServerRegistrationService(IDatabaseUnitOfWorkProvider uowProvider, ILogger logger, IEventMessagesFactory eventMessagesFactory, NetworkHelper networkHelper)
             : base(uowProvider, logger, eventMessagesFactory)
-        { }
+        {
+            _networkHelper = networkHelper;
+        }
 
         /// <summary>
         /// Touches a server to mark it as active; deactivate stale servers.

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace Umbraco.Core.Models.PublishedContent
 {
@@ -35,7 +37,7 @@ namespace Umbraco.Core.Models.PublishedContent
 
             foreach (var type in types)
             {
-                var constructor = type.GetConstructor(ctorArgTypes);
+                var constructor = type.GetTypeInfo().DeclaredConstructors.FirstOrDefault(x => x.GetParameters().Select(p => p.ParameterType).SequenceEqual(ctorArgTypes));                
                 if (constructor == null)
                     throw new InvalidOperationException(string.Format("Type {0} is missing a public constructor with one argument of type IPublishedContent.", type.FullName));
                 var attribute = type.GetCustomAttribute<PublishedContentModelAttribute>(false);

@@ -11,10 +11,12 @@ namespace Umbraco.Core.Publishing
     internal class ScheduledPublisher
     {
         private readonly IContentService _contentService;
+        private readonly IUserService _userService;
 
-        public ScheduledPublisher(IContentService contentService)
+        public ScheduledPublisher(IContentService contentService, IUserService userService)
         {
             _contentService = contentService;
+            _userService = userService;
         }
 
         public void CheckPendingAndProcess()
@@ -24,7 +26,7 @@ namespace Umbraco.Core.Publishing
                 try
                 {
                     d.ReleaseDate = null;
-                    var result = _contentService.SaveAndPublishWithStatus(d, (int)d.GetWriterProfile().Id);
+                    var result = _contentService.SaveAndPublishWithStatus(d, (int)d.GetWriterProfile(_userService).Id);
                     if (result.Success == false)
                     {
                         if (result.Exception != null)
@@ -48,7 +50,7 @@ namespace Umbraco.Core.Publishing
                 try
                 {
                     d.ExpireDate = null;
-                    _contentService.UnPublish(d, (int)d.GetWriterProfile().Id);
+                    _contentService.UnPublish(d, (int)d.GetWriterProfile(_userService).Id);
                 }
                 catch (Exception ee)
                 {

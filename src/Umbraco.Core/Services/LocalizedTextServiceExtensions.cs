@@ -14,7 +14,7 @@ namespace Umbraco.Core.Services
         public static string Localize(this ILocalizedTextService manager, params string[] keyParts)
         {
             var key = string.Join("/", keyParts);
-            return manager.Localize(key, Thread.CurrentThread.CurrentUICulture);
+            return manager.Localize(key, CultureInfo.CurrentUICulture);
         }
 
         /// <summary>
@@ -26,7 +26,7 @@ namespace Umbraco.Core.Services
         /// <returns></returns>
         public static string Localize(this ILocalizedTextService manager, string key, string[] tokens)
         {
-            return manager.Localize(key, Thread.CurrentThread.CurrentUICulture, tokens);
+            return manager.Localize(key, CultureInfo.CurrentUICulture, tokens);
         }
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace Umbraco.Core.Services
         /// <returns></returns>
         public static string Localize(this ILocalizedTextService manager, string key, IDictionary<string, string> tokens = null)
         {
-            return manager.Localize(key, Thread.CurrentThread.CurrentUICulture, tokens);
+            return manager.Localize(key, CultureInfo.CurrentUICulture, tokens);
         }
 
         /// <summary>

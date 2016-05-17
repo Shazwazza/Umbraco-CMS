@@ -9,7 +9,6 @@
   "exclude": [
     "*.cs",
     "_Legacy/**/*.cs",
-    "Auditing/**/*.*",
     "Configuration/**/*.*",
     "DependencyInjection/**/*.*",
     "Dynamics/**/*.*",
@@ -20,27 +19,25 @@
     "Manifest/ManifestWatcher.cs",
     "Media/**/*.*",
 
-    "Models/ContentTypeExtensions.cs",
     "Models/PropertyExtensions.cs",
     "Models/MediaExtensions.cs",
     "Models/UserExtensions.cs",
-    "Models/Mapping/**/*.*",
     "Models/Identity/**/*.*",
     "Models/Membership/**/*.*",
-    "Models/PublishedContent/**/*.*",
 
     "Packaging/**/*.*",
 
-    "Persistence/*.cs",
     "Persistence/Migrations/**/*.*",
-    
+    "Persistence/DatabaseSchemaHelper.cs",
+
     "PropertyEditors/ValueConverters/**/*.*",
 
+    "Services/PackagingService.cs",
+    "Services/IPackagingService.cs",
+
     "Profiling/**/*.*",
-    "Publishing/**/*.*",
     "Security/**/*.*",
     "Serialization/**/*.*",
-    "Services/**/*.*",
     "Strategies/**/*.*",
     "Strings/*.cs",
     "Sync/**/*.*",
@@ -76,6 +73,7 @@
     "Models/Membership/User.cs",
     "Models/Membership/IUserType.cs",
     "Models/Membership/UserType.cs",
+    "Models/Membership/MemberCountType.cs",
 
     "Models/Identity/BackOfficeIdentityUser.cs",
     "Models/Identity/IdentityUser.cs",
@@ -84,11 +82,12 @@
     "Models/Identity/IdentityUserRole.cs",
     "Models/Identity/IIdentityUserLogin.cs",
 
-    "Models/PublishedContent/IPublishedContentType.cs",
-    "Models/PublishedContent/IPublishedPropertyType.cs",
 
     "Strings/IShortStringHelper.cs",
     "Strings/CleanStringType.cs",
+    "Strings/IUrlSegmentProvider.cs",
+    "Strings/ContentBaseExtensions.cs",
+    "Strings/DefaultUrlSegmentProvider.cs",
 
     "Logging/LogHelper.cs",
     "Logging/ILogger.cs",
@@ -96,35 +95,17 @@
 
     "Sync/IServerAddress.cs",
     "Sync/MessageType.cs",
+    "Sync/ServerRole.cs",
 
     "Security/BackOfficeUserManager.cs",
     "Security/IBackOfficeUserPasswordChecker.cs",
     "Security/BackOfficeUserPasswordCheckerResult.cs",
 
-    "Services/MoveOperationStatusType.cs",
-    "Services/TagExtractor.cs",
-    "Services/IDataTypeService.cs",
-    "Services/IService.cs",
-    "Services/OperationStatus.cs",
-    "Services/OperationStatusType.cs",
-
     "Serialization/JsonToStringConverter.cs",
     "Serialization/JsonCreationConverter.cs",
 
-    "Persistence/RepositoryFactory.cs",
-    "Persistence/SqlContext.cs",
-    "Persistence/UmbracoDatabase.cs",
-    "Persistence/IUmbracoDatabaseConfig.cs",
-    "Persistence/IDbProviderFactories.cs",
-    "Persistence/DefaultDatabaseFactory.cs",
-    "Persistence/DbConnectionExtensions.cs",
-    "Persistence/IDatabaseFactory.cs",
-    "Persistence/Constants-DbProviderNames.cs",
-    "Persistence/NPocoDatabaseExtensions.cs",
-    "Persistence/RecordPersistenceType.cs",
-    "Persistence/NPocoSqlExtensions.cs",
-
     "CacheHelper.cs",
+    "NetworkHelper.cs",
     "MacroErrorBehaviour.cs",
     "IDisposeOnRequestEnd.cs",
     "ServiceProviderExtensions.cs",

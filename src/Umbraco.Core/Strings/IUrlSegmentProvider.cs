@@ -3,6 +3,8 @@ using Umbraco.Core.Models;
 
 namespace Umbraco.Core.Strings
 {
+    //TODO: Why is this in this namespace??
+
     /// <summary>
     /// Provides url segments for content.
     /// </summary>

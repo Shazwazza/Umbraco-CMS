@@ -3,17 +3,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
 using System.Text.RegularExpressions;
-using System.Web;
-using Umbraco.Core.Configuration;
-using Umbraco.Core.Configuration.UmbracoSettings;
 using Umbraco.Core.Events;
 using Umbraco.Core.IO;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
 using Umbraco.Core.Persistence;
-using Umbraco.Core.Persistence.Querying;
 using Umbraco.Core.Persistence.Repositories;
 using Umbraco.Core.Persistence.UnitOfWork;
 
@@ -25,6 +20,7 @@ namespace Umbraco.Core.Services
     public class FileService : RepositoryService, IFileService
     {
         private readonly IUnitOfWorkProvider _fileUowProvider;
+        private readonly IOHelper _ioHelper;
 
         private const string PartialViewHeader = "@inherits Umbraco.Web.Mvc.UmbracoTemplatePage";
         private const string PartialViewMacroHeader = "@inherits Umbraco.Web.Macros.PartialViewMacroPage";
@@ -33,12 +29,13 @@ namespace Umbraco.Core.Services
             IUnitOfWorkProvider fileProvider,
             IDatabaseUnitOfWorkProvider dataProvider,
             ILogger logger,
-            IEventMessagesFactory eventMessagesFactory)
+            IEventMessagesFactory eventMessagesFactory,
+            IOHelper ioHelper)
             : base(dataProvider, logger, eventMessagesFactory)
         {
             _fileUowProvider = fileProvider;
+            _ioHelper = ioHelper;
         }
-
 
         #region Stylesheets
 
@@ -502,29 +499,7 @@ namespace Umbraco.Core.Services
             SavedTemplate.RaiseEvent(new SaveEventArgs<ITemplate>(templates, false), this);
             Audit(AuditType.Save, "Save Template performed by user", userId, -1);
         }
-
-        /// <summary>
-        /// This checks what the default rendering engine is set in config but then also ensures that there isn't already
-        /// a template that exists in the opposite rendering engine's template folder, then returns the appropriate
-        /// rendering engine to use.
-        /// </summary>
-        /// <returns></returns>
-        /// <remarks>
-        /// The reason this is required is because for example, if you have a master page file already existing under ~/masterpages/Blah.aspx
-        /// and then you go to create a template in the tree called Blah and the default rendering engine is MVC, it will create a Blah.cshtml
-        /// empty template in ~/Views. This means every page that is using Blah will go to MVC and render an empty page.
-        /// This is mostly related to installing packages since packages install file templates to the file system and then create the
-        /// templates in business logic. Without this, it could cause the wrong rendering engine to be used for a package.
-        /// </remarks>
-        public RenderingEngine DetermineTemplateRenderingEngine(ITemplate template)
-        {
-            using (var uow = UowProvider.CreateUnitOfWork())
-            {
-                var repository = uow.CreateRepository<ITemplateRepository>();
-                return repository.DetermineTemplateRenderingEngine(template);
-            }
-        }
-
+        
         /// <summary>
         /// Deletes a template by its alias
         /// </summary>
@@ -570,7 +545,7 @@ namespace Umbraco.Core.Services
 
         public IEnumerable<string> GetPartialViewSnippetNames(params string[] filterNames)
         {
-            var snippetPath = IOHelper.MapPath(string.Format("{0}/PartialViewMacros/Templates/", SystemDirectories.Umbraco));
+            var snippetPath = _ioHelper.MapPath(string.Format("{0}/PartialViewMacros/Templates/", SystemDirectories.Umbraco));
             var files = Directory.GetFiles(snippetPath, "*.cshtml")
                 .Select(Path.GetFileNameWithoutExtension)
                 .Except(filterNames, StringComparer.OrdinalIgnoreCase)
@@ -775,7 +750,7 @@ namespace Umbraco.Core.Services
                 fileName += ".cshtml";
             }
 
-            var snippetPath = IOHelper.MapPath(string.Format("{0}/PartialViewMacros/Templates/{1}", SystemDirectories.Umbraco, fileName));
+            var snippetPath = _ioHelper.MapPath(string.Format("{0}/PartialViewMacros/Templates/{1}", SystemDirectories.Umbraco, fileName));
             return System.IO.File.Exists(snippetPath)
                 ? Attempt<string>.Succeed(snippetPath)
                 : Attempt<string>.Fail();

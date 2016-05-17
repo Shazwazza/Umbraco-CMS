@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml.Linq;
 using Umbraco.Core.Configuration;
+using Umbraco.Core.Configuration.UmbracoSettings;
 using Umbraco.Core.Events;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
@@ -36,8 +37,9 @@ namespace Umbraco.Core.Services
         private readonly IDataTypeService _dataTypeService;
         private readonly IUserService _userService;
         private readonly IEnumerable<IUrlSegmentProvider> _urlSegmentProviders;
+        private readonly IContentSection _contentSection;
 
-        public MediaService(IDatabaseUnitOfWorkProvider provider, ILogger logger, IEventMessagesFactory eventMessagesFactory, IDataTypeService dataTypeService, IUserService userService, IEnumerable<IUrlSegmentProvider> urlSegmentProviders)
+        public MediaService(IDatabaseUnitOfWorkProvider provider, ILogger logger, IEventMessagesFactory eventMessagesFactory, IDataTypeService dataTypeService, IUserService userService, IEnumerable<IUrlSegmentProvider> urlSegmentProviders, IContentSection contentSection)
             : base(provider, logger, eventMessagesFactory)
         {
             if (dataTypeService == null) throw new ArgumentNullException("dataTypeService");
@@ -45,6 +47,7 @@ namespace Umbraco.Core.Services
             _dataTypeService = dataTypeService;
             _userService = userService;
             _urlSegmentProviders = urlSegmentProviders;
+            _contentSection = contentSection;
         }
 
         /// <summary>
@@ -160,7 +163,7 @@ namespace Umbraco.Core.Services
 
                 repository.AddOrUpdateContentXml(media, m => _entitySerializer.Serialize(this, _dataTypeService, _userService, _urlSegmentProviders, m));
                 // generate preview for blame history?
-                if (UmbracoConfig.For.UmbracoSettings().Content.GlobalPreviewStorageEnabled)
+                if (_contentSection.GlobalPreviewStorageEnabled)
                 {
                     repository.AddOrUpdatePreviewXml(media, m => _entitySerializer.Serialize(this, _dataTypeService, _userService, _urlSegmentProviders, m));
                 }
@@ -216,7 +219,7 @@ namespace Umbraco.Core.Services
                 repository.AddOrUpdate(media);
                 repository.AddOrUpdateContentXml(media, m => _entitySerializer.Serialize(this, _dataTypeService, _userService, _urlSegmentProviders, m));
                 // generate preview for blame history?
-                if (UmbracoConfig.For.UmbracoSettings().Content.GlobalPreviewStorageEnabled)
+                if (_contentSection.GlobalPreviewStorageEnabled)
                 {
                     repository.AddOrUpdatePreviewXml(media, m => _entitySerializer.Serialize(this, _dataTypeService, _userService, _urlSegmentProviders, m));
                 }
@@ -772,7 +775,7 @@ namespace Umbraco.Core.Services
                 repository.AddOrUpdate(media);
                 repository.AddOrUpdateContentXml(media, m => _entitySerializer.Serialize(this, _dataTypeService, _userService, _urlSegmentProviders, m));
                 // generate preview for blame history?
-                if (UmbracoConfig.For.UmbracoSettings().Content.GlobalPreviewStorageEnabled)
+                if (_contentSection.GlobalPreviewStorageEnabled)
                 {
                     repository.AddOrUpdatePreviewXml(media, m => _entitySerializer.Serialize(this, _dataTypeService, _userService, _urlSegmentProviders, m));
                 }
@@ -817,7 +820,7 @@ namespace Umbraco.Core.Services
                     repository.AddOrUpdate(media);
                     repository.AddOrUpdateContentXml(media, m => _entitySerializer.Serialize(this, _dataTypeService, _userService, _urlSegmentProviders, m));
                     // generate preview for blame history?
-                    if (UmbracoConfig.For.UmbracoSettings().Content.GlobalPreviewStorageEnabled)
+                    if (_contentSection.GlobalPreviewStorageEnabled)
                     {
                         repository.AddOrUpdatePreviewXml(media, m => _entitySerializer.Serialize(this, _dataTypeService, _userService, _urlSegmentProviders, m));
                     }
@@ -1107,7 +1110,7 @@ namespace Umbraco.Core.Services
                     repository.AddOrUpdate(media);
                     repository.AddOrUpdateContentXml(media, m => _entitySerializer.Serialize(this, _dataTypeService, _userService, _urlSegmentProviders, m));
                     // generate preview for blame history?
-                    if (UmbracoConfig.For.UmbracoSettings().Content.GlobalPreviewStorageEnabled)
+                    if (_contentSection.GlobalPreviewStorageEnabled)
                     {
                         repository.AddOrUpdatePreviewXml(media, m => _entitySerializer.Serialize(this, _dataTypeService, _userService, _urlSegmentProviders, m));
                     }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using NPoco;
 using Umbraco.Core.Cache;
 using Umbraco.Core.CodeAnnotations;
@@ -573,11 +574,10 @@ namespace Umbraco.Core.Services
         public virtual Type GetEntityType(UmbracoObjectTypes umbracoObjectType)
         {
             var type = typeof(UmbracoObjectTypes);
-            var memInfo = type.GetMember(umbracoObjectType.ToString());
-            var attributes = memInfo[0].GetCustomAttributes(typeof(UmbracoObjectTypeAttribute),
-                false);
+            var memInfo = type.GetField(umbracoObjectType.ToString());
+            var attributes = memInfo.GetCustomAttribute(typeof(UmbracoObjectTypeAttribute), false);
 
-            var attribute = ((UmbracoObjectTypeAttribute)attributes[0]);
+            var attribute = ((UmbracoObjectTypeAttribute)attributes);
             if (attribute == null)
                 throw new NullReferenceException("The passed in UmbracoObjectType does not contain an UmbracoObjectTypeAttribute, which is used to retrieve the Type.");
 
