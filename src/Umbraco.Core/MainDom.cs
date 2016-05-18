@@ -5,14 +5,13 @@ using System.IO.MemoryMappedFiles;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web.Hosting;
 using Umbraco.Core.Logging;
 using Umbraco.Core.ObjectResolution;
 
 namespace Umbraco.Core
 {
     // represents the main domain
-    class MainDom : IRegisteredObject
+    class MainDom
     {
         #region Vars
 
@@ -48,7 +47,14 @@ namespace Umbraco.Core
             _logger = logger;
 
             var appId = string.Empty;
+
+            //Getting the application Id in aspnetcore is certainly not normal, here's the code that does this:
+            // https://github.com/aspnet/DataProtection/blob/82d92064c50c13f2737f96c6d76b45d68e9a9d05/src/Microsoft.AspNet.DataProtection.Interfaces/DataProtectionExtensions.cs#L97
+            // here's the comment that says it shouldn't be in hosting: https://github.com/aspnet/Hosting/issues/177#issuecomment-80738319
+
             // HostingEnvironment.ApplicationID is null in unit tests, making ReplaceNonAlphanumericChars fail
+            Microsoft.AspNet.DataProtection.DataProtectionExtensions.GetApplicationUniqueIdentifier(null);
+
             if (HostingEnvironment.ApplicationID != null)
                 appId = HostingEnvironment.ApplicationID.ReplaceNonAlphanumericChars(string.Empty);
 
@@ -173,17 +179,13 @@ namespace Umbraco.Core
             get { return _isMainDom; }
         }
 
-        // IRegisteredObject
-        public void Stop(bool immediate)
+        // IApplicationLifetime
+        public void Stopping()
         {
-            try
-            {
-                OnSignal("environment"); // will run once
-            }
-            finally
-            {
-                HostingEnvironment.UnregisterObject(this);
-            }
+            //TODO: Are we sure this won't fire twice? Maybe need more docs/info on IApplicationLifetime
+
+            OnSignal("environment"); // will run once
         }
+        
     }
 }
