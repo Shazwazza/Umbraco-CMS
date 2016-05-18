@@ -1,5 +1,7 @@
 ﻿using System;
-using System.Runtime.ConstrainedExecution;
+#if NET461
+using System.Runtime.ConstrainedExecution; 
+#endif
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -115,11 +117,21 @@ namespace Umbraco.Core
         // note - before making those classes some structs, read 
         // about "impure methods" and mutating readonly structs...
 
-        private class NamedSemaphoreReleaser : CriticalFinalizerObject, IDisposable
+        private class NamedSemaphoreReleaser
+#if NET461
+            : CriticalFinalizerObject, IDisposable 
+#else
+            //CriticalFinalizerObject really does seem to exist in coreclr but say's it's not there...
+            // https://github.com/dotnet/coreclr/blob/release/1.0.0-rc1/src/mscorlib/src/System/Runtime/Reliability/CriticalFinalizerObject.cs
+            // Though CriticalHandler & SafeHandle exist and they inherit from there - though not sure how to use them.
+            // here's the conversation about this - for now seems the finalizer is fine in coreclr without the CriticalFinalizerObject part
+            //https://github.com/dotnet/corefx/issues/1345
+            : IDisposable
+#endif        
         {
             private readonly Semaphore _semaphore;
             private GCHandle _handle;
-
+            
             internal NamedSemaphoreReleaser(Semaphore semaphore)
             {
                 _semaphore = semaphore;

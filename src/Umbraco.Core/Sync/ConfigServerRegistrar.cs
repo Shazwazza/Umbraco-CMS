@@ -73,7 +73,7 @@ namespace Umbraco.Core.Sync
         {
             // match by appId or computer name
             return (appId.IsNullOrWhiteSpace() == false && appId.Trim().InvariantEquals(HttpRuntime.AppDomainAppId))
-                || (serverName.IsNullOrWhiteSpace() == false && serverName.Trim().InvariantEquals(NetworkHelper.MachineName));
+                || (serverName.IsNullOrWhiteSpace() == false && serverName.Trim().InvariantEquals(EnvironmentHelper.MachineName));
         }
 
         public IEnumerable<IServerAddress> Registrations

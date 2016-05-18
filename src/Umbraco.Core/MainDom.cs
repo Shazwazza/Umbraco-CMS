@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO.MemoryMappedFiles;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
+using Microsoft.AspNet.Hosting;
 using Umbraco.Core.Logging;
-using Umbraco.Core.ObjectResolution;
 
 namespace Umbraco.Core
 {
@@ -16,6 +12,7 @@ namespace Umbraco.Core
         #region Vars
 
         private readonly ILogger _logger;
+        private readonly IApplicationLifetime _applicationLifetime;
 
         // our own lock for local consistency
         private readonly object _locko = new object();
@@ -42,9 +39,10 @@ namespace Umbraco.Core
         #region Ctor
 
         // initializes a new instance of MainDom
-        public MainDom(ILogger logger)
+        public MainDom(ILogger logger, EnvironmentHelper environment, IApplicationLifetime applicationLifetime)
         {
             _logger = logger;
+            _applicationLifetime = applicationLifetime;
 
             var appId = string.Empty;
 
@@ -55,8 +53,8 @@ namespace Umbraco.Core
             // HostingEnvironment.ApplicationID is null in unit tests, making ReplaceNonAlphanumericChars fail
             Microsoft.AspNet.DataProtection.DataProtectionExtensions.GetApplicationUniqueIdentifier(null);
 
-            if (HostingEnvironment.ApplicationID != null)
-                appId = HostingEnvironment.ApplicationID.ReplaceNonAlphanumericChars(string.Empty);
+            if (environment.ApplicationId != null)
+                appId = environment.ApplicationId.ReplaceNonAlphanumericChars(string.Empty);
 
             var lockName = "UMBRACO-" + appId + "-MAINDOM-LCK";
             _asyncLock = new AsyncLock(lockName);
@@ -166,7 +164,8 @@ namespace Umbraco.Core
                 _signal.WaitOneAsync()
                     .ContinueWith(_ => OnSignal("signal"));
 
-                HostingEnvironment.RegisterObject(this);
+                //register the application shutdown handler
+                _applicationLifetime.ApplicationStopping.Register(Stopping);                
 
                 _logger.Debug<MainDom>("Acquired MainDom.");
                 return true;

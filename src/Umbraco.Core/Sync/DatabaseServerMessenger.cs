@@ -399,7 +399,7 @@ namespace Umbraco.Core.Sync
         /// <para>Practically, all we really need is the guid, the other infos are here for information
         /// and debugging purposes.</para>
         /// </remarks>
-        protected readonly static string LocalIdentity = NetworkHelper.MachineName // eg DOMAIN\SERVER
+        protected readonly static string LocalIdentity = EnvironmentHelper.MachineName // eg DOMAIN\SERVER
             + "/" + HttpRuntime.AppDomainAppId // eg /LM/S3SVC/11/ROOT
             + " [P" + Process.GetCurrentProcess().Id // eg 1234
             + "/D" + AppDomain.CurrentDomain.Id // eg 22
@@ -413,7 +413,7 @@ namespace Umbraco.Core.Sync
         {
             get
             {
-                var tempFolder = IOHelper.MapPath("~/App_Data/TEMP/DistCache/" + NetworkHelper.FileSafeMachineName);
+                var tempFolder = IOHelper.MapPath("~/App_Data/TEMP/DistCache/" + EnvironmentHelper.FileSafeMachineName);
                 if (Directory.Exists(tempFolder) == false)
                     Directory.CreateDirectory(tempFolder);
 

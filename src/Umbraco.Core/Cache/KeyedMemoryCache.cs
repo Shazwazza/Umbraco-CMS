@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.OptionsModel;
+using Umbraco.Core.Collections;
 
 namespace Umbraco.Core.Cache
 {

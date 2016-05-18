@@ -15,11 +15,11 @@ namespace Umbraco.Core.Services
     /// </summary>
     public sealed class ServerRegistrationService : RepositoryService, IServerRegistrationService
     {
-        private readonly NetworkHelper _networkHelper;
+        private readonly EnvironmentHelper _environmentHelper;
         //private readonly static string CurrentServerIdentityValue = NetworkHelper.MachineName // eg DOMAIN\SERVER
         //                                                    + "/" + HttpRuntime.AppDomainAppId; // eg /LM/S3SVC/11/ROOT
 
-        private string CurrentServerIdentityValue => _networkHelper.FileSafeMachineName;
+        private string CurrentServerIdentityValue => _environmentHelper.FileSafeMachineName;
 
         private ServerRole _currentServerRole = ServerRole.Unknown;
 
@@ -29,11 +29,10 @@ namespace Umbraco.Core.Services
         /// <param name="uowProvider">A UnitOfWork provider.</param>
         /// <param name="logger">A logger.</param>
         /// <param name="eventMessagesFactory"></param>
-        /// <param name="networkHelper"></param>
-        public ServerRegistrationService(IDatabaseUnitOfWorkProvider uowProvider, ILogger logger, IEventMessagesFactory eventMessagesFactory, NetworkHelper networkHelper)
+        public ServerRegistrationService(IDatabaseUnitOfWorkProvider uowProvider, ILogger logger, IEventMessagesFactory eventMessagesFactory, EnvironmentHelper environmentHelper)
             : base(uowProvider, logger, eventMessagesFactory)
         {
-            _networkHelper = networkHelper;
+            _environmentHelper = environmentHelper;
         }
 
         /// <summary>

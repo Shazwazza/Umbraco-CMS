@@ -121,7 +121,7 @@ namespace Umbraco.Core.Sync
         {
             if (SystemUtilities.GetCurrentTrustLevel() != System.Web.AspNetHostingPermissionLevel.Unrestricted)
                 throw new NotSupportedException("FullTrust ASP.NET permission level is required.");
-            return GetServerHash(NetworkHelper.MachineName, System.Web.HttpRuntime.AppDomainAppId);
+            return GetServerHash(EnvironmentHelper.MachineName, System.Web.HttpRuntime.AppDomainAppId);
         }
 
         public static string GetServerHash(string machineName, string appDomainAppId)

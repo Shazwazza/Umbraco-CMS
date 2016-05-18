@@ -35,6 +35,7 @@
     "Services/PackagingService.cs",
     "Services/IPackagingService.cs",
 
+    "Plugins/PluginManager.cs",
     "Profiling/**/*.*",
     "Security/**/*.*",
     "Serialization/**/*.*",
@@ -83,6 +84,8 @@
     "Models/Identity/IdentityUserRole.cs",
     "Models/Identity/IIdentityUserLogin.cs",
 
+    "Macros/MacroErrorBehaviour.cs",
+
 
     "Strings/IShortStringHelper.cs",
     "Strings/CleanStringType.cs",
@@ -93,8 +96,7 @@
     "Logging/LogHelper.cs",
     "Logging/ILogger.cs",
     "Logging/LoggerExtensions.cs",
-
-    "Profiling/IProfiler.cs",
+    "Logging/IProfiler.cs",
 
     "Persistence/Migrations/Initial/DatabaseSchemaResult.cs",
 
@@ -109,10 +111,9 @@
     "Serialization/JsonToStringConverter.cs",
     "Serialization/JsonCreationConverter.cs",
 
-    "CacheHelper.cs",
+    "AsyncLock.cs",
     "DisposableTimer.cs",
-    "NetworkHelper.cs",
-    "MacroErrorBehaviour.cs",
+    "EnvironmentHelper.cs",
     "IDisposeOnRequestEnd.cs",
     "ServiceProviderExtensions.cs",
     "StringExtensions.cs",
@@ -122,7 +123,6 @@
     "Enum.cs",
     "ActivatorHelper.cs",
     "ActivatorServiceProvider.cs",
-    "ConcurrentHashSet.cs",
     "WriteLock.cs",
     "Constants.cs",
     "Constants-Applications.cs",
@@ -155,7 +155,6 @@
     "TypeExtensions.cs",
     "ExpressionHelper.cs",
     "NameValueCollectionExtensions.cs",
-    "ObservableDictionary.cs",
     "ReadLock.cs",
     "ThreadExtensions.cs",
     "TopologicalSorter.cs",
@@ -191,7 +190,7 @@
     "System.Xml.XPath": "4.0.1-beta-*",
     "System.Xml.XPath.XDocument": "4.0.1-beta-*",
     "System.ComponentModel.Annotations": "4.0.11-beta-*",
-    "System.Threading.Tasks.Parallel": "4.0.1-beta-*"
+    "System.Threading.Tasks.Parallel": "4.0.1-beta-*"    
   },
 
   "frameworks": {
@@ -211,7 +210,7 @@
         "System.Threading.ThreadPool": "4.0.10-beta-*",
         "System.Threading.Thread": "4.0.0-beta-*",
         "System.Reflection.TypeExtensions": "4.1.0-beta-*",
-        "System.Data.Common":  "4.0.1-beta-*" 
+        "System.Data.Common": "4.0.1-beta-*"
       }
     }
   }

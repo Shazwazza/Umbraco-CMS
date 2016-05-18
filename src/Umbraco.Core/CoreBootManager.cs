@@ -92,7 +92,7 @@ namespace Umbraco.Core
             ApplicationCache = CreateApplicationCache();
 
             _timer = ProfilingLogger.TraceDuration<CoreBootManager>(
-                string.Format("Umbraco {0} application starting on {1}", UmbracoVersion.GetSemanticVersion().ToSemanticString(), NetworkHelper.MachineName),
+                string.Format("Umbraco {0} application starting on {1}", UmbracoVersion.GetSemanticVersion().ToSemanticString(), EnvironmentHelper.MachineName),
                 "Umbraco application startup complete");
 
             ServiceProvider = new ActivatorServiceProvider();
