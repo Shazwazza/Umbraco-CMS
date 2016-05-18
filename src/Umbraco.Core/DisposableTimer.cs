@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using Umbraco.Core.Logging;
-using Umbraco.Core.Profiling;
 
 namespace Umbraco.Core
 {

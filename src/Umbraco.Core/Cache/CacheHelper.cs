@@ -1,7 +1,6 @@
 ﻿using System;
-using Umbraco.Core.Cache;
 
-namespace Umbraco.Core
+namespace Umbraco.Core.Cache
 {
 	/// <summary>
 	/// Class that is exposed by the ApplicationContext for application wide caching purposes

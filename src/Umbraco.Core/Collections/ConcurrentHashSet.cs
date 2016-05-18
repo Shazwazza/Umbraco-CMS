@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-namespace Umbraco.Core
+namespace Umbraco.Core.Collections
 {
     /// <summary>
     /// A thread-safe representation of a <see cref="HashSet{T}"/>. 

@@ -6,6 +6,7 @@ using LightInject;
 //using Umbraco.Core.Persistence.Repositories;
 //using Umbraco.Core.Persistence.SqlSyntax;
 //using Umbraco.Core.Persistence.UnitOfWork;
+using Umbraco.Core.Plugins;
 
 namespace Umbraco.Core.DependencyInjection
 {
