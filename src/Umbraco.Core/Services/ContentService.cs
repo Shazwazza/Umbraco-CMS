@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
+using Umbraco.Core.Configuration.UmbracoSettings;
 using Umbraco.Core.Events;
 using Umbraco.Core.IO;
 using Umbraco.Core.Logging;
@@ -25,6 +26,9 @@ namespace Umbraco.Core.Services
         private readonly IDataTypeService _dataTypeService;
         private readonly IUserService _userService;
         private readonly IEnumerable<IUrlSegmentProvider> _urlSegmentProviders;
+        private readonly IOHelper _ioHelper;
+        private readonly MediaFileSystem _mediaFileSystem;
+        private readonly IContentSection _contentSection;
         private IContentTypeService _contentTypeService;
 
         #region Constructors
@@ -35,7 +39,10 @@ namespace Umbraco.Core.Services
             IEventMessagesFactory eventMessagesFactory,
             IDataTypeService dataTypeService,
             IUserService userService,
-            IEnumerable<IUrlSegmentProvider> urlSegmentProviders)
+            IEnumerable<IUrlSegmentProvider> urlSegmentProviders,
+            IOHelper ioHelper,
+            MediaFileSystem mediaFileSystem,
+            IContentSection contentSection)
             : base(provider, logger, eventMessagesFactory)
         {
             if (dataTypeService == null) throw new ArgumentNullException(nameof(dataTypeService));
@@ -44,6 +51,9 @@ namespace Umbraco.Core.Services
             _dataTypeService = dataTypeService;
             _userService = userService;
             _urlSegmentProviders = urlSegmentProviders;
+            _ioHelper = ioHelper;
+            _mediaFileSystem = mediaFileSystem;
+            _contentSection = contentSection;
         }
 
         // don't change or remove this, will need it later
@@ -1349,7 +1359,8 @@ namespace Umbraco.Core.Services
                 var args = new DeleteEventArgs<IContent>(c, false); // raise event & get flagged files
                 Deleted.RaiseEvent(args, this);
 
-                IOHelper.DeleteFiles(args.MediaFilesToDelete, // remove flagged files
+                _ioHelper.DeleteFiles(args.MediaFilesToDelete, // remove flagged files
+                    _mediaFileSystem, _contentSection,
                     (file, e) => Logger.Error<MemberService>("An error occurred while deleting file attached to nodes: " + file, e));
             }
         }

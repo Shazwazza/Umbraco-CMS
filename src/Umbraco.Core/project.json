@@ -117,7 +117,7 @@
     "ServiceProviderExtensions.cs",
     "StringExtensions.cs",
     "EnumerableExtensions.cs",
-    "Attempt{T}.cs",
+    "AttemptOfT.cs",
     "Attempt.cs",
     "Enum.cs",
     "ActivatorHelper.cs",
@@ -171,7 +171,7 @@
     "System.Globalization": "4.0.11-beta-*",
 
     "Newtonsoft.Json": "8.0",
-    "NPoco": "3.1.0-u005",
+    "NPoco": "3.3.0-beta3", 
     "AutoMapper": "4.2",
     "LightInject": "4.0.9",
     "Microsoft.Extensions.Configuration.Abstractions": "1.0.0-rc1-final",
@@ -189,7 +189,7 @@
     "System.Xml.XPath": "4.0.1-beta-*",
     "System.Xml.XPath.XDocument": "4.0.1-beta-*",
     "System.ComponentModel.Annotations": "4.0.11-beta-*",
-    "System.Threading.Tasks.Parallel" :  "4.0.1-beta-*" 
+    "System.Threading.Tasks.Parallel": "4.0.1-beta-*"
   },
 
   "frameworks": {

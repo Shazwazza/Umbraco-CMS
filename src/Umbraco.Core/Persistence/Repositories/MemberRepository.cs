@@ -5,6 +5,7 @@ using System.Linq;
 using System.Xml.Linq;
 using NPoco;
 using Umbraco.Core.Configuration.UmbracoSettings;
+using Umbraco.Core.IO;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models.EntityBase;
 using Umbraco.Core.Models;

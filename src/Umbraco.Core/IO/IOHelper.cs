@@ -5,8 +5,10 @@ using System.Reflection;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Microsoft.AspNet.Hosting;
 using Microsoft.Extensions.PlatformAbstractions;
+using Umbraco.Core.Configuration.UmbracoSettings;
 using Umbraco.Core.Exceptions;
 
 namespace Umbraco.Core.IO
@@ -266,40 +268,42 @@ namespace Umbraco.Core.IO
 	        }
 	    }
 
-        /// <summary>
-        /// Deletes all files passed in.
-        /// </summary>
-        /// <param name="files"></param>
-        /// <param name="onError"></param>
-        /// <returns></returns>
-        internal static bool DeleteFiles(IEnumerable<string> files, Action<string, Exception> onError = null)
+	    /// <summary>
+	    /// Deletes all files passed in.
+	    /// </summary>
+	    /// <param name="files"></param>
+	    /// <param name="mediaFileSystem"></param>
+	    /// <param name="onError"></param>
+	    /// <param name="contentSection"></param>
+	    /// <returns></returns>
+	    internal bool DeleteFiles(IEnumerable<string> files, MediaFileSystem mediaFileSystem, IContentSection contentSection,
+            Action<string, Exception> onError = null)
         {
             //ensure duplicates are removed
             files = files.Distinct();
 
             var allsuccess = true;
-
-            var fs = FileSystemProviderManager.Current.GetFileSystemProvider<MediaFileSystem>();
+            
             Parallel.ForEach(files, file =>
             {
                 try
                 {
                     if (file.IsNullOrWhiteSpace()) return;
 
-                    var relativeFilePath = fs.GetRelativePath(file);
-                    if (fs.FileExists(relativeFilePath) == false) return;
+                    var relativeFilePath = mediaFileSystem.GetRelativePath(file);
+                    if (mediaFileSystem.FileExists(relativeFilePath) == false) return;
 
                     var parentDirectory = Path.GetDirectoryName(relativeFilePath);
 
                     // don't want to delete the media folder if not using directories.
-                    if (UmbracoConfig.For.UmbracoSettings().Content.UploadAllowDirectories && parentDirectory != fs.GetRelativePath("/"))
+                    if (contentSection.UploadAllowDirectories && parentDirectory != mediaFileSystem.GetRelativePath("/"))
                     {
                         //issue U4-771: if there is a parent directory the recursive parameter should be true
-                        fs.DeleteDirectory(parentDirectory, String.IsNullOrEmpty(parentDirectory) == false);
+                        mediaFileSystem.DeleteDirectory(parentDirectory, String.IsNullOrEmpty(parentDirectory) == false);
                     }
                     else
                     {
-                        fs.DeleteFile(file, true);
+                        mediaFileSystem.DeleteFile(file, true);
                     }
                 }
                 catch (Exception e)
