@@ -228,10 +228,10 @@ namespace Umbraco.Core.Models
         /// <param name="content">Current content</param>
         /// <param name="contentService"></param>
         /// <returns>An enumerable list of <see cref="IContent"/> objects</returns>
-        //public static IEnumerable<IContent> Ancestors(this IContent content, IContentService contentService)
-        //{
-        //    return contentService.GetAncestors(content);
-        //}
+        public static IEnumerable<IContent> Ancestors(this IContent content, IContentService contentService)
+        {
+            return contentService.GetAncestors(content);
+        }
 
 
         /// <summary>
@@ -240,10 +240,10 @@ namespace Umbraco.Core.Models
         /// <param name="content">Current content</param>
         /// <param name="contentService"></param>
         /// <returns>An enumerable list of <see cref="IContent"/> objects</returns>
-        //public static IEnumerable<IContent> Children(this IContent content, IContentService contentService)
-       // {
-       //     return contentService.GetChildren(content.Id);
-        //}
+        public static IEnumerable<IContent> Children(this IContent content, IContentService contentService)
+        {
+            return contentService.GetChildren(content.Id);
+        }
 
 
         /// <summary>
@@ -258,14 +258,17 @@ namespace Umbraco.Core.Models
         }
 
 
+        /// <summary>
+        /// Returns the parent of the current content.
+        /// </summary>
+        /// <param name="content">Current content</param>
         /// <param name="contentService"></param>
+        /// <returns>An <see cref="IContent"/> object</returns>
         public static IContent Parent(this IContent content, IContentService contentService)
         {
             return contentService.GetById(content.ParentId);
         }
 
-        [Obsolete("Use the overload with the service reference instead")]
-        [EditorBrowsable(EditorBrowsableState.Never)]
         #endregion
 
         #region IMedia
@@ -276,21 +279,21 @@ namespace Umbraco.Core.Models
         /// <param name="media">Current media</param>
         /// <param name="mediaService"></param>
         /// <returns>An enumerable list of <see cref="IMedia"/> objects</returns>
-        //public static IEnumerable<IMedia> Ancestors(this IMedia media, IMediaService mediaService)
-        //{
-        //    return mediaService.GetAncestors(media);
-        //}
+        public static IEnumerable<IMedia> Ancestors(this IMedia media, IMediaService mediaService)
+        {
+            return mediaService.GetAncestors(media);
+        }
 
-        ///// <summary>
-        ///// Returns a list of the current medias children.
-        ///// </summary>
-        ///// <param name="media">Current media</param>
+        /// <summary>
+        /// Returns a list of the current medias children.
+        /// </summary>
+        /// <param name="media">Current media</param>
         /// <param name="mediaService"></param>
         /// <returns>An enumerable list of <see cref="IMedia"/> objects</returns>
-        //public static IEnumerable<IMedia> Children(this IMedia media, IMediaService mediaService)
-        //{
-        //    return mediaService.GetChildren(media.Id);
-        //}
+        public static IEnumerable<IMedia> Children(this IMedia media, IMediaService mediaService)
+        {
+            return mediaService.GetChildren(media.Id);
+        }
 
 
         ///// <summary>
@@ -299,22 +302,22 @@ namespace Umbraco.Core.Models
         ///// <param name="media">Current media</param>
         /// <param name="mediaService"></param>
         /// <returns>An enumerable list of <see cref="IMedia"/> objects</returns>
-        //public static IEnumerable<IMedia> Descendants(this IMedia media, IMediaService mediaService)
-        //{
-        //    return mediaService.GetDescendants(media);
-        //}
+        public static IEnumerable<IMedia> Descendants(this IMedia media, IMediaService mediaService)
+        {
+            return mediaService.GetDescendants(media);
+        }
 
 
-        ///// <summary>
-        ///// Returns the parent of the current media.
-        ///// </summary>
-        ///// <param name="media">Current media</param>
+        /// <summary>
+        /// Returns the parent of the current media.
+        /// </summary>
+        /// <param name="media">Current media</param>
         /// <param name="mediaService"></param>
         /// <returns>An <see cref="IMedia"/> object</returns>
-        //public static IMedia Parent(this IMedia media, IMediaService mediaService)
-        //{
-        //    return mediaService.GetById(media.ParentId);
-        //}
+        public static IMedia Parent(this IMedia media, IMediaService mediaService)
+        {
+            return mediaService.GetById(media.ParentId);
+        }
 
         #endregion
 
