@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -221,88 +222,100 @@ namespace Umbraco.Core.Models
             return publishedState == PublishedState.Publishing || publishedState == PublishedState.Unpublishing;
         }
 
-        ///// <summary>
-        ///// Returns a list of the current contents ancestors, not including the content itself.
-        ///// </summary>
-        ///// <param name="content">Current content</param>
-        ///// <returns>An enumerable list of <see cref="IContent"/> objects</returns>
-        //public static IEnumerable<IContent> Ancestors(this IContent content)
+        /// <summary>
+        /// Returns a list of the current contents ancestors, not including the content itself.
+        /// </summary>
+        /// <param name="content">Current content</param>
+        /// <param name="contentService"></param>
+        /// <returns>An enumerable list of <see cref="IContent"/> objects</returns>
+        //public static IEnumerable<IContent> Ancestors(this IContent content, IContentService contentService)
         //{
-        //    return ApplicationContext.Current.Services.ContentService.GetAncestors(content);
+        //    return contentService.GetAncestors(content);
         //}
 
-        ///// <summary>
-        ///// Returns a list of the current contents children.
-        ///// </summary>
-        ///// <param name="content">Current content</param>
-        ///// <returns>An enumerable list of <see cref="IContent"/> objects</returns>
-        //public static IEnumerable<IContent> Children(this IContent content)
-        //{
-        //    return ApplicationContext.Current.Services.ContentService.GetChildren(content.Id);
+
+        /// <summary>
+        /// Returns a list of the current contents children.
+        /// </summary>
+        /// <param name="content">Current content</param>
+        /// <param name="contentService"></param>
+        /// <returns>An enumerable list of <see cref="IContent"/> objects</returns>
+        //public static IEnumerable<IContent> Children(this IContent content, IContentService contentService)
+       // {
+       //     return contentService.GetChildren(content.Id);
         //}
 
-        ///// <summary>
-        ///// Returns a list of the current contents descendants, not including the content itself.
-        ///// </summary>
-        ///// <param name="content">Current content</param>
-        ///// <returns>An enumerable list of <see cref="IContent"/> objects</returns>
-        //public static IEnumerable<IContent> Descendants(this IContent content)
-        //{
-        //    return ApplicationContext.Current.Services.ContentService.GetDescendants(content);
-        //}
 
-        ///// <summary>
-        ///// Returns the parent of the current content.
-        ///// </summary>
-        ///// <param name="content">Current content</param>
-        ///// <returns>An <see cref="IContent"/> object</returns>
-        //public static IContent Parent(this IContent content)
-        //{
-        //    return ApplicationContext.Current.Services.ContentService.GetById(content.ParentId);
-        //}
+        /// <summary>
+        /// Returns a list of the current contents descendants, not including the content itself.
+        /// </summary>
+        /// <param name="content">Current content</param>
+        /// <param name="contentService"></param>
+        /// <returns>An enumerable list of <see cref="IContent"/> objects</returns>
+        public static IEnumerable<IContent> Descendants(this IContent content, IContentService contentService)
+        {
+            return contentService.GetDescendants(content);
+        }
 
+
+        /// <param name="contentService"></param>
+        public static IContent Parent(this IContent content, IContentService contentService)
+        {
+            return contentService.GetById(content.ParentId);
+        }
+
+        [Obsolete("Use the overload with the service reference instead")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         #endregion
 
         #region IMedia
-        ///// <summary>
-        ///// Returns a list of the current medias ancestors, not including the media itself.
-        ///// </summary>
-        ///// <param name="media">Current media</param>
-        ///// <returns>An enumerable list of <see cref="IMedia"/> objects</returns>
-        //public static IEnumerable<IMedia> Ancestors(this IMedia media)
+
+        /// <summary>
+        /// Returns a list of the current medias ancestors, not including the media itself.
+        /// </summary>
+        /// <param name="media">Current media</param>
+        /// <param name="mediaService"></param>
+        /// <returns>An enumerable list of <see cref="IMedia"/> objects</returns>
+        //public static IEnumerable<IMedia> Ancestors(this IMedia media, IMediaService mediaService)
         //{
-        //    return ApplicationContext.Current.Services.MediaService.GetAncestors(media);
+        //    return mediaService.GetAncestors(media);
         //}
 
         ///// <summary>
         ///// Returns a list of the current medias children.
         ///// </summary>
         ///// <param name="media">Current media</param>
-        ///// <returns>An enumerable list of <see cref="IMedia"/> objects</returns>
-        //public static IEnumerable<IMedia> Children(this IMedia media)
+        /// <param name="mediaService"></param>
+        /// <returns>An enumerable list of <see cref="IMedia"/> objects</returns>
+        //public static IEnumerable<IMedia> Children(this IMedia media, IMediaService mediaService)
         //{
-        //    return ApplicationContext.Current.Services.MediaService.GetChildren(media.Id);
+        //    return mediaService.GetChildren(media.Id);
         //}
+
 
         ///// <summary>
         ///// Returns a list of the current medias descendants, not including the media itself.
         ///// </summary>
         ///// <param name="media">Current media</param>
-        ///// <returns>An enumerable list of <see cref="IMedia"/> objects</returns>
-        //public static IEnumerable<IMedia> Descendants(this IMedia media)
+        /// <param name="mediaService"></param>
+        /// <returns>An enumerable list of <see cref="IMedia"/> objects</returns>
+        //public static IEnumerable<IMedia> Descendants(this IMedia media, IMediaService mediaService)
         //{
-        //    return ApplicationContext.Current.Services.MediaService.GetDescendants(media);
+        //    return mediaService.GetDescendants(media);
         //}
+
 
         ///// <summary>
         ///// Returns the parent of the current media.
         ///// </summary>
         ///// <param name="media">Current media</param>
-        ///// <returns>An <see cref="IMedia"/> object</returns>
-        //public static IMedia Parent(this IMedia media)
+        /// <param name="mediaService"></param>
+        /// <returns>An <see cref="IMedia"/> object</returns>
+        //public static IMedia Parent(this IMedia media, IMediaService mediaService)
         //{
-        //    return ApplicationContext.Current.Services.MediaService.GetById(media.ParentId);
+        //    return mediaService.GetById(media.ParentId);
         //}
+
         #endregion
 
         internal static bool IsInRecycleBin(this IContent content)
@@ -454,145 +467,153 @@ namespace Umbraco.Core.Models
 
         #region SetValue for setting file contents
 
-        // /// <summary>
-        // /// Sets and uploads the file from a HttpPostedFileBase object as the property value
-        // /// </summary>
-        // /// <param name="content"><see cref="IContentBase"/> to add property value to</param>
-        // /// <param name="propertyTypeAlias">Alias of the property to save the value on</param>
-        // /// <param name="value">The <see cref="HttpPostedFileBase"/> containing the file that will be uploaded</param>
-        // public static void SetValue(this IContentBase content, string propertyTypeAlias, HttpPostedFileBase value)
-        // {
-        //     // Ensure we get the filename without the path in IE in intranet mode 
-        //     // http://stackoverflow.com/questions/382464/httppostedfile-filename-different-from-ie
-        //     var fileName = value.FileName;
-        //     if (fileName.LastIndexOf(@"\") > 0)
-        //         fileName = fileName.Substring(fileName.LastIndexOf(@"\") + 1);
+        /// <summary>
+        /// Sets and uploads the file from a HttpPostedFileBase object as the property value
+        /// </summary>
+        /// <param name="content"><see cref="IContentBase"/> to add property value to</param>
+        /// <param name="propertyTypeAlias">Alias of the property to save the value on</param>
+        /// <param name="value">The <see cref="HttpPostedFileBase"/> containing the file that will be uploaded</param>
+        /// <param name="dataTypeService"></param>
+        //public static void SetValue(this IContentBase content, string propertyTypeAlias, HttpPostedFileBase value, IDataTypeService dataTypeService)
+        //{
+        //    // Ensure we get the filename without the path in IE in intranet mode
+        //    // http://stackoverflow.com/questions/382464/httppostedfile-filename-different-from-ie
+        //    var fileName = value.FileName;
+        //    if (fileName.LastIndexOf(@"\") > 0)
+        //        fileName = fileName.Substring(fileName.LastIndexOf(@"\") + 1);
+//
+        //    var name =
+        //        IOHelper.SafeFileName(
+        //            fileName.Substring(fileName.LastIndexOf(IOHelper.DirSepChar) + 1,
+        //                               fileName.Length - fileName.LastIndexOf(IOHelper.DirSepChar) - 1)
+        //                    .ToLower());
 
-        //     var name =
-        //         IOHelper.SafeFileName(
-        //             fileName.Substring(fileName.LastIndexOf(IOHelper.DirSepChar) + 1,
-        //                                fileName.Length - fileName.LastIndexOf(IOHelper.DirSepChar) - 1)
-        //                     .ToLower());
+        //    if (string.IsNullOrEmpty(name) == false)
+        //        SetFileOnContent(content, propertyTypeAlias, name, value.InputStream, dataTypeService);
+        //}
 
-        //     if (string.IsNullOrEmpty(name) == false)
-        //         SetFileOnContent(content, propertyTypeAlias, name, value.InputStream);
-        // }
 
-        // /// <summary>
-        // /// Sets and uploads the file from a HttpPostedFile object as the property value
-        // /// </summary>
-        // /// <param name="content"><see cref="IContentBase"/> to add property value to</param>
-        // /// <param name="propertyTypeAlias">Alias of the property to save the value on</param>
-        // /// <param name="value">The <see cref="HttpPostedFile"/> containing the file that will be uploaded</param>
-        // public static void SetValue(this IContentBase content, string propertyTypeAlias, HttpPostedFile value)
-        // {
-        //     SetValue(content, propertyTypeAlias, (HttpPostedFileBase)new HttpPostedFileWrapper(value));
-        // }
+        /// <summary>
+        /// Sets and uploads the file from a HttpPostedFile object as the property value
+        /// </summary>
+        /// <param name="content"><see cref="IContentBase"/> to add property value to</param>
+        /// <param name="propertyTypeAlias">Alias of the property to save the value on</param>
+        /// <param name="value">The <see cref="HttpPostedFile"/> containing the file that will be uploaded</param>
+        /// <param name="dataTypeService"></param>
+        //public static void SetValue(this IContentBase content, string propertyTypeAlias, HttpPostedFile value, IDataTypeService dataTypeService)
+        //{
+        //    SetValue(content, propertyTypeAlias, new HttpPostedFileWrapper(value), dataTypeService);
+        //}
 
-        // /// <summary>
-        // /// Sets and uploads the file from a <see cref="Stream"/> as the property value
-        // /// </summary>
-        // /// <param name="content"><see cref="IContentBase"/> to add property value to</param>
-        // /// <param name="propertyTypeAlias">Alias of the property to save the value on</param>
-        // /// <param name="fileName">Name of the file</param>
-        // /// <param name="fileStream"><see cref="Stream"/> to save to disk</param>
-        // public static void SetValue(this IContentBase content, string propertyTypeAlias, string fileName, Stream fileStream)
-        // {
-        //     var name = IOHelper.SafeFileName(fileName);
 
-        //     if (string.IsNullOrEmpty(name) == false && fileStream != null)
-        //         SetFileOnContent(content, propertyTypeAlias, name, fileStream);
-        // }
 
-        // private static void SetFileOnContent(IContentBase content, string propertyTypeAlias, string filename, Stream fileStream)
-        // {
-        //     var property = content.Properties.FirstOrDefault(x => x.Alias == propertyTypeAlias);
-        //     if (property == null)
-        //         return;
+        /// <summary>
+        /// Sets and uploads the file from a <see cref="Stream"/> as the property value
+        /// </summary>
+        /// <param name="content"><see cref="IContentBase"/> to add property value to</param>
+        /// <param name="propertyTypeAlias">Alias of the property to save the value on</param>
+        /// <param name="fileName">Name of the file</param>
+        /// <param name="fileStream"><see cref="Stream"/> to save to disk</param>
+        /// <param name="dataTypeService"></param>
+        //public static void SetValue(this IContentBase content, string propertyTypeAlias, string fileName, Stream fileStream, IDataTypeService dataTypeService)
+        //{
+        //    var name = IOHelper.SafeFileName(fileName);
 
-        //     //TODO: ALl of this naming logic needs to be put into the ImageHelper and then we need to change FileUploadPropertyValueEditor to do the same!
+        //    if (string.IsNullOrEmpty(name) == false && fileStream != null)
+        //        SetFileOnContent(content, propertyTypeAlias, name, fileStream, dataTypeService);
+        //}
 
-        //     var numberedFolder = MediaSubfolderCounter.Current.Increment();
-        //     var fileName = UmbracoConfig.For.UmbracoSettings().Content.UploadAllowDirectories
-        //                                       ? Path.Combine(numberedFolder.ToString(CultureInfo.InvariantCulture), filename)
-        //                                       : numberedFolder + "-" + filename;
 
-        //     var extension = Path.GetExtension(filename).Substring(1).ToLowerInvariant();
+        //private static void SetFileOnContent(IContentBase content, string propertyTypeAlias, string filename, Stream fileStream, IDataTypeService dataTypeService)
+        //{
+        //    var property = content.Properties.FirstOrDefault(x => x.Alias == propertyTypeAlias);
+        //    if (property == null)
+        //        return;
 
-        //     //the file size is the length of the stream in bytes
-        //     var fileSize = fileStream.Length;
+        //    //TODO: ALl of this naming logic needs to be put into the ImageHelper and then we need to change FileUploadPropertyValueEditor to do the same!
 
-        //     var fs = FileSystemProviderManager.Current.GetFileSystemProvider<MediaFileSystem>();
-        //     fs.AddFile(fileName, fileStream);
+        //    var numberedFolder = MediaSubfolderCounter.Current.Increment();
+        //    var fileName = UmbracoConfig.For.UmbracoSettings().Content.UploadAllowDirectories
+        //                                      ? Path.Combine(numberedFolder.ToString(CultureInfo.InvariantCulture), filename)
+        //                                      : numberedFolder + "-" + filename;
 
-        //     //Check if file supports resizing and create thumbnails
-        //     var supportsResizing = UmbracoConfig.For.UmbracoSettings().Content.ImageFileTypes.InvariantContains(extension);
+        //    var extension = Path.GetExtension(filename).Substring(1).ToLowerInvariant();
 
-        //     //the config section used to auto-fill properties
-        //     IImagingAutoFillUploadField uploadFieldConfigNode = null;
+        //    //the file size is the length of the stream in bytes
+        //    var fileSize = fileStream.Length;
 
-        //     //Check for auto fill of additional properties
-        //     if (UmbracoConfig.For.UmbracoSettings().Content.ImageAutoFillProperties != null)
-        //     {
-        //         uploadFieldConfigNode = UmbracoConfig.For.UmbracoSettings().Content.ImageAutoFillProperties
-        //                             .FirstOrDefault(x => x.Alias == propertyTypeAlias);
+        //    var fs = FileSystemProviderManager.Current.GetFileSystemProvider<MediaFileSystem>();
+        //    fs.AddFile(fileName, fileStream);
 
-        //     }
+        //    //Check if file supports resizing and create thumbnails
+        //    var supportsResizing = UmbracoConfig.For.UmbracoSettings().Content.ImageFileTypes.InvariantContains(extension);
 
-        //     if (supportsResizing)
-        //     {
-        //         //get the original image from the original stream
-        //         if (fileStream.CanSeek) fileStream.Seek(0, 0);
-        //         using (var originalImage = Image.FromStream(fileStream))
-        //         {
-        //             var additionalSizes = new List<int>();
+        //    //the config section used to auto-fill properties
+        //    IImagingAutoFillUploadField uploadFieldConfigNode = null;
 
-        //             //Look up Prevalues for this upload datatype - if it is an upload datatype - get additional configured sizes
-        //             if (property.PropertyType.PropertyEditorAlias == Constants.PropertyEditors.UploadFieldAlias)
-        //             {
-        //                 //Get Prevalues by the DataType's Id: property.PropertyType.DataTypeId
-        //                 var values = ApplicationContext.Current.Services.DataTypeService.GetPreValuesByDataTypeId(property.PropertyType.DataTypeDefinitionId);
-        //                 var thumbnailSizes = values.FirstOrDefault();
-        //                 //Additional thumbnails configured as prevalues on the DataType
-        //                 if (thumbnailSizes != null)
-        //                 {
-        //foreach (var thumb in thumbnailSizes.Split(new[] { ";", "," }, StringSplitOptions.RemoveEmptyEntries))
-        //                     {
-        //                         int thumbSize;
-        //                         if (thumb != "" && int.TryParse(thumb, out thumbSize))
-        //                         {
-        //                             additionalSizes.Add(thumbSize);
-        //                         }
-        //                     }
-        //                 }
-        //             }
+        //    //Check for auto fill of additional properties
+        //    if (UmbracoConfig.For.UmbracoSettings().Content.ImageAutoFillProperties != null)
+        //    {
+        //        uploadFieldConfigNode = UmbracoConfig.For.UmbracoSettings().Content.ImageAutoFillProperties
+        //                            .FirstOrDefault(x => x.Alias == propertyTypeAlias);
 
-        //             ImageHelper.GenerateMediaThumbnails(fs, fileName, extension, originalImage, additionalSizes);
+        //    }
 
-        //             //while the image is still open, we'll check if we need to auto-populate the image properties
-        //             if (uploadFieldConfigNode != null)
-        //             {
-        //                 content.SetValue(uploadFieldConfigNode.WidthFieldAlias, originalImage.Width.ToString(CultureInfo.InvariantCulture));
-        //                 content.SetValue(uploadFieldConfigNode.HeightFieldAlias, originalImage.Height.ToString(CultureInfo.InvariantCulture));
-        //             }
+        //    if (supportsResizing)
+        //    {
+        //        //get the original image from the original stream
+        //        if (fileStream.CanSeek) fileStream.Seek(0, 0);
+        //        using (var originalImage = Image.FromStream(fileStream))
+        //        {
+        //            var additionalSizes = new List<int>();
 
-        //         }
-        //     }
+        //            //Look up Prevalues for this upload datatype - if it is an upload datatype - get additional configured sizes
+        //            if (property.PropertyType.PropertyEditorAlias == Constants.PropertyEditors.UploadFieldAlias)
+        //            {
+        //                //Get Prevalues by the DataType's Id: property.PropertyType.DataTypeId
+        //                var values = dataTypeService.GetPreValuesByDataTypeId(property.PropertyType.DataTypeDefinitionId);
+        //                var thumbnailSizes = values.FirstOrDefault();
+        //                //Additional thumbnails configured as prevalues on the DataType
+        //                if (thumbnailSizes != null)
+        //                {
+	//						foreach (var thumb in thumbnailSizes.Split(new[] { ";", "," }, StringSplitOptions.RemoveEmptyEntries))
+        //                    {
+        //                        int thumbSize;
+        //                        if (thumb != "" && int.TryParse(thumb, out thumbSize))
+        //                        {
+        //                            additionalSizes.Add(thumbSize);
+        //                        }
+        //                    }
+        //                }
+        //            }
 
-        //     //if auto-fill is true, then fill the remaining, non-image properties
-        //     if (uploadFieldConfigNode != null)
-        //     {
-        //         content.SetValue(uploadFieldConfigNode.LengthFieldAlias, fileSize.ToString(CultureInfo.InvariantCulture));
-        //         content.SetValue(uploadFieldConfigNode.ExtensionFieldAlias, extension);
-        //     }
+        //            ImageHelper.GenerateMediaThumbnails(fs, fileName, extension, originalImage, additionalSizes);
 
-        //     //Set the value of the property to that of the uploaded file's url
-        //     property.Value = fs.GetUrl(fileName);
-        // }
+        //            //while the image is still open, we'll check if we need to auto-populate the image properties
+        //            if (uploadFieldConfigNode != null)
+        //            {
+        //                content.SetValue(uploadFieldConfigNode.WidthFieldAlias, originalImage.Width.ToString(CultureInfo.InvariantCulture));
+        //                content.SetValue(uploadFieldConfigNode.HeightFieldAlias, originalImage.Height.ToString(CultureInfo.InvariantCulture));
+        //            }
+
+        //        }
+        //    }
+
+        //    //if auto-fill is true, then fill the remaining, non-image properties
+        //    if (uploadFieldConfigNode != null)
+        //    {
+        //        content.SetValue(uploadFieldConfigNode.LengthFieldAlias, fileSize.ToString(CultureInfo.InvariantCulture));
+        //        content.SetValue(uploadFieldConfigNode.ExtensionFieldAlias, extension);
+        //    }
+
+        //    //Set the value of the property to that of the uploaded file's url
+        //    property.Value = fs.GetUrl(fileName);
+        //}
 
         #endregion
 
         #region User/Profile methods
+
 
         /// <summary>
         /// Gets the <see cref="IProfile"/> for the Creator of this media item.
@@ -601,6 +622,7 @@ namespace Umbraco.Core.Models
         {
             return userService.GetProfileById(media.CreatorId);
         }
+        
 
         /// <summary>
         /// Gets the <see cref="IProfile"/> for the Creator of this content item.
@@ -609,6 +631,8 @@ namespace Umbraco.Core.Models
         {
             return userService.GetProfileById(content.CreatorId);
         }
+        
+       
 
         /// <summary>
         /// Gets the <see cref="IProfile"/> for the Writer of this content.
@@ -620,22 +644,10 @@ namespace Umbraco.Core.Models
 
         #endregion
 
+
         #region Tag methods
 
-        ///// <summary>
-        ///// Returns the tags for the given property
-        ///// </summary>
-        ///// <param name="content"></param>
-        ///// <param name="propertyTypeAlias"></param>
-        ///// <param name="tagGroup"></param>
-        ///// <returns></returns>
-        ///// <remarks>
-        ///// The tags returned are only relavent for published content & saved media or members
-        ///// </remarks>
-        //public static IEnumerable<ITag> GetTags(this IContentBase content, string propertyTypeAlias, string tagGroup = "default")
-        //{
-
-        //}
+       
 
         /// <summary>
         /// Sets tags for the property - will add tags to the tags table and set the property value to be the comma delimited value of the tags.
@@ -762,11 +774,7 @@ namespace Umbraco.Core.Models
         //    return packagingService.Export(content, true, raiseEvents: false);
         //}
         
-        ///// <summary>
-        ///// Creates the xml representation for the <see cref="IContent"/> object
-        ///// </summary>
-        ///// <param name="content"><see cref="IContent"/> to generate xml for</param>
-        ///// <param name="packagingService"></param>
+     
         ///// <returns>Xml representation of the passed in <see cref="IContent"/></returns>
         //public static XElement ToXml(this IContent content, IPackagingService packagingService)
         //{
@@ -784,11 +792,6 @@ namespace Umbraco.Core.Models
         //    return packagingService.Export(media, raiseEvents: false);
         //}
 
-        ///// <summary>
-        ///// Creates the full xml representation for the <see cref="IMedia"/> object and all of it's descendants
-        ///// </summary>
-        ///// <param name="media"><see cref="IMedia"/> to generate xml for</param>
-        ///// <param name="packagingService"></param>
         ///// <returns>Xml representation of the passed in <see cref="IMedia"/></returns>
         //internal static XElement ToDeepXml(this IMedia media, IPackagingService packagingService)
         //{
@@ -809,11 +812,6 @@ namespace Umbraco.Core.Models
         //    return content.ToXml(packagingService);
         //}
 
-        ///// <summary>
-        ///// Creates the xml representation for the <see cref="IMember"/> object
-        ///// </summary>
-        ///// <param name="member"><see cref="IMember"/> to generate xml for</param>
-        ///// <param name="packagingService"></param>
         ///// <returns>Xml representation of the passed in <see cref="IContent"/></returns>
         //public static XElement ToXml(this IMember member, IPackagingService packagingService)
         //{

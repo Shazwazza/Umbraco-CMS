@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using Umbraco.Core.Models.EntityBase;
+using Umbraco.Core.Services;
 
 namespace Umbraco.Core.Models
 {
@@ -437,11 +438,13 @@ namespace Umbraco.Core.Models
         ///// </summary>
         ///// <param name="propertyTypeAlias">Alias of the PropertyType</param>
         ///// <param name="value">Value to set for the Property</param>
-        //public virtual void SetPropertyValue(string propertyTypeAlias, HttpPostedFileBase value)
+        /// <param name="dataTypeService"></param>
+        //public virtual void SetPropertyValue(string propertyTypeAlias, HttpPostedFileBase value, IDataTypeService dataTypeService)
         //{
-        //    ContentExtensions.SetValue(this, propertyTypeAlias, value);
+         //   ContentExtensions.SetValue(this, propertyTypeAlias, value, dataTypeService);
         //}
 
+        
         /// <summary>
         /// Private method to set the value of a property
         /// </summary>
