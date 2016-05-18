@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Web;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Profiling;
 
@@ -52,7 +51,7 @@ namespace Umbraco.Core
             
             if (profiler != null)
             {
-                _profilerStep = profiler.Step(loggerType, startMessage);
+                _profilerStep = profiler.Step(startMessage);
             }
         }
 
@@ -66,152 +65,7 @@ namespace Umbraco.Core
 		{
 			get { return _stopwatch; }
 		}
-
-		/// <summary>
-		/// Starts the timer and invokes the specified callback upon disposal.
-		/// </summary>
-		/// <param name="callback">The callback.</param>
-		/// <returns></returns>
-		[Obsolete("Use either TraceDuration or DebugDuration instead of using Start")]
-		public static DisposableTimer Start(Action<long> callback)
-		{
-			return new DisposableTimer(callback);
-		}
-
-        #region TraceDuration
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        [Obsolete("Use the other methods that specify strings instead of Func")]
-        public static DisposableTimer TraceDuration<T>(Func<string> startMessage, Func<string> completeMessage)
-        {
-            return TraceDuration(typeof(T), startMessage, completeMessage);
-        }
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        [Obsolete("Use the other methods that specify strings instead of Func")]
-        public static DisposableTimer TraceDuration(Type loggerType, Func<string> startMessage, Func<string> completeMessage)
-        {
-            return new DisposableTimer(
-                LoggerResolver.Current.Logger, 
-                LogType.Info, 
-                ProfilerResolver.HasCurrent ? ProfilerResolver.Current.Profiler : null,
-                loggerType, 
-                startMessage(), 
-                completeMessage());
-        }
-
-        /// <summary>
-        /// Adds a start and end log entry as Info and tracks how long it takes until disposed.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="startMessage"></param>
-        /// <param name="completeMessage"></param>
-        /// <returns></returns>
-        [Obsolete("Use the Umbraco.Core.Logging.ProfilingLogger to create instances of DisposableTimer")]
-        public static DisposableTimer TraceDuration<T>(string startMessage, string completeMessage)
-        {
-            return TraceDuration(typeof(T), startMessage, completeMessage);
-        }
-
-        /// <summary>
-        /// Adds a start and end log entry as Info and tracks how long it takes until disposed.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="startMessage"></param>
-        /// <returns></returns>
-        [Obsolete("Use the Umbraco.Core.Logging.ProfilingLogger to create instances of DisposableTimer")]
-        public static DisposableTimer TraceDuration<T>(string startMessage)
-        {
-            return TraceDuration(typeof(T), startMessage, "Complete");
-        }
-
-        /// <summary>
-        /// Adds a start and end log entry as Info and tracks how long it takes until disposed.
-        /// </summary>
-        /// <param name="loggerType"></param>
-        /// <param name="startMessage"></param>
-        /// <param name="completeMessage"></param>
-        /// <returns></returns>
-        [Obsolete("Use the Umbraco.Core.Logging.ProfilingLogger to create instances of DisposableTimer")]
-        public static DisposableTimer TraceDuration(Type loggerType, string startMessage, string completeMessage)
-        {
-            return new DisposableTimer(
-                LoggerResolver.Current.Logger,
-                LogType.Info, 
-                ProfilerResolver.HasCurrent ? ProfilerResolver.Current.Profiler : null,
-                loggerType,
-                startMessage,
-                completeMessage);
-        }
-
-        #endregion
-
-        #region DebugDuration
-        /// <summary>
-        /// Adds a start and end log entry as Debug and tracks how long it takes until disposed.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="startMessage"></param>
-        /// <param name="completeMessage"></param>
-        /// <returns></returns>
-        [Obsolete("Use the Umbraco.Core.Logging.ProfilingLogger to create instances of DisposableTimer")]
-        public static DisposableTimer DebugDuration<T>(string startMessage, string completeMessage)
-        {
-            return DebugDuration(typeof(T), startMessage, completeMessage);
-        }
-
-        /// <summary>
-        /// Adds a start and end log entry as Debug and tracks how long it takes until disposed.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="startMessage"></param>
-        /// <returns></returns>
-        [Obsolete("Use the Umbraco.Core.Logging.ProfilingLogger to create instances of DisposableTimer")]
-        public static DisposableTimer DebugDuration<T>(string startMessage)
-        {
-            return DebugDuration(typeof(T), startMessage, "Complete");
-        }
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        [Obsolete("Use the other methods that specify strings instead of Func")]
-        public static DisposableTimer DebugDuration<T>(Func<string> startMessage, Func<string> completeMessage)
-        {
-            return DebugDuration(typeof(T), startMessage, completeMessage);
-        }
-
-        /// <summary>
-        /// Adds a start and end log entry as Debug and tracks how long it takes until disposed.
-        /// </summary>
-        /// <param name="loggerType"></param>
-        /// <param name="startMessage"></param>
-        /// <param name="completeMessage"></param>
-        /// <returns></returns>
-        [Obsolete("Use the Umbraco.Core.Logging.ProfilingLogger to create instances of DisposableTimer")]
-        public static DisposableTimer DebugDuration(Type loggerType, string startMessage, string completeMessage)
-        {
-            return new DisposableTimer(
-                LoggerResolver.Current.Logger,
-                LogType.Debug,
-                ProfilerResolver.HasCurrent ? ProfilerResolver.Current.Profiler : null,
-                loggerType,
-                startMessage,
-                completeMessage);
-        }
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        [Obsolete("Use the other methods that specify strings instead of Func")]
-        public static DisposableTimer DebugDuration(Type loggerType, Func<string> startMessage, Func<string> completeMessage)
-        {
-            return new DisposableTimer(
-                LoggerResolver.Current.Logger,
-                LogType.Debug,
-                ProfilerResolver.HasCurrent ? ProfilerResolver.Current.Profiler : null,
-                loggerType,
-                startMessage(),
-                completeMessage());
-        } 
-        #endregion
-
+        
 		/// <summary>
 		/// Handles the disposal of resources. Derived from abstract class <see cref="DisposableObject"/> which handles common required locking logic.
 		/// </summary>

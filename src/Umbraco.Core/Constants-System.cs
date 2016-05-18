@@ -7,6 +7,8 @@
 		/// </summary>
 		public static class System
 		{
+		    public const string UmbracoMigrationName = "Umbraco";
+
 			/// <summary>
 			/// The integer identifier for global system root node.
 			/// </summary>

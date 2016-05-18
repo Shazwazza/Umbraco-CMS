@@ -1,21 +1,19 @@
 ﻿using System;
-using System.Configuration;
-using System.Data.SqlServerCe;
 using System.IO;
 using System.Linq;
-using System.Web;
-using System.Web.Configuration;
 using System.Xml.Linq;
+using Microsoft.Extensions.PlatformAbstractions;
 using NPoco;
-using Semver;
 using Umbraco.Core.Configuration;
 using Umbraco.Core.IO;
 using Umbraco.Core.Logging;
+using Umbraco.Core.Models;
 using Umbraco.Core.Persistence;
 using Umbraco.Core.Persistence.Migrations;
 using Umbraco.Core.Persistence.Migrations.Initial;
 using Umbraco.Core.Persistence.SqlSyntax;
 using Umbraco.Core.Services;
+using File = System.IO.File;
 
 namespace Umbraco.Core
 {
@@ -27,6 +25,7 @@ namespace Umbraco.Core
     {
         private readonly IDatabaseFactory _factory;
         private readonly ILogger _logger;
+        private readonly IApplicationEnvironment _applicationEnvironment;
         private DatabaseSchemaResult _databaseSchemaValidationResult;
 
         /// <summary>
@@ -34,17 +33,19 @@ namespace Umbraco.Core
         /// </summary>
         /// <param name="factory">A database factory.</param>
         /// <param name="logger">A logger.</param>
+        /// <param name="applicationEnvironment"></param>
         /// <remarks>The database factory will try to configure itself but may fail eg if the default
         /// Umbraco connection string is not available because we are installing. In which case this
         /// database context must sort things out and configure the database factory before it can be
         /// used.</remarks>
-        public DatabaseContext(IDatabaseFactory factory, ILogger logger)
+        public DatabaseContext(IDatabaseFactory factory, ILogger logger, IApplicationEnvironment applicationEnvironment)
         {
             if (factory == null) throw new ArgumentNullException(nameof(factory));
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
             _factory = factory;
             _logger = logger;
+            _applicationEnvironment = applicationEnvironment;
         }
 
         /// <summary>
@@ -590,7 +591,7 @@ namespace Umbraco.Core
 
         #endregion
 
-        internal bool IsConnectionStringConfigured(ConnectionStringSettings databaseSettings)
+        internal bool IsConnectionStringConfigured(IConnectionString databaseSettings)
         {
             var dbIsSqlCe = false;
             if (databaseSettings?.ProviderName != null)
@@ -602,7 +603,7 @@ namespace Umbraco.Core
                 var dataSourcePart = parts.FirstOrDefault(x => x.InvariantStartsWith("Data Source="));
                 if (dataSourcePart != null)
                 {
-                    var datasource = dataSourcePart.Replace("|DataDirectory|", AppDomain.CurrentDomain.GetData("DataDirectory").ToString());
+                    var datasource = dataSourcePart.Replace("|DataDirectory|", _applicationEnvironment.GetData("DataDirectory").ToString());
                     var filePath = datasource.Replace("Data Source=", string.Empty);
                     sqlCeDatabaseExists = File.Exists(filePath);
                 }

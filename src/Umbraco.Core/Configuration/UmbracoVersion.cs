@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Reflection;
-using Semver;
+using Umbraco.Core.Models;
 
 namespace Umbraco.Core.Configuration
 {
@@ -28,7 +28,7 @@ namespace Umbraco.Core.Configuration
 
         // Get the version of the Umbraco.Core.dll by looking at a class in that dll
         // Had to do it like this due to medium trust issues, see: http://haacked.com/archive/2010/11/04/assembly-location-and-medium-trust.aspx
-        public static string AssemblyVersion { get { return new AssemblyName(typeof(UmbracoVersion).Assembly.FullName).Version.ToString(); } }
+        public static string AssemblyVersion { get { return new AssemblyName(typeof(UmbracoVersion).GetTypeInfo().Assembly.FullName).Version.ToString(); } }
 
         public static SemVersion GetSemanticVersion()
         {

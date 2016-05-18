@@ -50,6 +50,7 @@
     "Configuration/UmbracoSettings/IContentErrorPage.cs",
     "Configuration/Grid/IGridEditorConfig.cs",
     "Configuration/UmbracoConfigurationSection.cs",
+    "Configuration/UmbracoVersion.cs",
 
     "DependencyInjection/LightInjectExtensions.cs",
     "DependencyInjection/TEMP_Annotation.cs",
@@ -93,6 +94,10 @@
     "Logging/ILogger.cs",
     "Logging/LoggerExtensions.cs",
 
+    "Profiling/IProfiler.cs",
+
+    "Persistence/Migrations/Initial/DatabaseSchemaResult.cs",
+
     "Sync/IServerAddress.cs",
     "Sync/MessageType.cs",
     "Sync/ServerRole.cs",
@@ -105,6 +110,7 @@
     "Serialization/JsonCreationConverter.cs",
 
     "CacheHelper.cs",
+    "DisposableTimer.cs",
     "NetworkHelper.cs",
     "MacroErrorBehaviour.cs",
     "IDisposeOnRequestEnd.cs",
