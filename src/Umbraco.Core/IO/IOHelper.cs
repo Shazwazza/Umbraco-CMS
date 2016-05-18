@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.AspNet.Hosting;
 using Microsoft.Extensions.PlatformAbstractions;
@@ -257,14 +258,58 @@ namespace Umbraco.Core.IO
 	    public void EnsureFileExists(string path, string contents)
 	    {
 	        var absolutePath = MapPath(path);
-	        if (File.Exists(absolutePath) == false)
+	        if (File.Exists(absolutePath)) return;
+
+	        using (var writer = File.CreateText(absolutePath))
 	        {
-                using (var writer = File.CreateText(absolutePath))
-                {
-                    writer.Write(contents);
-                }
+	            writer.Write(contents);
 	        }
-	            
 	    }
+
+        /// <summary>
+        /// Deletes all files passed in.
+        /// </summary>
+        /// <param name="files"></param>
+        /// <param name="onError"></param>
+        /// <returns></returns>
+        internal static bool DeleteFiles(IEnumerable<string> files, Action<string, Exception> onError = null)
+        {
+            //ensure duplicates are removed
+            files = files.Distinct();
+
+            var allsuccess = true;
+
+            var fs = FileSystemProviderManager.Current.GetFileSystemProvider<MediaFileSystem>();
+            Parallel.ForEach(files, file =>
+            {
+                try
+                {
+                    if (file.IsNullOrWhiteSpace()) return;
+
+                    var relativeFilePath = fs.GetRelativePath(file);
+                    if (fs.FileExists(relativeFilePath) == false) return;
+
+                    var parentDirectory = Path.GetDirectoryName(relativeFilePath);
+
+                    // don't want to delete the media folder if not using directories.
+                    if (UmbracoConfig.For.UmbracoSettings().Content.UploadAllowDirectories && parentDirectory != fs.GetRelativePath("/"))
+                    {
+                        //issue U4-771: if there is a parent directory the recursive parameter should be true
+                        fs.DeleteDirectory(parentDirectory, String.IsNullOrEmpty(parentDirectory) == false);
+                    }
+                    else
+                    {
+                        fs.DeleteFile(file, true);
+                    }
+                }
+                catch (Exception e)
+                {
+                    onError?.Invoke(file, e);
+                    allsuccess = false;
+                }
+            });
+
+            return allsuccess;
+        }
     }
 }

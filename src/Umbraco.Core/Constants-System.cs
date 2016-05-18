@@ -27,9 +27,6 @@
 		    public const int DefaultContentListViewDataTypeId = -95;
             public const int DefaultMediaListViewDataTypeId = -96;
             public const int DefaultMembersListViewDataTypeId = -97;
-
-            // identifiers for lock objects
-		    public const int ServersLock = -331;
-		}
-	}
+        }
+    }
 }

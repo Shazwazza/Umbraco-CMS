@@ -53,8 +53,10 @@ namespace Umbraco.Core.Services
 
                 if (types.Any() == false)
                 {
-                    throw new EntityNotFoundException("No member types could be resolved");
+                    throw new EntityNotFoundException("No member types could be resolved"); // causes rollback
                 }
+
+                uow.Complete();
 
                 if (types.InvariantContains("writer"))
                 {
@@ -81,7 +83,9 @@ namespace Umbraco.Core.Services
             using (var uow = UowProvider.CreateUnitOfWork())
             {
                 var repository = uow.CreateRepository<IUserRepository>();
-                return repository.Exists(username);
+                var exists = repository.Exists(username);
+                uow.Complete();
+                return exists;
             }
         }
 
@@ -139,7 +143,7 @@ namespace Umbraco.Core.Services
                 var repository = uow.CreateRepository<IUserRepository>();
                 var loginExists = uow.Database.ExecuteScalar<int>("SELECT COUNT(id) FROM umbracoUser WHERE userLogin = @Login", new { Login = username }) != 0;
                 if (loginExists)
-                    throw new ArgumentException("Login already exists");
+                    throw new ArgumentException("Login already exists"); // causes rollback
 
                 user = new User(userType)
                 {
@@ -180,8 +184,8 @@ namespace Umbraco.Core.Services
             using (var uow = UowProvider.CreateUnitOfWork())
             {
                 var repository = uow.CreateRepository<IUserRepository>();
-                var user = repository.Get((int)id);
-
+                var user = repository.Get(id);
+                uow.Complete();
                 return user;
             }
         }
@@ -214,7 +218,7 @@ namespace Umbraco.Core.Services
                 var repository = uow.CreateRepository<IUserRepository>();
                 var query = repository.Query.Where(x => x.Email.Equals(email));
                 var user = repository.GetByQuery(query).FirstOrDefault();
-
+                uow.Complete();
                 return user;
             }
         }
@@ -231,6 +235,7 @@ namespace Umbraco.Core.Services
                 var repository = uow.CreateRepository<IUserRepository>();
                 var query = repository.Query.Where(x => x.Username.Equals(username));
                 var user = repository.GetByQuery(query).FirstOrDefault();
+                uow.Complete();
                 return user;
             }
         }
@@ -327,9 +332,9 @@ namespace Umbraco.Core.Services
             using (var uow = UowProvider.CreateUnitOfWork())
             {
                 var repository = uow.CreateRepository<IUserRepository>();
-                repository.AddOrUpdate(entity);
                 try
                 {
+                    repository.AddOrUpdate(entity);
                     uow.Complete();
                 }
                 catch (DbException ex)
@@ -412,7 +417,9 @@ namespace Umbraco.Core.Services
                         throw new ArgumentOutOfRangeException("matchType");
                 }
 
-                return repository.GetPagedResultsByQuery(query, pageIndex, pageSize, out totalRecords, dto => dto.Email);
+                var users = repository.GetPagedResultsByQuery(query, pageIndex, pageSize, out totalRecords, dto => dto.Email);
+                uow.Complete();
+                return users;
             }
         }
 
@@ -453,7 +460,9 @@ namespace Umbraco.Core.Services
                         throw new ArgumentOutOfRangeException("matchType");
                 }
 
-                return repository.GetPagedResultsByQuery(query, pageIndex, pageSize, out totalRecords, dto => dto.Username);
+                var users = repository.GetPagedResultsByQuery(query, pageIndex, pageSize, out totalRecords, dto => dto.Username);
+                uow.Complete();
+                return users;
             }
         }
 
@@ -478,7 +487,7 @@ namespace Umbraco.Core.Services
                 {
                     case MemberCountType.All:
                         query = repository.Query;
-                        return repository.Count(query);
+                        break;
                     case MemberCountType.Online:
                         throw new NotImplementedException();
                         //var fromDate = DateTime.Now.AddMinutes(-Membership.UserIsOnlineTimeWindow);
@@ -489,18 +498,18 @@ namespace Umbraco.Core.Services
                         //        ((Member)x).DateTimePropertyValue > fromDate);
                         //return repository.GetCountByQuery(query);
                     case MemberCountType.LockedOut:
-                        query =
-                            repository.Query.Where(
-                                x => x.IsLockedOut);
-                        return repository.GetCountByQuery(query);
+                        query = repository.Query.Where(x => x.IsLockedOut);
+                        break;
                     case MemberCountType.Approved:
-                        query =
-                            repository.Query.Where(
-                                x => x.IsApproved);
-                        return repository.GetCountByQuery(query);
+                        query = repository.Query.Where(x => x.IsApproved);
+                        break;
                     default:
                         throw new ArgumentOutOfRangeException("countType");
                 }
+
+                var count = repository.GetCountByQuery(query);
+                uow.Complete();
+                return count;
             }
         }
 
@@ -516,7 +525,9 @@ namespace Umbraco.Core.Services
             using (var uow = UowProvider.CreateUnitOfWork())
             {
                 var repository = uow.CreateRepository<IUserRepository>();
-                return repository.GetPagedResultsByQuery(null, pageIndex, pageSize, out totalRecords, member => member.Username);
+                var users = repository.GetPagedResultsByQuery(null, pageIndex, pageSize, out totalRecords, member => member.Username);
+                uow.Complete();
+                return users;
             }
         }
 
@@ -556,7 +567,9 @@ namespace Umbraco.Core.Services
             using (var uow = UowProvider.CreateUnitOfWork())
             {
                 var repository = uow.CreateRepository<IUserRepository>();
-                return repository.Get(id);
+                var user = repository.Get(id);
+                uow.Complete();
+                return user;
             }
         }
 
@@ -573,6 +586,7 @@ namespace Umbraco.Core.Services
             {
                 var repository = uow.CreateRepository<IUserRepository>();
                 repository.ReplaceUserPermissions(userId, permissions, entityIds);
+                uow.Complete();
             }
         }
 
@@ -588,6 +602,7 @@ namespace Umbraco.Core.Services
             {
                 var repository = uow.CreateRepository<IUserRepository>();
                 repository.AssignUserPermission(userId, permission, entityIds);
+                uow.Complete();
             }
         }
 
@@ -601,7 +616,9 @@ namespace Umbraco.Core.Services
             using (var uow = UowProvider.CreateUnitOfWork())
             {
                 var repository = uow.CreateRepository<IUserTypeRepository>();
-                return repository.GetAll(ids);
+                var types = repository.GetAll(ids);
+                uow.Complete();
+                return types;
             }
         }
 
@@ -616,8 +633,9 @@ namespace Umbraco.Core.Services
             {
                 var repository = uow.CreateRepository<IUserTypeRepository>();
                 var query = repository.QueryFactory.Create<IUserType>().Where(x => x.Alias == alias);
-                var contents = repository.GetByQuery(query);
-                return contents.SingleOrDefault();
+                var type = repository.GetByQuery(query).SingleOrDefault();
+                uow.Complete();
+                return type;
             }
         }
 
@@ -631,7 +649,9 @@ namespace Umbraco.Core.Services
             using (var uow = UowProvider.CreateUnitOfWork())
             {
                 var repository = uow.CreateRepository<IUserTypeRepository>();
-                return repository.Get(id);                
+                var type = repository.Get(id);                
+                uow.Complete();
+                return type;
             }
         }
 
@@ -646,8 +666,9 @@ namespace Umbraco.Core.Services
             {
                 var repository = uow.CreateRepository<IUserTypeRepository>();
                 var query = repository.QueryFactory.Create<IUserType>().Where(x => x.Name == name);
-                var contents = repository.GetByQuery(query);
-                return contents.SingleOrDefault();
+                var type = repository.GetByQuery(query).SingleOrDefault();
+                uow.Complete();
+                return type;
             }
         }
 
@@ -768,23 +789,16 @@ namespace Umbraco.Core.Services
                     if (id == -1 && user.DefaultPermissions.Any() == false)
                     {
                         // exception to everything. If default cruds is empty and we're on root node; allow browse of root node
-                        result.Add(
-                            new EntityPermission(
-                                user.Id,
-                                id,
-                                user.DefaultPermissions.ToArray()));
+                        result.Add(new EntityPermission(user.Id, id, user.DefaultPermissions.ToArray()));
                     }
                     else
                     {
                         //use the user's user type permissions
-                        result.Add(
-                           new EntityPermission(
-                               user.Id,
-                               id,
-                               user.DefaultPermissions.ToArray()));
+                        result.Add(new EntityPermission(user.Id, id, user.DefaultPermissions.ToArray()));
                     }                    
                 }
 
+                uow.Complete();
                 return result;
             }
         }

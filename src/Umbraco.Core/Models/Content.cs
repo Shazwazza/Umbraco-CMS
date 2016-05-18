@@ -19,12 +19,14 @@ namespace Umbraco.Core.Models
         private IContentType _contentType;
         private ITemplate _template;
         private bool _published;
+        private bool? _publishedOriginal;
         private string _language;
         private DateTime? _releaseDate;
         private DateTime? _expireDate;
         private int _writer;
         private string _nodeName;//NOTE Once localization is introduced this will be the non-localized Node Name.
         private bool _permissionsChanged;
+
         /// <summary>
         /// Constructor for creating a Content object
         /// </summary>
@@ -33,8 +35,7 @@ namespace Umbraco.Core.Models
         /// <param name="contentType">ContentType for the current Content object</param>
         public Content(string name, IContent parent, IContentType contentType)
 			: this(name, parent, contentType, new PropertyCollection())
-		{			
-		}
+		{ }
 
         /// <summary>
         /// Constructor for creating a Content object
@@ -49,6 +50,7 @@ namespace Umbraco.Core.Models
 			Mandate.ParameterNotNull(contentType, "contentType");
 
 			_contentType = contentType;
+            PublishedState = PublishedState.Unpublished;
 		}
 
         /// <summary>
@@ -59,8 +61,7 @@ namespace Umbraco.Core.Models
         /// <param name="contentType">ContentType for the current Content object</param>
         public Content(string name, int parentId, IContentType contentType)
             : this(name, parentId, contentType, new PropertyCollection())
-        {
-        }
+        { }
 
         /// <summary>
         /// Constructor for creating a Content object
@@ -75,6 +76,7 @@ namespace Umbraco.Core.Models
             Mandate.ParameterNotNull(contentType, "contentType");
 
             _contentType = contentType;
+            PublishedState = PublishedState.Unpublished;
         }
 
         private static readonly PropertyInfo TemplateSelector = ExpressionHelper.GetPropertyInfo<Content, ITemplate>(x => x.Template);
@@ -97,7 +99,13 @@ namespace Umbraco.Core.Models
         [DataMember]
         public virtual ITemplate Template
         {
-            get { return _template; }
+            get
+            {
+                if (_template == null)
+                    return _contentType.DefaultTemplate;
+
+                return _template;
+            }
             set
             {
                 SetPropertyValueAndDetectChanges(o =>
@@ -148,9 +156,17 @@ namespace Umbraco.Core.Models
                 SetPropertyValueAndDetectChanges(o =>
                 {
                     _published = value;
+                    _publishedOriginal = _publishedOriginal ?? _published;
+                    PublishedState = _published ? PublishedState.Published : PublishedState.Unpublished;
                     return _published;
                 }, _published, PublishedSelector);
             }
+        }
+
+        [IgnoreDataMember]
+        public bool PublishedOriginal
+        {
+            get { return _publishedOriginal ?? false; }
         }
 
         /// <summary>
@@ -307,12 +323,14 @@ namespace Umbraco.Core.Models
         /// </summary>
         public void ChangePublishedState(PublishedState state)
         {
-            Published = state == PublishedState.Published;
+            if (state == PublishedState.Published || state == PublishedState.Unpublished)
+                throw new ArgumentException("Invalid state.");
+            Published = state == PublishedState.Publishing;
             PublishedState = state;
         }
 
         [DataMember]
-        internal PublishedState PublishedState { get; set; }
+        internal PublishedState PublishedState { get; private set; }
 
         /// <summary>
         /// Gets or sets the unique identifier of the published version, if any.
@@ -324,24 +342,26 @@ namespace Umbraco.Core.Models
         /// Gets a value indicating whether the content has a published version.
         /// </summary>
         public bool HasPublishedVersion { get { return PublishedVersionGuid != default(Guid); } }
-
-        /// <summary>
-        /// Changes the Trashed state of the content object
-        /// </summary>
-        /// <param name="isTrashed">Boolean indicating whether content is trashed (true) or not trashed (false)</param>
-        /// <param name="parentId"> </param>
-        public override void ChangeTrashedState(bool isTrashed, int parentId = -20)
-        {
-            Trashed = isTrashed;
-            ParentId = parentId;
-
-            //If the content is trashed and is published it should be marked as unpublished
-            if (isTrashed && Published)
-            {
-                ChangePublishedState(PublishedState.Unpublished);
-            }
-        }
         
+        public override void ResetDirtyProperties(bool rememberPreviouslyChangedProperties)
+        {
+            base.ResetDirtyProperties(rememberPreviouslyChangedProperties);
+
+            // take care of the published state
+            switch (PublishedState)
+            {
+                case PublishedState.Saving:
+                case PublishedState.Unpublishing:
+                    PublishedState = PublishedState.Unpublished;
+                    break;
+                case PublishedState.Publishing:
+                    PublishedState = PublishedState.Published;
+                    break;
+            }
+
+            _publishedOriginal = _published;
+        }
+
         /// <summary>
         /// Method to call when Entity is being updated
         /// </summary>
@@ -378,6 +398,8 @@ namespace Umbraco.Core.Models
                 property.ResetIdentity();
                 property.Version = clone.Version;
             }
+
+            clone.PublishedVersionGuid = Guid.Empty;
 
             return clone;
         }

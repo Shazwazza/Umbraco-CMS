@@ -14,7 +14,6 @@ using Umbraco.Core.Models;
 using Umbraco.Core.Persistence;
 using Umbraco.Core.Persistence.SqlSyntax;
 using Umbraco.Core.Persistence.UnitOfWork;
-using Umbraco.Core.Publishing;
 using Umbraco.Core.Services;
 using Umbraco.Core.Strings;
 using Umbraco.Tests.TestHelpers;
@@ -35,8 +34,6 @@ namespace Umbraco.Tests.Services
 		{
 			base.Initialize();
 
-		    var sqlSyntax = new SqlCeSyntaxProvider();
-
             //we need to use our own custom IDatabaseFactory for the DatabaseContext because we MUST ensure that
             //a Database instance is created per thread, whereas the default implementation which will work in an HttpContext
             //threading environment, or a single apartment threading environment will not work for this test because
@@ -54,12 +51,11 @@ namespace Umbraco.Tests.Services
 			//here we are going to override the ServiceContext because normally with our test cases we use a
 			//global Database object but this is NOT how it should work in the web world or in any multi threaded scenario.
 			//we need a new Database object for each thread.
-		    var evtMsgs = new TransientMessagesFactory();
+		    var evtMsgs = new TransientEventMessagesFactory();
 		    ApplicationContext.Services = TestObjects.GetServiceContext(
                 repositoryFactory,
                 _uowProvider,
                 new FileUnitOfWorkProvider(),
-                new PublishingStrategy(evtMsgs, Logger),
                 cacheHelper,
                 Logger,
                 evtMsgs,
@@ -79,20 +75,13 @@ namespace Umbraco.Tests.Services
         [TearDown]
 		public override void TearDown()
 		{
-			_error = null;
-
 			// dispose!
             _dbFactory?.Dispose();
 
             base.TearDown();
 		}
 
-		/// <summary>
-		/// Used to track exceptions during multi-threaded tests, volatile so that it is not locked in CPU registers.
-		/// </summary>
-		private volatile Exception _error = null;
-
-		private const int MaxThreadCount = 20;
+        private const int MaxThreadCount = 20;
 
 		[Test]
 		public void Ensure_All_Threads_Execute_Successfully_Content_Service()
@@ -101,8 +90,9 @@ namespace Umbraco.Tests.Services
 			var contentService = (ContentService)ServiceContext.ContentService;
 
 			var threads = new List<Thread>();
+            var exceptions = new List<Exception>();
 
-			Debug.WriteLine("Starting test...");
+            Debug.WriteLine("Starting test...");
 
 			for (var i = 0; i < MaxThreadCount; i++)
 			{
@@ -110,26 +100,26 @@ namespace Umbraco.Tests.Services
 					{
 						try
 						{
-							Debug.WriteLine("Created content on thread: " + Thread.CurrentThread.ManagedThreadId);
+							//Debug.WriteLine($"[{Thread.CurrentThread.ManagedThreadId}] ({DateTime.Now.ToString("HH:mm:ss,FFF")}) Create 1st content.");
+							var content1 = contentService.CreateContent("test" + Guid.NewGuid(), -1, "umbTextpage", 0);
 
-							//create 2 content items
-
-                            string name1 = "test" + Guid.NewGuid();
-							var content1 = contentService.CreateContent(name1, -1, "umbTextpage", 0);
-
-							Debug.WriteLine("Saving content1 on thread: " + Thread.CurrentThread.ManagedThreadId);
+							//Debug.WriteLine($"[{Thread.CurrentThread.ManagedThreadId}] ({DateTime.Now.ToString("HH:mm:ss,FFF")}) Save 1st content.");
 							contentService.Save(content1);
+                            //Debug.WriteLine($"[{Thread.CurrentThread.ManagedThreadId}] ({DateTime.Now.ToString("HH:mm:ss,FFF")}) Saved 1st content.");
 
 							Thread.Sleep(100); //quick pause for maximum overlap!
 
-                            string name2 = "test" + Guid.NewGuid();
-							var content2 = contentService.CreateContent(name2, -1, "umbTextpage", 0);
-							Debug.WriteLine("Saving content2 on thread: " + Thread.CurrentThread.ManagedThreadId);
-							contentService.Save(content2);
-						}
-						catch(Exception e)
+                            //Debug.WriteLine($"[{Thread.CurrentThread.ManagedThreadId}] ({DateTime.Now.ToString("HH:mm:ss,FFF")}) Create 2nd content.");
+                            var content2 = contentService.CreateContent("test" + Guid.NewGuid(), -1, "umbTextpage", 0);
+
+                            //Debug.WriteLine($"[{Thread.CurrentThread.ManagedThreadId}] ({DateTime.Now.ToString("HH:mm:ss,FFF")}) Save 2nd content.");
+                            contentService.Save(content2);
+                            //Debug.WriteLine($"[{Thread.CurrentThread.ManagedThreadId}] ({DateTime.Now.ToString("HH:mm:ss,FFF")}) Saved 2nd content.");
+                        }
+                        catch (Exception e)
 						{
-							_error = e;
+                            //Debug.WriteLine($"[{Thread.CurrentThread.ManagedThreadId}] ({DateTime.Now.ToString("HH:mm:ss,FFF")}) Exception!");
+						    lock (exceptions) { exceptions.Add(e); }
 						}
 					});
 				threads.Add(t);
@@ -144,7 +134,7 @@ namespace Umbraco.Tests.Services
 			//kill them all
 			threads.ForEach(x => x.Abort());
 
-			if (_error == null)
+			if (exceptions.Count == 0)
 			{
 				//now look up all items, there should be 40!
 				var items = contentService.GetRootContent();
@@ -152,7 +142,7 @@ namespace Umbraco.Tests.Services
 			}
 			else
 			{
-			    throw new Exception("Error!", _error);
+			    throw new Exception("Exceptions!", exceptions.First()); // rethrow the first one...
 			}
 
 		}
@@ -164,8 +154,9 @@ namespace Umbraco.Tests.Services
 			var mediaService = (MediaService)ServiceContext.MediaService;
 
 			var threads = new List<Thread>();
+            var exceptions = new List<Exception>();
 
-			Debug.WriteLine("Starting test...");
+            Debug.WriteLine("Starting test...");
 
 			for (var i = 0; i < MaxThreadCount; i++)
 			{
@@ -173,26 +164,24 @@ namespace Umbraco.Tests.Services
 				{
 					try
 					{
-						Debug.WriteLine("Created content on thread: " + Thread.CurrentThread.ManagedThreadId);
+						//Debug.WriteLine("Created content on thread: " + Thread.CurrentThread.ManagedThreadId);
 
 						//create 2 content items
 
-                        string name1 = "test" + Guid.NewGuid();
-					    var folder1 = mediaService.CreateMedia(name1, -1, Constants.Conventions.MediaTypes.Folder, 0);
-						Debug.WriteLine("Saving folder1 on thread: " + Thread.CurrentThread.ManagedThreadId);
+					    var folder1 = mediaService.CreateMedia("test" + Guid.NewGuid(), -1, Constants.Conventions.MediaTypes.Folder, 0);
+						//Debug.WriteLine("Saving folder1 on thread: " + Thread.CurrentThread.ManagedThreadId);
 						mediaService.Save(folder1, 0);
 
 						Thread.Sleep(100); //quick pause for maximum overlap!
 
-                        string name = "test" + Guid.NewGuid();
-                        var folder2 = mediaService.CreateMedia(name, -1, Constants.Conventions.MediaTypes.Folder, 0);
-						Debug.WriteLine("Saving folder2 on thread: " + Thread.CurrentThread.ManagedThreadId);
+                        var folder2 = mediaService.CreateMedia("test" + Guid.NewGuid(), -1, Constants.Conventions.MediaTypes.Folder, 0);
+						//Debug.WriteLine("Saving folder2 on thread: " + Thread.CurrentThread.ManagedThreadId);
 						mediaService.Save(folder2, 0);
 					}
 					catch (Exception e)
 					{
-						_error = e;
-					}
+                        lock (exceptions) { exceptions.Add(e); }
+                    }
 				});
 				threads.Add(t);
 			}
@@ -206,7 +195,7 @@ namespace Umbraco.Tests.Services
 			//kill them all
 			threads.ForEach(x => x.Abort());
 
-			if (_error == null)
+			if (exceptions.Count == 0)
 			{
 				//now look up all items, there should be 40!
 				var items = mediaService.GetRootMedia();
@@ -214,8 +203,8 @@ namespace Umbraco.Tests.Services
 			}
 			else
 			{
-				Assert.Fail("ERROR! " + _error);
-			}
+                throw new Exception("Exceptions!", exceptions.First()); // rethrow the first one...
+            }
 
 		}
 
