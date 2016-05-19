@@ -10,6 +10,7 @@ using Umbraco.Core.Models;
 using Umbraco.Core.Persistence;
 using Umbraco.Core.Persistence.Migrations;
 using Umbraco.Core.Persistence.Migrations.Initial;
+using Umbraco.Core.Persistence.Querying;
 using Umbraco.Core.Persistence.SqlSyntax;
 using Umbraco.Core.Services;
 using File = System.IO.File;
@@ -54,9 +55,14 @@ namespace Umbraco.Core
         }
 
         /// <summary>
+        /// Gets the QueryFactory
+        /// </summary>
+        public IQueryFactory QueryFactory => _factory.QueryFactory;
+
+        /// <summary>
         /// Gets the database sql syntax.
         /// </summary>
-        public ISqlSyntaxProvider SqlSyntax => _factory.SqlSyntax;
+        public ISqlSyntaxProvider SqlSyntax => _factory.QueryFactory.SqlSyntax;
 
         /// <summary>
         /// Gets the <see cref="Database"/> object for doing CRUD operations
