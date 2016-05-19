@@ -37,7 +37,7 @@ namespace Umbraco.Core.DependencyInjection
             container.RegisterSingleton<IDataTypeService, DataTypeService>();
             container.RegisterSingleton<IFileService, FileService>();
             container.RegisterSingleton<ILocalizationService, LocalizationService>();
-            container.RegisterSingleton<IPackagingService, PackagingService>();
+            //container.RegisterSingleton<IPackagingService, PackagingService>();
             container.RegisterSingleton<IServerRegistrationService, ServerRegistrationService>();
             container.RegisterSingleton<IEntityService, EntityService>();
             container.RegisterSingleton<IRelationService, RelationService>();
@@ -48,9 +48,10 @@ namespace Umbraco.Core.DependencyInjection
             container.RegisterSingleton<IExternalLoginService, ExternalLoginService>();
             container.Register<LocalizedTextServiceFileSources>(factory =>
             {
-                var mainLangFolder = new DirectoryInfo(IOHelper.MapPath(SystemDirectories.Umbraco + "/config/lang/"));
-                var appPlugins = new DirectoryInfo(IOHelper.MapPath(SystemDirectories.AppPlugins));
-                var configLangFolder = new DirectoryInfo(IOHelper.MapPath(SystemDirectories.Config + "/lang/"));
+                var ioHelper = factory.GetInstance<IOHelper>();
+                var mainLangFolder = new DirectoryInfo(ioHelper.MapPath(SystemDirectories.Umbraco + "/config/lang/"));
+                var appPlugins = new DirectoryInfo(ioHelper.MapPath(SystemDirectories.AppPlugins));
+                var configLangFolder = new DirectoryInfo(ioHelper.MapPath(SystemDirectories.Config + "/lang/"));
 
                 var pluginLangFolders = appPlugins.Exists == false
                     ? Enumerable.Empty<LocalizedTextServiceSupplementaryFileSource>()

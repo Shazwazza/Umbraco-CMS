@@ -1,48 +1,57 @@
-﻿using System.Runtime.Remoting.Messaging;
-using System.Web;
+﻿
+using System.Collections.Generic;
+using System.Threading;
+using Microsoft.AspNet.Http;
 
 namespace Umbraco.Core
 {
     internal class DefaultScopeContextAdapter : IScopeContextAdapter
     {
-        // note
-        // CallContext stuff will flow downwards in async but not upwards ie an async call will receive the values
-        // but any changes it makes will *not* modify the caller's CallContext, so we should be careful when using
-        // this for caches and stuff
-        //
-        // also might have to look for another solution for .NET Core as CallContext prob won't be available.
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly AsyncLocal<IDictionary<string,object>> _nonWebContext = new AsyncLocal<IDictionary<string, object>>();
+
+        /// <summary>
+        /// Lazily creates a non-web (singleton) context value container
+        /// </summary>
+        protected IDictionary<string, object> NonWebContext => 
+            _nonWebContext.Value ?? (_nonWebContext.Value = new Dictionary<string, object>());
+
+        public DefaultScopeContextAdapter(IHttpContextAccessor httpContextAccessor)
+        {
+            _httpContextAccessor = httpContextAccessor;
+        }
 
         public object Get(string key)
         {
-            return HttpContext.Current == null
-                ? CallContext.LogicalGetData(key)
-                : HttpContext.Current.Items[key];
+            return _httpContextAccessor?.HttpContext == null
+                ? NonWebContext.GetValue(key)
+                : _httpContextAccessor.HttpContext.Items[key];
         }
 
         public void Set(string key, object value)
         {
-            if (HttpContext.Current == null)
+            if (_httpContextAccessor?.HttpContext == null)
             {
                 if (value != null)
-                    CallContext.LogicalSetData(key, value);
+                    NonWebContext[key] = value;
                 else
-                    CallContext.FreeNamedDataSlot(key);
+                    NonWebContext.Remove(key);
             }
             else
             {
                 if (value != null)
-                    HttpContext.Current.Items[key] = value;
+                    _httpContextAccessor.HttpContext.Items[key] = value;
                 else
-                    HttpContext.Current.Items.Remove(key);
+                    _httpContextAccessor.HttpContext.Items.Remove(key);
             }
         }
 
         public void Clear(string key)
         {
-            if (HttpContext.Current == null)
-                CallContext.FreeNamedDataSlot(key);
+            if (_httpContextAccessor.HttpContext == null)
+                NonWebContext.Remove(key);
             else
-                HttpContext.Current.Items.Remove(key);
+                _httpContextAccessor.HttpContext.Items.Remove(key);
         }
     }
 }

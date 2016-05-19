@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Umbraco.Core.Exceptions;
 using Umbraco.Core.Logging;
 
 namespace Umbraco.Core.IO
 {
     public class PhysicalFileSystem : IFileSystem
     {
+        private readonly IOHelper _ioHelper;
         // the rooted, filesystem path, using directory separator chars, NOT ending with a separator
         // eg "c:" or "c:\path\to\site" or "\\server\path"
         private readonly string _rootPath;
@@ -16,17 +18,20 @@ namespace Umbraco.Core.IO
         // eg "" (?) or "/Scripts" or ???
         private readonly string _rootUrl;
 
-        public PhysicalFileSystem(string virtualRoot)
+        public PhysicalFileSystem(IOHelper ioHelper, string virtualRoot)
         {
-	        if (virtualRoot == null) throw new ArgumentNullException("virtualRoot");
+            if (ioHelper == null) throw new ArgumentNullException(nameof(ioHelper));
+            if (virtualRoot == null) throw new ArgumentNullException("virtualRoot");
 			if (virtualRoot.StartsWith("~/") == false)
 				throw new ArgumentException("The virtualRoot argument must be a virtual path and start with '~/'");
 
-            _rootPath = IOHelper.MapPath(virtualRoot);
+            _ioHelper = ioHelper;
+
+            _rootPath = _ioHelper.MapPath(virtualRoot);
             _rootPath = EnsureDirectorySeparatorChar(_rootPath);
             _rootPath = _rootPath.TrimEnd(Path.DirectorySeparatorChar);
 
-            _rootUrl = IOHelper.ResolveUrl(virtualRoot);
+            _rootUrl = _ioHelper.ResolveUrl(virtualRoot);
             _rootUrl = EnsureUrlSeparatorChar(_rootUrl);
             _rootUrl = _rootUrl.TrimEnd('/');
         }
@@ -46,7 +51,7 @@ namespace Umbraco.Core.IO
             // but the test suite App.config cannot really "root" anything so we'll have to do it here
 
             //var localRoot = AppDomain.CurrentDomain.BaseDirectory;
-            var localRoot = IOHelper.GetRootDirectorySafe();
+            var localRoot = _ioHelper.GetRootDirectorySafe();
             if (Path.IsPathRooted(rootPath) == false)
             {
                 rootPath = Path.Combine(localRoot, rootPath);

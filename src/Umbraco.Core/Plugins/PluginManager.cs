@@ -6,14 +6,14 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using System.Web.Compilation;
 using System.Xml.Linq;
+using Microsoft.Extensions.PlatformAbstractions;
 using Umbraco.Core.Cache;
 using Umbraco.Core.IO;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Persistence.Mappers;
 using Umbraco.Core.PropertyEditors;
-using Umbraco.Core._Legacy.PackageActions;
+//using Umbraco.Core._Legacy.PackageActions;
 using File = System.IO.File;
 
 namespace Umbraco.Core.Plugins
@@ -38,20 +38,38 @@ namespace Umbraco.Core.Plugins
         /// file is cached temporarily until app startup completes.
         /// </summary>
         /// <param name="logger"></param>
+        /// <param name="ioHelper"></param>
+        /// <param name="environmentHelper"></param>
+        /// <param name="typeFinder"></param>
+        /// <param name="umbracoAssemblyProvider"></param>
+        /// <param name="loadContextAccessor"></param>
         /// <param name="detectChanges"></param>
         /// <param name="serviceProvider"></param>
         /// <param name="runtimeCache"></param>
-        public PluginManager(IServiceProvider serviceProvider, IRuntimeCacheProvider runtimeCache, ProfilingLogger logger, bool detectChanges = true)
+        public PluginManager(IServiceProvider serviceProvider, IRuntimeCacheProvider runtimeCache, 
+            ProfilingLogger logger, IOHelper ioHelper, EnvironmentHelper environmentHelper, ITypeFinder typeFinder,
+            IUmbracoAssemblyProvider umbracoAssemblyProvider, IAssemblyLoadContextAccessor loadContextAccessor,
+            bool detectChanges = true)
         {
             if (serviceProvider == null) throw new ArgumentNullException("serviceProvider");
             if (runtimeCache == null) throw new ArgumentNullException("runtimeCache");
             if (logger == null) throw new ArgumentNullException("logger");
+            if (ioHelper == null) throw new ArgumentNullException(nameof(ioHelper));
+            if (environmentHelper == null) throw new ArgumentNullException(nameof(environmentHelper));
+            if (typeFinder == null) throw new ArgumentNullException(nameof(typeFinder));
+            if (umbracoAssemblyProvider == null) throw new ArgumentNullException(nameof(umbracoAssemblyProvider));
+            if (loadContextAccessor == null) throw new ArgumentNullException(nameof(loadContextAccessor));
 
             _serviceProvider = serviceProvider;
             _runtimeCache = runtimeCache;
             _logger = logger;
+            _ioHelper = ioHelper;
+            _environmentHelper = environmentHelper;
+            _typeFinder = typeFinder;
+            _umbracoAssemblyProvider = umbracoAssemblyProvider;
+            _loadContextAccessor = loadContextAccessor;
 
-            _tempFolder = IOHelper.MapPath("~/App_Data/TEMP/PluginCache");
+            _tempFolder = _ioHelper.MapPath("~/App_Data/TEMP/PluginCache");
             //create the folder if it doesn't exist
             if (Directory.Exists(_tempFolder) == false)
             {
@@ -99,47 +117,16 @@ namespace Umbraco.Core.Plugins
         private readonly IServiceProvider _serviceProvider;
         private readonly IRuntimeCacheProvider _runtimeCache;
         private readonly ProfilingLogger _logger;
+        private readonly IOHelper _ioHelper;
+        private readonly EnvironmentHelper _environmentHelper;
+        private readonly ITypeFinder _typeFinder;
+        private readonly IUmbracoAssemblyProvider _umbracoAssemblyProvider;
+        private readonly IAssemblyLoadContextAccessor _loadContextAccessor;
         private const string CacheKey = "umbraco-plugins.list";
         static PluginManager _resolver;
         private readonly string _tempFolder;
         private long _cachedAssembliesHash = -1;
-        private long _currentAssembliesHash = -1;
-        private static bool _initialized = false;
-        private static object _singletonLock = new object();
-
-        /// <summary>
-        /// We will ensure that no matter what, only one of these is created, this is to ensure that caching always takes place
-        /// </summary>
-        /// <remarks>
-        /// The setter is generally only used for unit tests
-        /// </remarks>
-        public static PluginManager Current
-        {
-            get
-            {
-                return LazyInitializer.EnsureInitialized(ref _resolver, ref _initialized, ref _singletonLock, () =>
-                {
-                    if (ApplicationContext.Current == null)
-                    {
-                        var logger = LoggerResolver.HasCurrent ? LoggerResolver.Current.Logger : new DebugDiagnosticsLogger();
-                        var profiler = ProfilerResolver.HasCurrent ? ProfilerResolver.Current.Profiler : new LogProfiler(logger);
-                        return new PluginManager(
-                            new ActivatorServiceProvider(), 
-                            new NullCacheProvider(), 
-                            new ProfilingLogger(logger, profiler));
-                    }
-                    return new PluginManager(
-                        new ActivatorServiceProvider(), 
-                        ApplicationContext.Current.ApplicationCache.RuntimeCache, 
-                        ApplicationContext.Current.ProfilingLogger);
-                });
-            }
-            set
-            {
-                _initialized = true;
-                _resolver = value;
-            }
-        }
+        private long _currentAssembliesHash = -1;       
 
         #region Hash checking methods
 
@@ -190,15 +177,16 @@ namespace Umbraco.Core.Plugins
                 _currentAssembliesHash = GetFileHash(
                     new List<Tuple<FileSystemInfo, bool>>
 						{
-							//add the bin folder and everything in it
-							new Tuple<FileSystemInfo, bool>(new DirectoryInfo(IOHelper.MapPath(SystemDirectories.Bin)), false),
-							//add the app code folder and everything in it
-							new Tuple<FileSystemInfo, bool>(new DirectoryInfo(IOHelper.MapPath("~/App_Code")), false),
-							//add the global.asax (the app domain also monitors this, if it changes will do a full restart)
-							new Tuple<FileSystemInfo, bool>(new FileInfo(IOHelper.MapPath("~/global.asax")), false),
+                            //TODO: How are we going to generate the hash?
 
+							//add the bin folder and everything in it
+							//new Tuple<FileSystemInfo, bool>(new DirectoryInfo(_ioHelper.MapPath(SystemDirectories.Bin)), false),
+							//add the app code folder and everything in it
+							//new Tuple<FileSystemInfo, bool>(new DirectoryInfo(_ioHelper.MapPath("~/App_Code")), false),
+							//add the global.asax (the app domain also monitors this, if it changes will do a full restart)
+							//new Tuple<FileSystemInfo, bool>(new FileInfo(_ioHelper.MapPath("~/global.asax")), false),
                             //add the trees.config - use the contents to create the has since this gets resaved on every app startup!
-                            new Tuple<FileSystemInfo, bool>(new FileInfo(IOHelper.MapPath(SystemDirectories.Config + "/trees.config")), true)
+                            //new Tuple<FileSystemInfo, bool>(new FileInfo(_ioHelper.MapPath(SystemDirectories.Config + "/trees.config")), true)
 						}, _logger
                     );
                 return _currentAssembliesHash;
@@ -221,9 +209,12 @@ namespace Umbraco.Core.Plugins
         /// A collection of files and whether or not to use their file contents to determine the hash or the file's properties 
         /// (true will make a hash based on it's contents)
         /// </param>
+        /// <param name="logger"></param>
         /// <returns></returns>
         internal static long GetFileHash(IEnumerable<Tuple<FileSystemInfo, bool>> filesAndFolders, ProfilingLogger logger)
         {
+            //TODO: Need to figure this out differently!
+
             using (logger.TraceDuration<PluginManager>("Determining hash of code files on disk", "Hash determined"))
             {
                 var hashCombiner = new HashCodeCombiner();
@@ -348,12 +339,12 @@ namespace Umbraco.Core.Plugins
         
         private string GetPluginListFilePath()
         {
-            return Path.Combine(_tempFolder, string.Format("umbraco-plugins.{0}.list", NetworkHelper.FileSafeMachineName));
+            return Path.Combine(_tempFolder, string.Format("umbraco-plugins.{0}.list", _environmentHelper.FileSafeMachineName));
         }
 
         private string GetPluginHashFilePath()
         {
-            return Path.Combine(_tempFolder, string.Format("umbraco-plugins.{0}.hash", NetworkHelper.FileSafeMachineName));
+            return Path.Combine(_tempFolder, string.Format("umbraco-plugins.{0}.hash", _environmentHelper.FileSafeMachineName));
         }
 
         /// <summary>
@@ -452,15 +443,18 @@ namespace Umbraco.Core.Plugins
 
             //now we have the type element, we need to clear any previous types as children and add/update it with new ones
             typeElement.ReplaceNodes(typesFound.Select(x => new XElement("add", new XAttribute("type", x.AssemblyQualifiedName))));
-            //save the xml file
-            xml.Save(filePath);
+
+            using (var outputStream = File.OpenWrite(filePath))
+            {
+                //save the xml file
+                xml.Save(outputStream);
+            }            
         }
 
         #endregion
 
         private static readonly ReaderWriterLockSlim Locker = new ReaderWriterLockSlim();
-        private readonly HashSet<TypeList> _types = new HashSet<TypeList>();
-        private IEnumerable<Assembly> _assemblies;
+        private readonly HashSet<TypeList> _types = new HashSet<TypeList>();        
 
         /// <summary>
         /// Returns all found property editors (based on the resolved Iparameter editors - this saves a scan)
@@ -501,14 +495,14 @@ namespace Umbraco.Core.Plugins
             return ResolveTypes<ICacheRefresher>();
         }      
 
-        /// <summary>
-        /// Returns all available IPackageAction in application
-        /// </summary>
-        /// <returns></returns>
-        internal IEnumerable<Type> ResolvePackageActions()
-        {
-            return ResolveTypes<IPackageAction>();
-        }
+        ///// <summary>
+        ///// Returns all available IPackageAction in application
+        ///// </summary>
+        ///// <returns></returns>
+        //internal IEnumerable<Type> ResolvePackageActions()
+        //{
+        //    return ResolveTypes<IPackageAction>();
+        //}
 
         
 
@@ -520,17 +514,7 @@ namespace Umbraco.Core.Plugins
         {
             return ResolveTypesWithAttribute<BaseMapper, MapperForAttribute>();
         }               
-
-        /// <summary>
-        /// Gets/sets which assemblies to scan when type finding, generally used for unit testing, if not explicitly set
-        /// this will search all assemblies known to have plugins and exclude ones known to not have them.
-        /// </summary>
-        internal IEnumerable<Assembly> AssembliesToScan
-        {
-            get { return _assemblies ?? (_assemblies = TypeFinder.GetAssembliesWithKnownExclusions()); }
-            set { _assemblies = value; }
-        }     
-
+        
         private IEnumerable<Type> ResolveTypes<T>(
             Func<IEnumerable<Type>> finder,
             TypeResolutionKind resolutionType,
@@ -587,10 +571,28 @@ namespace Umbraco.Core.Plugins
                                     foreach (var t in fileCacheResult.Result)
                                     {
                                         try
-                                        {
-                                            //we use the build manager to ensure we get all types loaded, this is slightly slower than
-                                            //Type.GetType but if the types in the assembly aren't loaded yet then we have problems with that.
-                                            var type = BuildManager.GetType(t, true);
+                                        {           
+                                            //TODO: This used to use BuildManager now things are a bit different and I'm not exactly sure
+                                            // how Type.GetType would work but assuming it would be the same as before where it would only 
+                                            // return types currently loaded. 
+
+                                            var typeName = new TypeName(t);
+                                            //TODO: IS this it? Or do we need to lok into the _umbracoAssemblyProvider.CandidateAssemblies?
+                                            var assem = _loadContextAccessor.Default.Load(typeName.AssemblyName);
+                                            var type = assem.GetType(t, true, false);
+
+                                            // TODO: This overload allows us to look into all assemblies given to us
+                                            // by the AssemblyProvider so should work just as well/better. but is not yet available
+                                            // in .net core afaik.
+                                            //var type = Type.GetType(t,
+                                            //    //return if it matches a candidate
+                                            //    aName => _umbracoAssemblyProvider.CandidateAssemblies.FirstOrDefault(x => x.GetName() == aName),
+                                            //    (assem, name, ignore) => assem == null
+                                            //        //no assembly, default to the CLR
+                                            //        ? Type.GetType(name, false, ignore)
+                                            //        //try to get the type directly from the assembly
+                                            //        : assem.GetType(name, false, ignore));
+
                                             typeList.AddType(type);
                                         }
                                         catch (Exception ex)
@@ -668,7 +670,7 @@ namespace Umbraco.Core.Plugins
         public IEnumerable<Type> ResolveTypes<T>(bool cacheResult = true, IEnumerable<Assembly> specificAssemblies = null)
         {
             return ResolveTypes<T>(
-                () => TypeFinder.FindClassesOfType<T>(specificAssemblies ?? AssembliesToScan),
+                () => _typeFinder.FindClassesOfType<T>(specificAssemblies ?? _typeFinder.AssembliesToScan),
                 TypeResolutionKind.FindAllTypes,
                 cacheResult);
         }
@@ -683,7 +685,7 @@ namespace Umbraco.Core.Plugins
             where TAttribute : Attribute
         {
             return ResolveTypes<T>(
-                () => TypeFinder.FindClassesOfTypeWithAttribute<T, TAttribute>(specificAssemblies ?? AssembliesToScan),
+                () => _typeFinder.FindClassesOfTypeWithAttribute<T, TAttribute>(specificAssemblies ?? _typeFinder.AssembliesToScan),
                 TypeResolutionKind.FindTypesWithAttribute,
                 cacheResult);
         }
@@ -697,7 +699,7 @@ namespace Umbraco.Core.Plugins
             where TAttribute : Attribute
         {
             return ResolveTypes<TAttribute>(
-                () => TypeFinder.FindClassesWithAttribute<TAttribute>(specificAssemblies ?? AssembliesToScan),
+                () => _typeFinder.FindClassesWithAttribute<TAttribute>(specificAssemblies ?? _typeFinder.AssembliesToScan),
                 TypeResolutionKind.FindAttributedTypes,
                 cacheResult);
         } 

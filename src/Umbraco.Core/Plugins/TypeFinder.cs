@@ -43,9 +43,10 @@ namespace Umbraco.Core.Plugins
         /// cached for perforance reasons.
         /// </summary>
         /// <returns></returns>
-        internal HashSet<Assembly> GetAssembliesWithKnownExclusions()
+        public IEnumerable<Assembly> AssembliesToScan
         {
-            return _localFilteredAssemblyCache.Value;
+            get { return _localFilteredAssemblyCache.Value; }
+            
         }
 
         /// <summary>
@@ -64,11 +65,11 @@ namespace Umbraco.Core.Plugins
                 exclusionFilter = new string[] { };
 
             return _assemblyProvider.SelectMany(x => x.CandidateAssemblies)
-                .Where(x => !excludeFromResults.Contains(x)
+                .Where(x => excludeFromResults.Contains(x) == false
 #if NET461
-                            && !x.GlobalAssemblyCache 
+                            && x.GlobalAssemblyCache == false 
 #endif
-                            && !exclusionFilter.Any(f => x.FullName.StartsWith(f)));
+                            && exclusionFilter.Any(f => x.FullName.StartsWith(f)) == false);
         }
 
         /// <summary>
@@ -106,7 +107,7 @@ namespace Umbraco.Core.Plugins
         public IEnumerable<Type> FindClassesOfTypeWithAttribute<T, TAttribute>()
             where TAttribute : Attribute
         {
-            return FindClassesOfTypeWithAttribute<T, TAttribute>(GetAssembliesWithKnownExclusions(), true);
+            return FindClassesOfTypeWithAttribute<T, TAttribute>(AssembliesToScan, true);
         }
 
         /// <summary>
@@ -166,7 +167,7 @@ namespace Umbraco.Core.Plugins
         /// <returns></returns>
         public IEnumerable<Type> FindClassesOfType<T>()
         {
-            return FindClassesOfType<T>(GetAssembliesWithKnownExclusions(), true);
+            return FindClassesOfType<T>(AssembliesToScan, true);
         }
 
         /// <summary>
@@ -348,7 +349,7 @@ namespace Umbraco.Core.Plugins
         public IEnumerable<Type> FindClassesWithAttribute<T>()
             where T : Attribute
         {
-            return FindClassesWithAttribute<T>(GetAssembliesWithKnownExclusions());
+            return FindClassesWithAttribute<T>(AssembliesToScan);
         }
 
 

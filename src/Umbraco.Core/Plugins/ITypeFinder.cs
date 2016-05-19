@@ -17,5 +17,6 @@ namespace Umbraco.Core.Plugins
         IEnumerable<Type> FindClassesWithAttribute<T>() where T : Attribute;
         IEnumerable<Type> FindClassesWithAttribute<T>(IEnumerable<Assembly> assemblies) where T : Attribute;
         IEnumerable<Type> FindClassesWithAttribute<T>(IEnumerable<Assembly> assemblies, bool onlyConcreteClasses) where T : Attribute;
+        IEnumerable<Assembly> AssembliesToScan { get; }
     }
 }
