@@ -8,11 +8,12 @@
 		public static class System
 		{
 		    public const string UmbracoMigrationName = "Umbraco";
+            public const string UmbracoConnectionName = "umbracoDbDSN";
 
-			/// <summary>
-			/// The integer identifier for global system root node.
-			/// </summary>
-			public const int Root = -1;
+            /// <summary>
+            /// The integer identifier for global system root node.
+            /// </summary>
+            public const int Root = -1;
 
 			/// <summary>
 			/// The integer identifier for content's recycle bin.

@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
-using log4net;
 using NPoco;
-using Semver;
-using Umbraco.Core.Configuration;
 using Umbraco.Core.Events;
+using Umbraco.Core.Exceptions;
 using Umbraco.Core.Logging;
-using Umbraco.Core.Persistence.Migrations.Syntax.IfDatabase;
-using Umbraco.Core.Persistence.SqlSyntax;
+using Umbraco.Core.Models;
 using Umbraco.Core.Services;
 
 namespace Umbraco.Core.Persistence.Migrations
@@ -162,7 +158,7 @@ namespace Umbraco.Core.Persistence.Migrations
             return _migrations ?? _resolver.Migrations.ToArray();
         }
 
-        internal MigrationContext InitializeMigrations(
+        internal IMigrationContext InitializeMigrations(
             List<IMigration> migrations,
             UmbracoDatabase database,
             bool isUpgrade = true)

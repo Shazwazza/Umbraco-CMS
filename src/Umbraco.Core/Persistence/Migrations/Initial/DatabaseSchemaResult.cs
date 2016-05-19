@@ -44,7 +44,7 @@ namespace Umbraco.Core.Persistence.Migrations.Initial
         /// </summary>
         /// <param name="migrationEntryService"></param>
         /// <returns></returns>
-        public ISemVersion DetermineInstalledVersionByMigrations(IMigrationEntryService migrationEntryService)
+        public SemVersion DetermineInstalledVersionByMigrations(IMigrationEntryService migrationEntryService)
         {
             var allMigrations = migrationEntryService.GetAll(Constants.System.UmbracoMigrationName);
             var mostrecent = allMigrations.OrderByDescending(x => x.Version).Select(x => x.Version).FirstOrDefault();

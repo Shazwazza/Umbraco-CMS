@@ -1,4 +1,4 @@
-﻿using Semver;
+﻿using Umbraco.Core.Models;
 
 namespace Umbraco.Core
 {

@@ -12,7 +12,7 @@ namespace Umbraco.Core.Services
         /// <param name="migrationName"></param>
         /// <param name="version"></param>
         /// <returns></returns>
-        IMigrationEntry CreateEntry(string migrationName, ISemVersion version);
+        IMigrationEntry CreateEntry(string migrationName, SemVersion version);
 
         /// <summary>
         /// Finds a migration by name and version, returns null if not found
@@ -20,7 +20,7 @@ namespace Umbraco.Core.Services
         /// <param name="migrationName"></param>
         /// <param name="version"></param>
         /// <returns></returns>
-        IMigrationEntry FindEntry(string migrationName, ISemVersion version);
+        IMigrationEntry FindEntry(string migrationName, SemVersion version);
 
         /// <summary>
         /// Gets all entries for a given migration name

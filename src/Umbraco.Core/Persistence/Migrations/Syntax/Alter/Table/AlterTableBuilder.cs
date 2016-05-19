@@ -241,19 +241,19 @@ namespace Umbraco.Core.Persistence.Migrations.Syntax.Alter.Table
             return this;
         }
 
-        public IAlterTableColumnOptionForeignKeyCascadeSyntax OnDelete(Rule rule)
+        public IAlterTableColumnOptionForeignKeyCascadeSyntax OnDelete(CascadeRule rule)
         {
             CurrentForeignKey.OnDelete = rule;
             return this;
         }
 
-        public IAlterTableColumnOptionForeignKeyCascadeSyntax OnUpdate(Rule rule)
+        public IAlterTableColumnOptionForeignKeyCascadeSyntax OnUpdate(CascadeRule rule)
         {
             CurrentForeignKey.OnUpdate = rule;
             return this;
         }
 
-        public IAlterTableColumnOptionSyntax OnDeleteOrUpdate(Rule rule)
+        public IAlterTableColumnOptionSyntax OnDeleteOrUpdate(CascadeRule rule)
         {
             OnDelete(rule);
             OnUpdate(rule);

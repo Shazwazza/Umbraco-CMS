@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using Umbraco.Core.Persistence.DatabaseModelDefinitions;
 using Umbraco.Core.Persistence.Migrations.Syntax.Expressions;
 
 namespace Umbraco.Core.Persistence.Migrations.Syntax.Create.ForeignKey
@@ -52,19 +53,19 @@ namespace Umbraco.Core.Persistence.Migrations.Syntax.Create.ForeignKey
             return this;
         }
 
-        public ICreateForeignKeyCascadeSyntax OnDelete(Rule rule)
+        public ICreateForeignKeyCascadeSyntax OnDelete(CascadeRule rule)
         {
             Expression.ForeignKey.OnDelete = rule;
             return this;
         }
 
-        public ICreateForeignKeyCascadeSyntax OnUpdate(Rule rule)
+        public ICreateForeignKeyCascadeSyntax OnUpdate(CascadeRule rule)
         {
             Expression.ForeignKey.OnUpdate = rule;
             return this;
         }
 
-        public void OnDeleteOrUpdate(Rule rule)
+        public void OnDeleteOrUpdate(CascadeRule rule)
         {
             Expression.ForeignKey.OnDelete = rule;
             Expression.ForeignKey.OnUpdate = rule;

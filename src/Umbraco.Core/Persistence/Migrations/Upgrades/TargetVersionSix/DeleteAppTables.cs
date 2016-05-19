@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using Umbraco.Core.Configuration;
+using Umbraco.Core.Exceptions;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Persistence.SqlSyntax;
 

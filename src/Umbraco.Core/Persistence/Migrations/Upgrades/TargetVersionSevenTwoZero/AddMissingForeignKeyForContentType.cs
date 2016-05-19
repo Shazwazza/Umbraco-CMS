@@ -1,6 +1,7 @@
 using System.Data;
 using System.Linq;
 using Umbraco.Core.Configuration;
+using Umbraco.Core.Exceptions;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models.Rdbms;
 using Umbraco.Core.Persistence.DatabaseModelDefinitions;

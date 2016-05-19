@@ -23,7 +23,7 @@ namespace Umbraco.Core.Services
         /// <param name="migrationName"></param>
         /// <param name="version"></param>
         /// <returns></returns>
-        public IMigrationEntry CreateEntry(string migrationName, ISemVersion version)
+        public IMigrationEntry CreateEntry(string migrationName, SemVersion version)
         {
             var entry = new MigrationEntry
             {
@@ -47,7 +47,7 @@ namespace Umbraco.Core.Services
         /// <param name="migrationName"></param>
         /// <param name="version"></param>
         /// <returns></returns>
-        public IMigrationEntry FindEntry(string migrationName, ISemVersion version)
+        public IMigrationEntry FindEntry(string migrationName, SemVersion version)
         {
             using (var uow = UowProvider.CreateUnitOfWork())
             {

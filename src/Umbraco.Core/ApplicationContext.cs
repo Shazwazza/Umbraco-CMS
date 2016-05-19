@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Configuration;
 using System.Threading;
+using Microsoft.AspNet.Hosting;
 using Umbraco.Core.Cache;
 using Umbraco.Core.Configuration;
 using Umbraco.Core.Logging;
@@ -22,19 +22,21 @@ namespace Umbraco.Core
         readonly ManualResetEventSlim _isReadyEvent = new ManualResetEventSlim(false);
         private DatabaseContext _databaseContext;
         private ServiceContext _services;
-        private Lazy<bool> _configured;
+	    private readonly IUmbracoSettings _umbracoSettings;
+	    private Lazy<bool> _configured;
 
         // ReSharper disable once InconsistentNaming
         internal string _umbracoApplicationUrl;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ApplicationContext"/> class.
-        /// </summary>
-        /// <param name="dbContext">A database context.</param>
-        /// <param name="serviceContext">A service context.</param>
-        /// <param name="cache">A cache helper.</param>
-        /// <param name="logger">A logger.</param>
-        public ApplicationContext(DatabaseContext dbContext, ServiceContext serviceContext, CacheHelper cache, ProfilingLogger logger)
+	    /// <summary>
+	    /// Initializes a new instance of the <see cref="ApplicationContext"/> class.
+	    /// </summary>
+	    /// <param name="dbContext">A database context.</param>
+	    /// <param name="serviceContext">A service context.</param>
+	    /// <param name="cache">A cache helper.</param>
+	    /// <param name="logger">A logger.</param>
+	    /// <param name="umbracoSettings"></param>
+	    public ApplicationContext(DatabaseContext dbContext, ServiceContext serviceContext, CacheHelper cache, ProfilingLogger logger, IUmbracoSettings umbracoSettings)
 	    {
             if (dbContext == null) throw new ArgumentNullException(nameof(dbContext));
             if (serviceContext == null) throw new ArgumentNullException(nameof(serviceContext));
@@ -43,19 +45,21 @@ namespace Umbraco.Core
 
             _databaseContext = dbContext;
             _services = serviceContext;
-            ApplicationCache = cache;
+	        _umbracoSettings = umbracoSettings;
+	        ApplicationCache = cache;
             ProfilingLogger = logger;
 
             Initialize();
 	    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ApplicationContext"/> class.
-        /// </summary>
-        /// <param name="cache">A cache helper.</param>
-        /// <param name="logger">A logger.</param>
-        /// <remarks>For Unit Tests only.</remarks>
-        public ApplicationContext(CacheHelper cache, ProfilingLogger logger)
+	    /// <summary>
+	    /// Initializes a new instance of the <see cref="ApplicationContext"/> class.
+	    /// </summary>
+	    /// <param name="cache">A cache helper.</param>
+	    /// <param name="logger">A logger.</param>
+	    /// <param name="umbracoSettings"></param>
+	    /// <remarks>For Unit Tests only.</remarks>
+	    public ApplicationContext(CacheHelper cache, ProfilingLogger logger, IUmbracoSettings umbracoSettings)
         {
 	        if (cache == null) throw new ArgumentNullException(nameof(cache));
 	        if (logger == null) throw new ArgumentNullException(nameof(logger));
@@ -81,22 +85,23 @@ namespace Umbraco.Core
 	        return Current = appContext;
 	    }
 
-        /// <summary>
-        /// Sets and/or ensures that a global application context exists.
-        /// </summary>
-        /// <param name="cache">A cache helper.</param>
-        /// <param name="logger">A logger.</param>
-        /// <param name="dbContext">A database context.</param>
-        /// <param name="serviceContext">A service context.</param>
+	    /// <summary>
+	    /// Sets and/or ensures that a global application context exists.
+	    /// </summary>
+	    /// <param name="cache">A cache helper.</param>
+	    /// <param name="logger">A logger.</param>
+	    /// <param name="dbContext">A database context.</param>
+	    /// <param name="serviceContext">A service context.</param>
+	    /// <param name="umbracoSettings"></param>
 	    /// <param name="replaceContext">A value indicating whether to replace the existing context, if any.</param>
-        /// <returns>The current global application context.</returns>
-        /// <remarks>This is NOT thread safe. For Unit Tests only.</remarks>
-        public static ApplicationContext EnsureContext(DatabaseContext dbContext, ServiceContext serviceContext, CacheHelper cache, ProfilingLogger logger, bool replaceContext)
+	    /// <returns>The current global application context.</returns>
+	    /// <remarks>This is NOT thread safe. For Unit Tests only.</remarks>
+	    public static ApplicationContext EnsureContext(DatabaseContext dbContext, ServiceContext serviceContext, CacheHelper cache, ProfilingLogger logger, IUmbracoSettings umbracoSettings, bool replaceContext)
         {
             if (Current != null && replaceContext == false)
                     return Current;
 
-            return Current = new ApplicationContext(dbContext, serviceContext, cache, logger);
+            return Current = new ApplicationContext(dbContext, serviceContext, cache, logger, umbracoSettings);
         }
 
 	    /// <summary>
@@ -116,11 +121,6 @@ namespace Umbraco.Core
         /// Gets the profiling logger.
         /// </summary>
         public ProfilingLogger ProfilingLogger { get; }
-
-        /// <summary>
-        /// Gets the MainDom.
-        /// </summary>
-        internal MainDom MainDom { get; private set; }
 
         /// <summary>
         /// Gets a value indicating whether the application is configured.
@@ -183,44 +183,10 @@ namespace Umbraco.Core
                 var schemaresult = DatabaseContext.ValidateDatabaseSchema();
                 return schemaresult.ValidTables.Count > 0;
             }
-	    }
-
-	    /// <summary>
-        /// Gets the application Url.
-        /// </summary>
-        /// <remarks>
-        /// The application url is the url that should be used by services to talk to the application,
-        /// eg keep alive or scheduled publishing services. It must exist on a global context because
-        /// some of these services may not run within a web context.
-        /// The format of the application url is:
-        /// - has a scheme (http or https)
-        /// - has the SystemDirectories.Umbraco path
-        /// - does not end with a slash
-        /// It is initialized on the first request made to the server, by UmbracoModule.EnsureApplicationUrl:
-        /// - if umbracoSettings:settings/web.routing/@umbracoApplicationUrl is set, use the value (new setting)
-        /// - if umbracoSettings:settings/scheduledTasks/@baseUrl is set, use the value (backward compatibility)
-        /// - otherwise, use the url of the (first) request.
-        /// Not locking, does not matter if several threads write to this.
-        /// See also issues:
-        /// - http://issues.umbraco.org/issue/U4-2059
-        /// - http://issues.umbraco.org/issue/U4-6788
-        /// - http://issues.umbraco.org/issue/U4-5728
-        /// - http://issues.umbraco.org/issue/U4-5391
-        /// </remarks>
-        internal string UmbracoApplicationUrl
-        {
-            get
-            {
-                ApplicationUrlHelper.EnsureApplicationUrl(this);
-                return _umbracoApplicationUrl;
-            }
-        }
+	    }        
 
 	    private void Initialize()
 		{
-            MainDom = new MainDom(ProfilingLogger.Logger);
-            MainDom.Acquire();
-
             ResetConfigured();
 		}
 
@@ -255,7 +221,7 @@ namespace Umbraco.Core
                     }
 
                     // look for a migration entry for the current version
-                    var entry = Services.MigrationEntryService.FindEntry(GlobalSettings.UmbracoMigrationName, UmbracoVersion.GetSemanticVersion());
+                    var entry = Services.MigrationEntryService.FindEntry(Constants.System.UmbracoMigrationName, UmbracoVersion.GetSemanticVersion());
                     if (entry != null)
                         return true; // all clear!
 
@@ -272,22 +238,9 @@ namespace Umbraco.Core
         }
 
         // gets the configuration status, ie the version that's in web.config
-        private string ConfigurationStatus
-		{
-			get
-			{
-				try
-				{
-					return ConfigurationManager.AppSettings["umbracoConfigurationStatus"];
-				}
-				catch
-				{
-					return string.Empty;
-				}
-			}
-		}
+        private string ConfigurationStatus => _umbracoSettings.ConfigurationStatus;
 
-		/// <summary>
+	    /// <summary>
 		/// Gets the current database context.
 		/// </summary>
 		public DatabaseContext DatabaseContext
@@ -316,16 +269,6 @@ namespace Umbraco.Core
             // INTERNAL FOR UNIT TESTS
             internal set { _services = value; }
 		}
-
-        /// <summary>
-        /// Gets the server role.
-        /// </summary>
-        /// <returns></returns>
-	    internal ServerRole GetCurrentServerRole()
-	    {
-	        var registrar = ServerRegistrarResolver.Current.Registrar as IServerRegistrar2;
-            return registrar?.GetCurrentServerRole() ?? ServerRole.Unknown;
-	    }
 
         /// <summary>
         /// Disposes the application context.

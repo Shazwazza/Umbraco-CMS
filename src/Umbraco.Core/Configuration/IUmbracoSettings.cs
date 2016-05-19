@@ -9,6 +9,7 @@ namespace Umbraco.Core.Configuration
         bool IsDebuggingEnabled { get; }
         bool UseSSL { get; }
         string DefaultUILanguage { get; }
+        string ConfigurationStatus { get; }
     }
 
     /// <summary>
@@ -16,7 +17,11 @@ namespace Umbraco.Core.Configuration
     /// </summary>
     public interface IConnectionString
     {
+        //TODO: In aspnetcore this syntax could be used to extract the conn string: _connectionStringConfig[$"Data:{Constants.System.UmbracoConnectionName}:ConnectionString"];
+        // see: https://docs.asp.net/en/latest/fundamentals/configuration.html
         string ConnectionString { get; }
         string ProviderName { get; }
+
+        void Set(string connString, string providerName);
     }
 }

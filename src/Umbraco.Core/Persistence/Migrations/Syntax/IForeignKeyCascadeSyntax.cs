@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using Umbraco.Core.Persistence.DatabaseModelDefinitions;
 
 namespace Umbraco.Core.Persistence.Migrations.Syntax
 {
@@ -6,8 +7,8 @@ namespace Umbraco.Core.Persistence.Migrations.Syntax
         where TNext : IFluentSyntax
         where TNextFk : IFluentSyntax
     {
-        TNextFk OnDelete(Rule rule);
-        TNextFk OnUpdate(Rule rule);
-        TNext OnDeleteOrUpdate(Rule rule);
+        TNextFk OnDelete(CascadeRule rule);
+        TNextFk OnUpdate(CascadeRule rule);
+        TNext OnDeleteOrUpdate(CascadeRule rule);
     }
 }

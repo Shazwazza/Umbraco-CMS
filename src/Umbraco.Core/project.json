@@ -27,8 +27,7 @@
 
     "Packaging/**/*.*",
 
-    "Persistence/Migrations/**/*.*",
-    "Persistence/DatabaseSchemaHelper.cs",
+    "Persistence/Migrations/Upgrades/*.*",
 
     "PropertyEditors/ValueConverters/**/*.*",
 
@@ -97,8 +96,7 @@
     "Logging/ILogger.cs",
     "Logging/LoggerExtensions.cs",
     "Logging/IProfiler.cs",
-
-    "Persistence/Migrations/Initial/DatabaseSchemaResult.cs",
+    "Logging/ProfilingLogger.cs",
 
     "Sync/IServerAddress.cs",
     "Sync/MessageType.cs",
@@ -111,8 +109,10 @@
     "Serialization/JsonToStringConverter.cs",
     "Serialization/JsonCreationConverter.cs",
 
+    "ApplicationContext.cs",
     "AsyncLock.cs",
     "DisposableTimer.cs",
+    "DatabaseContext.cs",
     "EnvironmentHelper.cs",
     "IDisposeOnRequestEnd.cs",
     "ServiceProviderExtensions.cs",
@@ -153,12 +153,14 @@
     "MonitorLock.cs",
     "ObjectExtensions.cs",
     "TypeExtensions.cs",
+    "SemVersionExtensions.cs",
     "ExpressionHelper.cs",
     "NameValueCollectionExtensions.cs",
     "ReadLock.cs",
     "ThreadExtensions.cs",
     "TopologicalSorter.cs",
     "UpgradeableReadLock.cs",
+    "VersionExtensions.cs",
     "WaitHandleExtensions.cs",
     "XmlExtensions.cs"
   ],

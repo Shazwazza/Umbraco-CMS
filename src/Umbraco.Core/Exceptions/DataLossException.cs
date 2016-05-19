@@ -1,6 +1,6 @@
 using System;
 
-namespace Umbraco.Core.Persistence.Migrations
+namespace Umbraco.Core.Exceptions
 {
     /// <summary>
     /// Used if a migration has executed but the whole process has failed and cannot be rolled back

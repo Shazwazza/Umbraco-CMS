@@ -1,11 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Xml.Linq;
 using Microsoft.Extensions.PlatformAbstractions;
 using NPoco;
 using Umbraco.Core.Configuration;
-using Umbraco.Core.IO;
+using Umbraco.Core.Exceptions;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
 using Umbraco.Core.Persistence;
@@ -14,6 +13,9 @@ using Umbraco.Core.Persistence.Migrations.Initial;
 using Umbraco.Core.Persistence.SqlSyntax;
 using Umbraco.Core.Services;
 using File = System.IO.File;
+#if NET461
+using System.Data.SqlServerCe; 
+#endif
 
 namespace Umbraco.Core
 {
@@ -26,6 +28,7 @@ namespace Umbraco.Core
         private readonly IDatabaseFactory _factory;
         private readonly ILogger _logger;
         private readonly IApplicationEnvironment _applicationEnvironment;
+        private readonly IUmbracoSettings _umbracoSettings;
         private DatabaseSchemaResult _databaseSchemaValidationResult;
 
         /// <summary>
@@ -34,11 +37,12 @@ namespace Umbraco.Core
         /// <param name="factory">A database factory.</param>
         /// <param name="logger">A logger.</param>
         /// <param name="applicationEnvironment"></param>
+        /// <param name="umbracoSettings"></param>
         /// <remarks>The database factory will try to configure itself but may fail eg if the default
         /// Umbraco connection string is not available because we are installing. In which case this
         /// database context must sort things out and configure the database factory before it can be
         /// used.</remarks>
-        public DatabaseContext(IDatabaseFactory factory, ILogger logger, IApplicationEnvironment applicationEnvironment)
+        public DatabaseContext(IDatabaseFactory factory, ILogger logger, IApplicationEnvironment applicationEnvironment, IUmbracoSettings umbracoSettings)
         {
             if (factory == null) throw new ArgumentNullException(nameof(factory));
             if (logger == null) throw new ArgumentNullException(nameof(logger));
@@ -46,6 +50,7 @@ namespace Umbraco.Core
             _factory = factory;
             _logger = logger;
             _applicationEnvironment = applicationEnvironment;
+            _umbracoSettings = umbracoSettings;
         }
 
         /// <summary>
@@ -96,11 +101,12 @@ namespace Umbraco.Core
             ConfigureEmbeddedDatabaseConnection(_factory, _logger);
         }
 
-        private static void ConfigureEmbeddedDatabaseConnection(IDatabaseFactory factory, ILogger logger)
+        private void ConfigureEmbeddedDatabaseConnection(IDatabaseFactory factory, ILogger logger)
         {
+#if NET461
             SaveConnectionString(EmbeddedDatabaseConnectionString, Constants.DbProviderNames.SqlCe, logger);
 
-            var path = Path.Combine(GlobalSettings.FullpathToRoot, "App_Data", "Umbraco.sdf");
+            var path = Path.Combine(_applicationEnvironment.ApplicationBasePath, "App_Data", "Umbraco.sdf");
             if (File.Exists(path) == false)
             {
                 // this should probably be in a "using (new SqlCeEngine)" clause but not sure
@@ -110,7 +116,10 @@ namespace Umbraco.Core
                 engine.CreateDatabase();
             }
 
-            factory.Configure(EmbeddedDatabaseConnectionString, Constants.DbProviderNames.SqlCe);
+            factory.Configure(EmbeddedDatabaseConnectionString, Constants.DbProviderNames.SqlCe); 
+#else
+            throw new NotSupportedException("SqlCe is not supported in AspNetCore");
+#endif
         }
 
         /// <summary>
@@ -256,83 +265,15 @@ namespace Umbraco.Core
         /// <param name="connectionString">The connection string.</param>
         /// <param name="providerName">The provider name.</param>
         /// <param name="logger">A logger.</param>
-        private static void SaveConnectionString(string connectionString, string providerName, ILogger logger)
+        private void SaveConnectionString(string connectionString, string providerName, ILogger logger)
         {
             if (string.IsNullOrWhiteSpace(connectionString)) throw new ArgumentException("Value cannot be null nor empty.", nameof(connectionString));
             if (string.IsNullOrWhiteSpace(providerName)) throw new ArgumentException("Value cannot be null nor empty.", nameof(providerName));
 
             // set the connection string for the new datalayer
-            var connectionStringSettings = new ConnectionStringSettings(GlobalSettings.UmbracoConnectionName, connectionString, providerName);
+            _umbracoSettings.ConnectionString.Set(connectionString, providerName);
 
-            var fileName = IOHelper.MapPath($"{SystemDirectories.Root}/web.config");
-            var xml = XDocument.Load(fileName, LoadOptions.PreserveWhitespace);
-            if (xml.Root == null) throw new Exception("Invalid web.config file.");
-            var connectionStrings = xml.Root.DescendantsAndSelf("connectionStrings").FirstOrDefault();
-            if (connectionStrings == null) throw new Exception("Invalid web.config file.");
-
-            // update connectionString if it exists, or else create a new connectionString
-            var setting = connectionStrings.Descendants("add").FirstOrDefault(s => s.Attribute("name").Value == GlobalSettings.UmbracoConnectionName);
-            if (setting == null)
-            {
-                connectionStrings.Add(new XElement("add",
-                    new XAttribute("name", GlobalSettings.UmbracoConnectionName),
-                    new XAttribute("connectionString", connectionStringSettings),
-                    new XAttribute("providerName", providerName)));
-            }
-            else
-            {
-                setting.Attribute("connectionString").Value = connectionString;
-                setting.Attribute("providerName").Value = providerName;
-            }
-
-            xml.Save(fileName, SaveOptions.DisableFormatting);
             logger.Info<DatabaseContext>("Configured a new ConnectionString using the '" + providerName + "' provider.");
-        }
-
-        #endregion
-
-        #region Utils
-
-        internal static void GiveLegacyAChance(IDatabaseFactory factory, ILogger logger)
-        {
-            // look for the legacy appSettings key
-            var legacyConnString = ConfigurationManager.AppSettings[GlobalSettings.UmbracoConnectionName];
-            if (string.IsNullOrWhiteSpace(legacyConnString)) return;
-
-            var test = legacyConnString.ToLowerInvariant();
-            if (test.Contains("sqlce4umbraco"))
-            {
-                // sql ce
-                ConfigureEmbeddedDatabaseConnection(factory, logger);
-            }
-            else if (test.Contains("tcp:"))
-            {
-                // sql azure
-                SaveConnectionString(legacyConnString, Constants.DbProviderNames.SqlServer, logger);
-                factory.Configure(legacyConnString, Constants.DbProviderNames.SqlServer);
-            }
-            else if (test.Contains("datalayer=mysql"))
-            {
-                // mysql
-
-                // strip the datalayer part off
-                var connectionStringWithoutDatalayer = string.Empty;
-                // ReSharper disable once LoopCanBeConvertedToQuery
-                foreach (var variable in legacyConnString.Split(';').Where(x => x.ToLowerInvariant().StartsWith("datalayer") == false))
-                    connectionStringWithoutDatalayer = $"{connectionStringWithoutDatalayer}{variable};";
-
-                SaveConnectionString(connectionStringWithoutDatalayer, Constants.DbProviderNames.MySql, logger);
-                factory.Configure(connectionStringWithoutDatalayer, Constants.DbProviderNames.MySql);
-            }
-            else
-            {
-                // sql server
-                SaveConnectionString(legacyConnString, Constants.DbProviderNames.SqlServer, logger);
-                factory.Configure(legacyConnString, Constants.DbProviderNames.SqlServer);
-            }
-
-            // remove the legacy connection string, so we don't end up in a loop if something goes wrong
-            GlobalSettings.RemoveSetting(GlobalSettings.UmbracoConnectionName);
         }
 
         #endregion
@@ -390,7 +331,7 @@ namespace Umbraco.Core
                 var installedSchemaVersion = schemaResult.DetermineInstalledVersion();
 
                 //If Configuration Status is empty and the determined version is "empty" its a new install - otherwise upgrade the existing
-                if (string.IsNullOrEmpty(GlobalSettings.ConfigurationStatus) && installedSchemaVersion.Equals(new Version(0, 0, 0)))
+                if (string.IsNullOrEmpty(_umbracoSettings.ConfigurationStatus) && installedSchemaVersion.Equals(new Version(0, 0, 0)))
                 {
                     var helper = new DatabaseSchemaHelper(database, _logger);
                     helper.CreateDatabaseSchema(true, applicationContext);
@@ -444,7 +385,7 @@ namespace Umbraco.Core
 
                 var installedSchemaVersion = new SemVersion(schemaResult.DetermineInstalledVersion());
 
-                var installedMigrationVersion = new SemVersion(0);
+                SemVersion installedMigrationVersion = new SemVersion(0);
                 //we cannot check the migrations table if it doesn't exist, this will occur when upgrading to 7.3
                 if (schemaResult.ValidTables.Any(x => x.InvariantEquals("umbracoMigration")))
                 {
@@ -467,11 +408,11 @@ namespace Umbraco.Core
                 // If there is a version in the web.config, we'll take the minimum between the listed migration in the db and what
                 // is declared in the web.config.
 
-                var currentInstalledVersion = string.IsNullOrEmpty(GlobalSettings.ConfigurationStatus)
+                var currentInstalledVersion = string.IsNullOrEmpty(_umbracoSettings.ConfigurationStatus)
                     //Take the minimum version between the detected schema version and the installed migration version
                     ? new[] {installedSchemaVersion, installedMigrationVersion}.Min()
                     //Take the minimum version between the installed migration version and the version specified in the config
-                    : new[] { SemVersion.Parse(GlobalSettings.ConfigurationStatus), installedMigrationVersion }.Min();
+                    : new[] { SemVersion.Parse(_umbracoSettings.ConfigurationStatus), installedMigrationVersion }.Min();
 
                 //Ok, another edge case here. If the current version is a pre-release,
                 // then we want to ensure all migrations for the current release are executed.
@@ -482,13 +423,13 @@ namespace Umbraco.Core
 
                 //DO the upgrade!
 
-                var runner = new MigrationRunner(migrationResolver, migrationEntryService, _logger, currentInstalledVersion, UmbracoVersion.GetSemanticVersion(), GlobalSettings.UmbracoMigrationName);
+                var runner = new MigrationRunner(migrationResolver, migrationEntryService, _logger, currentInstalledVersion, UmbracoVersion.GetSemanticVersion(), Constants.System.UmbracoMigrationName);
 
                 var upgraded = runner.Execute(database /*, true*/);
 
                 if (upgraded == false)
                 {
-                    throw new ApplicationException("Upgrading failed, either an error occurred during the upgrade process or an event canceled the upgrade process, see log for full details");
+                    throw new InstallationException("Upgrading failed, either an error occurred during the upgrade process or an event canceled the upgrade process, see log for full details");
                 }
 
                 message = message + "<p>Upgrade completed!</p>";

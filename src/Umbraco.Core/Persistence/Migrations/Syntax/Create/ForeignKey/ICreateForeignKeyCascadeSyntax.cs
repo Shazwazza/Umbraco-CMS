@@ -1,11 +1,12 @@
 ﻿using System.Data;
+using Umbraco.Core.Persistence.DatabaseModelDefinitions;
 
 namespace Umbraco.Core.Persistence.Migrations.Syntax.Create.ForeignKey
 {
     public interface ICreateForeignKeyCascadeSyntax : IFluentSyntax
     {
-        ICreateForeignKeyCascadeSyntax OnDelete(Rule rule);
-        ICreateForeignKeyCascadeSyntax OnUpdate(Rule rule);
-        void OnDeleteOrUpdate(Rule rule);
+        ICreateForeignKeyCascadeSyntax OnDelete(CascadeRule rule);
+        ICreateForeignKeyCascadeSyntax OnUpdate(CascadeRule rule);
+        void OnDeleteOrUpdate(CascadeRule rule);
     }
 }

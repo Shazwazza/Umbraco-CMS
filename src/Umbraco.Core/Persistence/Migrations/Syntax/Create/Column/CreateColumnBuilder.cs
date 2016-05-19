@@ -199,19 +199,19 @@ namespace Umbraco.Core.Persistence.Migrations.Syntax.Create.Column
             return this;
         }
 
-        public ICreateColumnOptionForeignKeyCascadeSyntax OnDelete(Rule rule)
+        public ICreateColumnOptionForeignKeyCascadeSyntax OnDelete(CascadeRule rule)
         {
             CurrentForeignKey.OnDelete = rule;
             return this;
         }
 
-        public ICreateColumnOptionForeignKeyCascadeSyntax OnUpdate(Rule rule)
+        public ICreateColumnOptionForeignKeyCascadeSyntax OnUpdate(CascadeRule rule)
         {
             CurrentForeignKey.OnUpdate = rule;
             return this;
         }
 
-        public ICreateColumnOptionSyntax OnDeleteOrUpdate(Rule rule)
+        public ICreateColumnOptionSyntax OnDeleteOrUpdate(CascadeRule rule)
         {
             OnDelete(rule);
             OnUpdate(rule);

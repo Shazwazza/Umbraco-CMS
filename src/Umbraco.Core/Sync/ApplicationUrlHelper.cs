@@ -7,6 +7,34 @@ using Umbraco.Core.ObjectResolution;
 
 namespace Umbraco.Core.Sync
 {
+    //TODO: Fix this up:
+    // * Make  this a singleton IOC service
+    // * Change the name to be something useful, it can be injected into anything that needs to know the operating base URL of the app (not much cares about that)
+    // * Here's the notes from the previous property on the ApplicationContext:
+
+    /// <summary>
+    /// Gets the application Url.
+    /// </summary>
+    /// <remarks>
+    /// The application url is the url that should be used by services to talk to the application,
+    /// eg keep alive or scheduled publishing services. It must exist on a global context because
+    /// some of these services may not run within a web context.
+    /// The format of the application url is:
+    /// - has a scheme (http or https)
+    /// - has the SystemDirectories.Umbraco path
+    /// - does not end with a slash
+    /// It is initialized on the first request made to the server, by UmbracoModule.EnsureApplicationUrl:
+    /// - if umbracoSettings:settings/web.routing/@umbracoApplicationUrl is set, use the value (new setting)
+    /// - if umbracoSettings:settings/scheduledTasks/@baseUrl is set, use the value (backward compatibility)
+    /// - otherwise, use the url of the (first) request.
+    /// Not locking, does not matter if several threads write to this.
+    /// See also issues:
+    /// - http://issues.umbraco.org/issue/U4-2059
+    /// - http://issues.umbraco.org/issue/U4-6788
+    /// - http://issues.umbraco.org/issue/U4-5728
+    /// - http://issues.umbraco.org/issue/U4-5391
+    /// </remarks>
+
     /// <summary>
     /// A helper used to determine the current server umbraco application url.
     /// </summary>
