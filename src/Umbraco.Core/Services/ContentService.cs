@@ -837,12 +837,17 @@ namespace Umbraco.Core.Services
             using (var uow = UowProvider.CreateUnitOfWork())
             {
                 uow.ReadLock(Constants.Locks.ContentTree);
-                var repository = uow.CreateRepository<IContentRepository>();
-                var query = repository.Query.Where(x => x.Published && x.ExpireDate <= DateTime.Now);
-                var content = repository.GetByQuery(query);
+                var content = GetContentForExpiration(uow);
                 uow.Complete();
                 return content;
             }
+        }
+
+        private IEnumerable<IContent> GetContentForExpiration(IDatabaseUnitOfWork uow)
+        {
+            var repository = uow.CreateRepository<IContentRepository>();
+            var query = repository.Query.Where(x => x.Published && x.ExpireDate <= DateTime.Now);
+            return repository.GetByQuery(query);
         }
 
         /// <summary>
@@ -854,12 +859,17 @@ namespace Umbraco.Core.Services
             using (var uow = UowProvider.CreateUnitOfWork())
             {
                 uow.ReadLock(Constants.Locks.ContentTree);
-                var repository = uow.CreateRepository<IContentRepository>();
-                var query = repository.Query.Where(x => x.Published == false && x.ReleaseDate <= DateTime.Now);
-                var content = repository.GetByQuery(query);
+                var content = GetContentForRelease(uow);
                 uow.Complete();
                 return content;
             }
+        }
+
+        private IEnumerable<IContent> GetContentForRelease(IDatabaseUnitOfWork uow)
+        {
+            var repository = uow.CreateRepository<IContentRepository>();
+            var query = repository.Query.Where(x => x.Published == false && x.ReleaseDate <= DateTime.Now);
+            return repository.GetByQuery(query);
         }
 
         /// <summary>
@@ -1234,37 +1244,42 @@ namespace Umbraco.Core.Services
         /// </summary>
         public IEnumerable<Attempt<PublishStatus>> PerformScheduledPublish()
         {
-            //TODO: Do I need to move all of this logic to the repo? Or wrap this all in a unit of work?
+            using (var uow = UowProvider.CreateUnitOfWork())
+            {
+                uow.WriteLock(Constants.Locks.ContentTree);
 
-            foreach (var d in GetContentForRelease())
-            {
-                d.ReleaseDate = null;
-                var result = SaveAndPublishWithStatus(d, (int)d.GetWriterProfile(_userService).Id);
-                if (result.Success == false)
+                foreach (var d in GetContentForRelease(uow))
                 {
-                    if (result.Exception != null)
+                    d.ReleaseDate = null;
+                    var result = ((IContentServiceOperations) this).SaveAndPublish(d, d.WriterId);
+                    if (result.Success == false)
                     {
-                        Logger.Error<ContentService>("Could not published the document (" + d.Id + ") based on it's scheduled release, status result: " + result.Result.StatusType, result.Exception);
+                        if (result.Exception != null)
+                        {
+                            Logger.Error<ContentService>("Could not published the document (" + d.Id + ") based on it's scheduled release, status result: " + result.Result.StatusType, result.Exception);
+                        }
+                        else
+                        {
+                            Logger.Warn<ContentService>("Could not published the document (" + d.Id + ") based on it's scheduled release. Status result: " + result.Result.StatusType);
+                        }
                     }
-                    else
+                    yield return result;
+                }
+                foreach (var d in GetContentForExpiration(uow))
+                {
+                    try
                     {
-                        Logger.Warn<ContentService>("Could not published the document (" + d.Id + ") based on it's scheduled release. Status result: " + result.Result.StatusType);
+                        d.ExpireDate = null;
+                        ((IContentServiceOperations) this).UnPublish(d, d.WriterId);
+                    }
+                    catch (Exception ee)
+                    {
+                        Logger.Error<ContentService>($"Error unpublishing node {d.Id}", ee);
+                        throw;
                     }
                 }
-                yield return result;
-            }
-            foreach (var d in GetContentForExpiration())
-            {
-                try
-                {
-                    d.ExpireDate = null;
-                    UnPublish(d, (int)d.GetWriterProfile(_userService).Id);
-                }
-                catch (Exception ee)
-                {
-                    Logger.Error<ContentService>($"Error unpublishing node {d.Id}", ee);
-                    throw;
-                }
+
+                uow.Complete();
             }
         }
 
