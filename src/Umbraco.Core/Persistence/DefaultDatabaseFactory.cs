@@ -62,36 +62,19 @@ namespace Umbraco.Core.Persistence
                 EnsureConfigured();
                 return _queryFactory ?? (_queryFactory = new QueryFactory(SqlSyntax, _mappingResolver));
             }
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DefaultDatabaseFactory"/> with the default connection, and a logger.
-        /// </summary>
-        /// <param name="sqlSyntaxProviders">The collection of available sql syntax providers.</param>
-        /// <param name="logger">A logger.</param>
-        /// <param name="scopeContextAdapter"></param>
-        /// <param name="connectionString"></param>
-        /// <param name="mappingResolver"></param>
-        /// <param name="dbProviderFactories"></param>
-        /// <remarks>Used by LightInject.</remarks>
-        public DefaultDatabaseFactory(IEnumerable<ISqlSyntaxProvider> sqlSyntaxProviders, ILogger logger, IScopeContextAdapter scopeContextAdapter, IConnectionString connectionString, IDbProviderFactories dbProviderFactories)
-        public DefaultDatabaseFactory(IEnumerable<ISqlSyntaxProvider> sqlSyntaxProviders, ILogger logger, IScopeContextAdapter scopeContextAdapter, IMappingResolver mappingResolver)
-            : this(GlobalSettings.UmbracoConnectionName, sqlSyntaxProviders, logger, scopeContextAdapter, mappingResolver)
-        {
-            if (Configured == false)
-                DatabaseContext.GiveLegacyAChance(this, logger);
-        }
+        }       
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultDatabaseFactory"/> with a connection string name and a logger.
         /// </summary>
-        /// <param name="connectionStringName">The name of the connection string in web.config.</param>
+        /// <param name="connectionString"></param>
         /// <param name="sqlSyntaxProviders">The collection of available sql syntax providers.</param>
         /// <param name="logger">A logger</param>
         /// <param name="scopeContextAdapter"></param>
         /// <param name="mappingResolver"></param>
+        /// <param name="dbProviderFactories"></param>
         /// <remarks>Used by the other ctor and in tests.</remarks>
-        public DefaultDatabaseFactory(string connectionStringName, IEnumerable<ISqlSyntaxProvider> sqlSyntaxProviders, ILogger logger, IScopeContextAdapter scopeContextAdapter, IMappingResolver mappingResolver)
+        public DefaultDatabaseFactory(IConnectionString connectionString, IEnumerable<ISqlSyntaxProvider> sqlSyntaxProviders, ILogger logger, IScopeContextAdapter scopeContextAdapter, IMappingResolver mappingResolver, IDbProviderFactories dbProviderFactories)
         {
             if (sqlSyntaxProviders == null) throw new ArgumentNullException(nameof(sqlSyntaxProviders));
             if (logger == null) throw new ArgumentNullException(nameof(logger));

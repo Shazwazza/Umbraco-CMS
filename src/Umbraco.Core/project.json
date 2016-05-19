@@ -97,6 +97,7 @@
     "Logging/LoggerExtensions.cs",
     "Logging/IProfiler.cs",
     "Logging/ProfilingLogger.cs",
+    "Logging/ProfilerExtensions.cs",
 
     "Sync/IServerAddress.cs",
     "Sync/MessageType.cs",
