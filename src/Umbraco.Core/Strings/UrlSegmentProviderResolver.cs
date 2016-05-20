@@ -12,18 +12,6 @@ namespace Umbraco.Core.Strings
     public sealed class UrlSegmentProviderResolver : ContainerManyObjectsResolver<UrlSegmentProviderResolver, IUrlSegmentProvider>
     {
         /// <summary>
-        /// ONLY for testing
-        /// </summary>
-        /// <param name="serviceProvider"></param>
-        /// <param name="logger"></param>
-        /// <param name="providerTypes"></param>
-        [Obsolete("Used only for Tests - should remove")]
-        internal UrlSegmentProviderResolver(IServiceProvider serviceProvider, ILogger logger, params Type[] providerTypes)
-            : base(serviceProvider, logger, providerTypes)
-        {
-        }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="UrlSegmentProviderResolver"/> class with an initial list of provider types.
         /// </summary>
         /// <param name="container"></param>

@@ -21,17 +21,17 @@ namespace Umbraco.Core.Services
     /// </summary>
     public class UserService : RepositoryService, IUserService
     {
-        private readonly IUmbracoSettings _umbracoSettings;
+        private readonly IUmbracoConfig _umbracoConfig;
 
         //TODO: We need to change the isUpgrading flag to use an app state enum as described here: http://issues.umbraco.org/issue/U4-6816
         // in the meantime, we will use a boolean which we are currently using during upgrades to ensure that a user object is not persisted during this phase, otherwise
         // exceptions can occur if the db is not in it's correct state.
         internal bool IsUpgrading { get; set; }
 
-        public UserService(IDatabaseUnitOfWorkProvider provider, ILogger logger, IEventMessagesFactory eventMessagesFactory, IUmbracoSettings umbracoSettings)
+        public UserService(IDatabaseUnitOfWorkProvider provider, ILogger logger, IEventMessagesFactory eventMessagesFactory, IUmbracoConfig umbracoConfig)
             : base(provider, logger, eventMessagesFactory)
         {
-            _umbracoSettings = umbracoSettings;
+            _umbracoConfig = umbracoConfig;
             IsUpgrading = false;
         }
 
@@ -149,7 +149,7 @@ namespace Umbraco.Core.Services
                 {
                     DefaultToLiveEditing = false,
                     Email = email,
-                    Language = _umbracoSettings.DefaultUILanguage,
+                    Language = _umbracoConfig.DefaultUILanguage,
                     Name = username,
                     RawPasswordValue = passwordValue,                    
                     Username = username,

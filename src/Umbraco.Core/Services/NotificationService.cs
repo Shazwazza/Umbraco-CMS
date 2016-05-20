@@ -21,9 +21,9 @@ namespace Umbraco.Core.Services
         private readonly IContentService _contentService;
         private readonly RepositoryFactory _repositoryFactory;
         private readonly ILogger _logger;
-        private readonly IUmbracoSettings _umbracoSettings;
+        private readonly IUmbracoConfig _umbracoConfig;
 
-        public NotificationService(IDatabaseUnitOfWorkProvider provider, IUserService userService, IContentService contentService, RepositoryFactory repositoryFactory,  ILogger logger, IUmbracoSettings umbracoSettings)
+        public NotificationService(IDatabaseUnitOfWorkProvider provider, IUserService userService, IContentService contentService, RepositoryFactory repositoryFactory,  ILogger logger, IUmbracoConfig umbracoConfig)
         {
             if (provider == null) throw new ArgumentNullException("provider");
             if (userService == null) throw new ArgumentNullException("userService");
@@ -35,7 +35,7 @@ namespace Umbraco.Core.Services
             _contentService = contentService;
             _repositoryFactory = repositoryFactory;
             _logger = logger;
-            _umbracoSettings = umbracoSettings;
+            _umbracoConfig = umbracoConfig;
         }
 
         /// <summary>
@@ -312,7 +312,7 @@ namespace Umbraco.Core.Services
                     "<tr><td colspan=\"2\" style=\"border-bottom: 1px solid #CCC; font-size: 2px;\">&nbsp;</td></tr>");
             }
 
-            string protocol = _umbracoSettings.UseSSL ? "https" : "http";
+            string protocol = _umbracoConfig.UseSSL ? "https" : "http";
 
             throw new NotImplementedException("Fix sending notifications, there is no SMTP Server here right now");
 

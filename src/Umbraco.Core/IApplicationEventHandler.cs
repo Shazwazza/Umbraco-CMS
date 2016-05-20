@@ -12,14 +12,14 @@ namespace Umbraco.Core
 		/// </summary>
 		/// <param name="umbracoApplication"></param>
 		/// <param name="applicationContext"></param>
-		void OnApplicationInitialized(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext);
+		void OnApplicationInitialized(UmbracoApplication umbracoApplication, ApplicationContext applicationContext);
 		
 		/// <summary>
 		/// All resolvers have been initialized but resolution is not frozen so they can be modified in this method
 		/// </summary>
         /// <param name="umbracoApplication"></param>
 		/// <param name="applicationContext"></param>
-        void OnApplicationStarting(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext);
+        void OnApplicationStarting(UmbracoApplication umbracoApplication, ApplicationContext applicationContext);
 		
 		/// <summary>
 		/// Bootup is completed, this allows you to perform any other bootup logic required for the application.
@@ -27,6 +27,6 @@ namespace Umbraco.Core
 		/// </summary>
         /// <param name="umbracoApplication"></param>
 		/// <param name="applicationContext"></param>
-        void OnApplicationStarted(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext);
+        void OnApplicationStarted(UmbracoApplication umbracoApplication, ApplicationContext applicationContext);
 	}
 }

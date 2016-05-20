@@ -43,7 +43,7 @@
     "Xml/**/*.*"
   ],
   "compileFiles": [
-    "Configuration/IUmbracoSettings.cs",
+    "Configuration/IUmbracoConfig.cs",
     "Configuration/UmbracoSettings/IContentSection.cs",
     "Configuration/UmbracoSettings/IImagingAutoFillUploadField.cs",
     "Configuration/UmbracoSettings/IContentErrorPage.cs",
@@ -55,6 +55,7 @@
     "DependencyInjection/TEMP_Annotation.cs",
     "DependencyInjection/RepositoryCompositionRoot.cs",
     "DependencyInjection/ServicesCompositionRoot.cs",
+    "DependencyInjection/ConfigurationCompositionRoot.cs",
 
     "IO/IFileSystem.cs",
     "IO/PhysicalFileSystem.cs",
@@ -92,6 +93,7 @@
     "Strings/IUrlSegmentProvider.cs",
     "Strings/ContentBaseExtensions.cs",
     "Strings/DefaultUrlSegmentProvider.cs",
+    "Strings/UrlSegmentProviderResolver.cs",
 
     "Logging/LogHelper.cs",
     "Logging/ILogger.cs",
@@ -112,8 +114,9 @@
     "Serialization/JsonCreationConverter.cs",
 
     "IApplicationEventHandler.cs",
-    "UmbracoApplicationBase.cs",
+    "UmbracoApplication.cs",
     "IBootManager.cs",
+    "CoreBootManager.cs",
     "ApplicationContext.cs",
     "AsyncLock.cs",
     "DisposableTimer.cs",

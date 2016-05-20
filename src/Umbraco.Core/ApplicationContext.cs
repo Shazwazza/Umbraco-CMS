@@ -22,7 +22,7 @@ namespace Umbraco.Core
         readonly ManualResetEventSlim _isReadyEvent = new ManualResetEventSlim(false);
         private DatabaseContext _databaseContext;
         private ServiceContext _services;
-	    private readonly IUmbracoSettings _umbracoSettings;
+	    private readonly IUmbracoConfig _umbracoConfig;
 	    private Lazy<bool> _configured;
 
         // ReSharper disable once InconsistentNaming
@@ -35,8 +35,8 @@ namespace Umbraco.Core
 	    /// <param name="serviceContext">A service context.</param>
 	    /// <param name="cache">A cache helper.</param>
 	    /// <param name="logger">A logger.</param>
-	    /// <param name="umbracoSettings"></param>
-	    public ApplicationContext(DatabaseContext dbContext, ServiceContext serviceContext, CacheHelper cache, ProfilingLogger logger, IUmbracoSettings umbracoSettings)
+	    /// <param name="umbracoConfiggs"></param>
+	    public ApplicationContext(DatabaseContext dbContext, ServiceContext serviceContext, CacheHelper cache, ProfilingLogger logger, IUmbracoConfig umbracoConfig)
 	    {
             if (dbContext == null) throw new ArgumentNullException(nameof(dbContext));
             if (serviceContext == null) throw new ArgumentNullException(nameof(serviceContext));
@@ -45,7 +45,7 @@ namespace Umbraco.Core
 
             _databaseContext = dbContext;
             _services = serviceContext;
-	        _umbracoSettings = umbracoSettings;
+	        _umbracoConfig = umbracoConfig;
 	        ApplicationCache = cache;
             ProfilingLogger = logger;
 
@@ -57,9 +57,9 @@ namespace Umbraco.Core
 	    /// </summary>
 	    /// <param name="cache">A cache helper.</param>
 	    /// <param name="logger">A logger.</param>
-	    /// <param name="umbracoSettings"></param>
+	    /// <param name="umbracoConfiggs"></param>
 	    /// <remarks>For Unit Tests only.</remarks>
-	    public ApplicationContext(CacheHelper cache, ProfilingLogger logger, IUmbracoSettings umbracoSettings)
+	    public ApplicationContext(CacheHelper cache, ProfilingLogger logger, IUmbracoConfig umbracoConfig)
         {
 	        if (cache == null) throw new ArgumentNullException(nameof(cache));
 	        if (logger == null) throw new ArgumentNullException(nameof(logger));
@@ -92,16 +92,16 @@ namespace Umbraco.Core
 	    /// <param name="logger">A logger.</param>
 	    /// <param name="dbContext">A database context.</param>
 	    /// <param name="serviceContext">A service context.</param>
-	    /// <param name="umbracoSettings"></param>
+	    /// <param name="umbracoConfiggs"></param>
 	    /// <param name="replaceContext">A value indicating whether to replace the existing context, if any.</param>
 	    /// <returns>The current global application context.</returns>
 	    /// <remarks>This is NOT thread safe. For Unit Tests only.</remarks>
-	    public static ApplicationContext EnsureContext(DatabaseContext dbContext, ServiceContext serviceContext, CacheHelper cache, ProfilingLogger logger, IUmbracoSettings umbracoSettings, bool replaceContext)
+	    public static ApplicationContext EnsureContext(DatabaseContext dbContext, ServiceContext serviceContext, CacheHelper cache, ProfilingLogger logger, IUmbracoConfig umbracoConfig, bool replaceContext)
         {
             if (Current != null && replaceContext == false)
                     return Current;
 
-            return Current = new ApplicationContext(dbContext, serviceContext, cache, logger, umbracoSettings);
+            return Current = new ApplicationContext(dbContext, serviceContext, cache, logger, umbracoConfig);
         }
 
 	    /// <summary>
@@ -238,7 +238,7 @@ namespace Umbraco.Core
         }
 
         // gets the configuration status, ie the version that's in web.config
-        private string ConfigurationStatus => _umbracoSettings.ConfigurationStatus;
+        private string ConfigurationStatus => _umbracoConfig.ConfigurationStatus;
 
 	    /// <summary>
 		/// Gets the current database context.

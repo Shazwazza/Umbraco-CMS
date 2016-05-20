@@ -29,7 +29,7 @@ namespace Umbraco.Core
         private readonly IDatabaseFactory _factory;
         private readonly ILogger _logger;
         private readonly IApplicationEnvironment _applicationEnvironment;
-        private readonly IUmbracoSettings _umbracoSettings;
+        private readonly IUmbracoConfig _umbracoConfig;
         private DatabaseSchemaResult _databaseSchemaValidationResult;
 
         /// <summary>
@@ -38,12 +38,12 @@ namespace Umbraco.Core
         /// <param name="factory">A database factory.</param>
         /// <param name="logger">A logger.</param>
         /// <param name="applicationEnvironment"></param>
-        /// <param name="umbracoSettings"></param>
+        /// <param name="umbracoConfiggs"></param>
         /// <remarks>The database factory will try to configure itself but may fail eg if the default
         /// Umbraco connection string is not available because we are installing. In which case this
         /// database context must sort things out and configure the database factory before it can be
         /// used.</remarks>
-        public DatabaseContext(IDatabaseFactory factory, ILogger logger, IApplicationEnvironment applicationEnvironment, IUmbracoSettings umbracoSettings)
+        public DatabaseContext(IDatabaseFactory factory, ILogger logger, IApplicationEnvironment applicationEnvironment, IUmbracoConfig umbracoConfig)
         {
             if (factory == null) throw new ArgumentNullException(nameof(factory));
             if (logger == null) throw new ArgumentNullException(nameof(logger));
@@ -51,7 +51,7 @@ namespace Umbraco.Core
             _factory = factory;
             _logger = logger;
             _applicationEnvironment = applicationEnvironment;
-            _umbracoSettings = umbracoSettings;
+            _umbracoConfig = umbracoConfig;
         }
 
         /// <summary>
@@ -277,7 +277,7 @@ namespace Umbraco.Core
             if (string.IsNullOrWhiteSpace(providerName)) throw new ArgumentException("Value cannot be null nor empty.", nameof(providerName));
 
             // set the connection string for the new datalayer
-            _umbracoSettings.ConnectionString.Set(connectionString, providerName);
+            _umbracoConfig.ConnectionString.Set(connectionString, providerName);
 
             logger.Info<DatabaseContext>("Configured a new ConnectionString using the '" + providerName + "' provider.");
         }
@@ -337,7 +337,7 @@ namespace Umbraco.Core
                 var installedSchemaVersion = schemaResult.DetermineInstalledVersion();
 
                 //If Configuration Status is empty and the determined version is "empty" its a new install - otherwise upgrade the existing
-                if (string.IsNullOrEmpty(_umbracoSettings.ConfigurationStatus) && installedSchemaVersion.Equals(new Version(0, 0, 0)))
+                if (string.IsNullOrEmpty(_umbracoConfig.ConfigurationStatus) && installedSchemaVersion.Equals(new Version(0, 0, 0)))
                 {
                     var helper = new DatabaseSchemaHelper(database, _logger);
                     helper.CreateDatabaseSchema(true, applicationContext);
@@ -414,11 +414,11 @@ namespace Umbraco.Core
                 // If there is a version in the web.config, we'll take the minimum between the listed migration in the db and what
                 // is declared in the web.config.
 
-                var currentInstalledVersion = string.IsNullOrEmpty(_umbracoSettings.ConfigurationStatus)
+                var currentInstalledVersion = string.IsNullOrEmpty(_umbracoConfig.ConfigurationStatus)
                     //Take the minimum version between the detected schema version and the installed migration version
                     ? new[] {installedSchemaVersion, installedMigrationVersion}.Min()
                     //Take the minimum version between the installed migration version and the version specified in the config
-                    : new[] { SemVersion.Parse(_umbracoSettings.ConfigurationStatus), installedMigrationVersion }.Min();
+                    : new[] { SemVersion.Parse(_umbracoConfig.ConfigurationStatus), installedMigrationVersion }.Min();
 
                 //Ok, another edge case here. If the current version is a pre-release,
                 // then we want to ensure all migrations for the current release are executed.

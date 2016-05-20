@@ -18,14 +18,11 @@ namespace Umbraco.Core.PropertyEditors
     /// This resolver will contain any property editors defined in manifests as well!
     /// </remarks>
     public class PropertyEditorResolver : ContainerLazyManyObjectsResolver<PropertyEditorResolver, PropertyEditor>
-    {
-        private readonly ManifestBuilder _builder;
-
-        internal PropertyEditorResolver(IServiceContainer container, ILogger logger, Func<IEnumerable<Type>> typeListProducerList, ManifestBuilder builder)
+    {        
+        internal PropertyEditorResolver(IServiceContainer container, ILogger logger, Func<IEnumerable<Type>> typeListProducerList)
             : base(container, logger, typeListProducerList, ObjectLifetimeScope.Application)
         {
-            _builder = builder;
-            _unioned = new Lazy<List<PropertyEditor>>(() => Values.Union(builder.PropertyEditors).ToList());
+            _unioned = new Lazy<List<PropertyEditor>>(() => Values.Union(container.GetInstance<ManifestBuilder>().PropertyEditors).ToList());
         }
 
         private readonly Lazy<List<PropertyEditor>> _unioned;

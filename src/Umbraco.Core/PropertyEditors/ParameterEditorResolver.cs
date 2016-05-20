@@ -17,12 +17,12 @@ namespace Umbraco.Core.PropertyEditors
     /// </remarks>
     internal class ParameterEditorResolver : ContainerLazyManyObjectsResolver<ParameterEditorResolver, IParameterEditor>
     {
-        private readonly ManifestBuilder _builder;
+        private readonly IServiceContainer _container;
 
-        public ParameterEditorResolver(IServiceContainer container, ILogger logger, Func<IEnumerable<Type>> typeListProducerList, ManifestBuilder builder)
+        public ParameterEditorResolver(IServiceContainer container, ILogger logger, Func<IEnumerable<Type>> typeListProducerList)
             : base(container, logger, typeListProducerList, ObjectLifetimeScope.Application)
         {
-            _builder = builder;
+            _container = container;
         }
 
         /// <summary>
@@ -38,14 +38,16 @@ namespace Umbraco.Core.PropertyEditors
                 var filtered = Values.Select(x => x as PropertyEditor)
                                      .WhereNotNull()
                                      .Where(x => x.IsParameterEditor == false);
-                
+
+                var builder = _container.GetInstance<ManifestBuilder>();
+
                 return Values
                     //exclude the non parameter editor c# property editors
                     .Except(filtered)
                     //include the manifest parameter editors
-                    .Union(_builder.ParameterEditors)
+                    .Union(builder.ParameterEditors)
                     //include the manifest prop editors that are parameter editors
-                    .Union(_builder.PropertyEditors.Where(x => x.IsParameterEditor));
+                    .Union(builder.PropertyEditors.Where(x => x.IsParameterEditor));
             }
         }
 
