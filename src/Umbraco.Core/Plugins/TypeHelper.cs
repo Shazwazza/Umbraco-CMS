@@ -16,19 +16,11 @@ namespace Umbraco.Core.Plugins
 	public class TypeHelper
     {
 
-#if NET461
         public TypeHelper()
         {
 
         }
-#else
-        public TypeHelper(ILibraryManager libraryManager)
-        {
-            _libraryManager = libraryManager;
-        }
-#endif
 
-        private readonly ILibraryManager _libraryManager;
         private readonly ConcurrentDictionary<Type, FieldInfo[]> _getFieldsCache = new ConcurrentDictionary<Type, FieldInfo[]>();
         private readonly ConcurrentDictionary<Tuple<Type, bool, bool, bool>, PropertyInfo[]> _getPropertiesCache = new ConcurrentDictionary<Tuple<Type, bool, bool, bool>, PropertyInfo[]>();
 
@@ -76,16 +68,11 @@ namespace Umbraco.Core.Plugins
         private bool HasReferenceToAssemblyWithName(Assembly assembly, string expectedAssemblyName)
         {
 
-#if NET461
             return assembly
                 .GetReferencedAssemblies()
-#else
-            //TODO: Need to figure out if this works!
-            return
-                _libraryManager.GetReferencingLibraries(assembly.GetName().Name)
-#endif
                 .Select(a => a.Name)
                 .Contains(expectedAssemblyName, StringComparer.Ordinal);
+            
         }
 
         /// <summary>
@@ -109,13 +96,7 @@ namespace Umbraco.Core.Plugins
         /// </remarks>
         public bool IsStaticClass(Type type)
         {
-            return
-
-#if NET461
-                type.IsAbstract && type.IsSealed;
-#else
-                type.GetTypeInfo().IsAbstract && type.GetTypeInfo().IsSealed;
-#endif
+            return type.GetTypeInfo().IsAbstract && type.GetTypeInfo().IsSealed;
 
         }
 
@@ -209,12 +190,8 @@ namespace Umbraco.Core.Plugins
         public bool IsImplicitValueType(Type implementation)
         {
             return IsValueType(implementation)
-#if NET461
-                || implementation.IsEnum
-#else
-                || implementation.GetTypeInfo().IsEnum
-#endif
-                || implementation == typeof(string);
+                   || implementation.GetTypeInfo().IsEnum
+                   || implementation == typeof(string);
         }
 
         /// <summary>

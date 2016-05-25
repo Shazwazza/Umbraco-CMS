@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNet.Identity;
+using Microsoft.AspNetCore.Identity;
 using NPoco;
 using Umbraco.Core.Cache;
 using Umbraco.Core.Logging;

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
-using Microsoft.AspNet.Http;
+using Microsoft.AspNetCore.Http;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Plugins;
 

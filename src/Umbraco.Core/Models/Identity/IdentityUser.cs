@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.AspNet.Identity;
+using Microsoft.AspNetCore.Identity;
 
 namespace Umbraco.Core.Models.Identity
 {

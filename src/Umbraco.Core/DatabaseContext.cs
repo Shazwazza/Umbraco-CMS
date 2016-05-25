@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.PlatformAbstractions;
 using NPoco;
 using Umbraco.Core.Configuration;
@@ -28,7 +29,7 @@ namespace Umbraco.Core
     {
         private readonly IDatabaseFactory _factory;
         private readonly ILogger _logger;
-        private readonly IApplicationEnvironment _applicationEnvironment;
+        private readonly IHostingEnvironment _applicationEnvironment;
         private readonly IUmbracoConfig _umbracoConfig;
         private DatabaseSchemaResult _databaseSchemaValidationResult;
 
@@ -38,12 +39,12 @@ namespace Umbraco.Core
         /// <param name="factory">A database factory.</param>
         /// <param name="logger">A logger.</param>
         /// <param name="applicationEnvironment"></param>
-        /// <param name="umbracoConfiggs"></param>
+        /// <param name="umbracoConfig"></param>
         /// <remarks>The database factory will try to configure itself but may fail eg if the default
         /// Umbraco connection string is not available because we are installing. In which case this
         /// database context must sort things out and configure the database factory before it can be
         /// used.</remarks>
-        public DatabaseContext(IDatabaseFactory factory, ILogger logger, IApplicationEnvironment applicationEnvironment, IUmbracoConfig umbracoConfig)
+        public DatabaseContext(IDatabaseFactory factory, ILogger logger, IHostingEnvironment applicationEnvironment, IUmbracoConfig umbracoConfig)
         {
             if (factory == null) throw new ArgumentNullException(nameof(factory));
             if (logger == null) throw new ArgumentNullException(nameof(logger));
@@ -112,7 +113,7 @@ namespace Umbraco.Core
 #if NET461
             SaveConnectionString(EmbeddedDatabaseConnectionString, Constants.DbProviderNames.SqlCe, logger);
 
-            var path = Path.Combine(_applicationEnvironment.ApplicationBasePath, "App_Data", "Umbraco.sdf");
+            var path = Path.Combine(_applicationEnvironment.ContentRootPath, "App_Data", "Umbraco.sdf");
             if (File.Exists(path) == false)
             {
                 // this should probably be in a "using (new SqlCeEngine)" clause but not sure
@@ -541,20 +542,24 @@ namespace Umbraco.Core
         internal bool IsConnectionStringConfigured(IConnectionString databaseSettings)
         {
             var dbIsSqlCe = false;
+            var sqlCeDatabaseExists = false;
+
+#if NET461
             if (databaseSettings?.ProviderName != null)
                 dbIsSqlCe = databaseSettings.ProviderName == Constants.DbProviderNames.SqlCe;
-            var sqlCeDatabaseExists = false;
+            
             if (dbIsSqlCe)
             {
                 var parts = databaseSettings.ConnectionString.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
                 var dataSourcePart = parts.FirstOrDefault(x => x.InvariantStartsWith("Data Source="));
                 if (dataSourcePart != null)
                 {
-                    var datasource = dataSourcePart.Replace("|DataDirectory|", _applicationEnvironment.GetData("DataDirectory").ToString());
+                    var datasource = dataSourcePart.Replace("|DataDirectory|", AppDomain.CurrentDomain.GetData("DataDirectory").ToString());
                     var filePath = datasource.Replace("Data Source=", string.Empty);
                     sqlCeDatabaseExists = File.Exists(filePath);
                 }
-            }
+            } 
+#endif
 
             // Either the connection details are not fully specified or it's a SQL CE database that doesn't exist yet
             if (databaseSettings == null

@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using Microsoft.AspNet.Hosting;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.DataProtection;
 using Umbraco.Core.Logging;
 
 namespace Umbraco.Core
@@ -44,14 +45,7 @@ namespace Umbraco.Core
             _logger = logger;
             _applicationLifetime = applicationLifetime;
 
-            var appId = string.Empty;
-
-            //Getting the application Id in aspnetcore is certainly not normal, here's the code that does this:
-            // https://github.com/aspnet/DataProtection/blob/82d92064c50c13f2737f96c6d76b45d68e9a9d05/src/Microsoft.AspNet.DataProtection.Interfaces/DataProtectionExtensions.cs#L97
-            // here's the comment that says it shouldn't be in hosting: https://github.com/aspnet/Hosting/issues/177#issuecomment-80738319
-
-            // HostingEnvironment.ApplicationID is null in unit tests, making ReplaceNonAlphanumericChars fail
-            Microsoft.AspNet.DataProtection.DataProtectionExtensions.GetApplicationUniqueIdentifier(null);
+            var appId = string.Empty;           
 
             if (environment.ApplicationId != null)
                 appId = environment.ApplicationId.ReplaceNonAlphanumericChars(string.Empty);

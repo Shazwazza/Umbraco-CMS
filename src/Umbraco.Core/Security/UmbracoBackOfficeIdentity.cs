@@ -6,7 +6,7 @@ using System.Security.Claims;
 using System.Security.Principal;
 using System.Web;
 using System.Web.Security;
-using Microsoft.AspNet.Identity;
+using Microsoft.AspNetCore.Identity;
 using Newtonsoft.Json;
 using Umbraco.Core.Configuration;
 
@@ -218,9 +218,9 @@ namespace Umbraco.Core.Security
 
                 //The security stamp claim is also required... this is because this claim type is hard coded 
                 // by the SecurityStampValidator, see: https://katanaproject.codeplex.com/workitem/444
-                if (HasClaim(x => x.Type == Microsoft.AspNet.Identity.Constants.DefaultSecurityStampClaimType) == false)
+                if (HasClaim(x => x.Type == Microsoft.AspNetCore.Identity.Constants.DefaultSecurityStampClaimType) == false)
                 {
-                    AddClaim(new Claim(Microsoft.AspNet.Identity.Constants.DefaultSecurityStampClaimType, SessionId, ClaimValueTypes.String, Issuer, Issuer, this));
+                    AddClaim(new Claim(Microsoft.AspNetCore.Identity.Constants.DefaultSecurityStampClaimType, SessionId, ClaimValueTypes.String, Issuer, Issuer, this));
                 }
             }
 

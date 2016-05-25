@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Security;
 using AutoMapper;
-using Microsoft.AspNet.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Owin;
 using Umbraco.Core.Models.Identity;
 using Umbraco.Core.Models.Membership;

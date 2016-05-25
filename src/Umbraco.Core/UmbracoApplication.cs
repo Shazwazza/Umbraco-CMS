@@ -4,12 +4,10 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using LightInject;
-using Microsoft.AspNet.FileProviders;
-using Microsoft.AspNet.Hosting;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Umbraco.Core.Logging;
 using Umbraco.Core.ObjectResolution;
-using Umbraco.Core.Logging;
 
 namespace Umbraco.Core
 {

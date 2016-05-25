@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.OptionsModel;
+using Microsoft.Extensions.Options;
 using Umbraco.Core.Collections;
 
 namespace Umbraco.Core.Cache
@@ -26,18 +26,13 @@ namespace Umbraco.Core.Cache
             _keys.Clear();
             base.Dispose();
         }
-        
-        IEntryLink IMemoryCache.CreateLinkingScope()
-        {
-            return base.CreateLinkingScope();
-        }
-        
-        object IMemoryCache.Set(object key, object value, MemoryCacheEntryOptions options)
+
+        ICacheEntry IMemoryCache.CreateEntry(object key)
         {
             _keys.TryAdd(key.ToString());
-            return base.Set(key, value, options);
+            return base.CreateEntry(key);
         }
-
+        
         /// <summary>Gets the item associated with this key if present.</summary>
         /// <param name="key">An object identifying the requested entry.</param>
         /// <param name="value">The located value or null.</param>

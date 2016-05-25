@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Xml.Linq;
+using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.PlatformAbstractions;
 using Umbraco.Core.Cache;
 using Umbraco.Core.IO;
@@ -41,14 +42,11 @@ namespace Umbraco.Core.Plugins
         /// <param name="ioHelper"></param>
         /// <param name="environmentHelper"></param>
         /// <param name="typeFinder"></param>
-        /// <param name="umbracoAssemblyProvider"></param>
-        /// <param name="loadContextAccessor"></param>
         /// <param name="detectChanges"></param>
         /// <param name="serviceProvider"></param>
         /// <param name="runtimeCache"></param>
         public PluginManager(IServiceProvider serviceProvider, IRuntimeCacheProvider runtimeCache, 
             ProfilingLogger logger, IOHelper ioHelper, EnvironmentHelper environmentHelper, ITypeFinder typeFinder,
-            IUmbracoAssemblyProvider umbracoAssemblyProvider, IAssemblyLoadContextAccessor loadContextAccessor,
             bool detectChanges = true)
         {
             if (serviceProvider == null) throw new ArgumentNullException("serviceProvider");
@@ -57,17 +55,12 @@ namespace Umbraco.Core.Plugins
             if (ioHelper == null) throw new ArgumentNullException(nameof(ioHelper));
             if (environmentHelper == null) throw new ArgumentNullException(nameof(environmentHelper));
             if (typeFinder == null) throw new ArgumentNullException(nameof(typeFinder));
-            if (umbracoAssemblyProvider == null) throw new ArgumentNullException(nameof(umbracoAssemblyProvider));
-            if (loadContextAccessor == null) throw new ArgumentNullException(nameof(loadContextAccessor));
 
-            _serviceProvider = serviceProvider;
             _runtimeCache = runtimeCache;
             _logger = logger;
             _ioHelper = ioHelper;
             _environmentHelper = environmentHelper;
             _typeFinder = typeFinder;
-            _umbracoAssemblyProvider = umbracoAssemblyProvider;
-            _loadContextAccessor = loadContextAccessor;
 
             _tempFolder = _ioHelper.MapPath("~/App_Data/TEMP/PluginCache");
             //create the folder if it doesn't exist
@@ -114,16 +107,12 @@ namespace Umbraco.Core.Plugins
             }
         }
 
-        private readonly IServiceProvider _serviceProvider;
         private readonly IRuntimeCacheProvider _runtimeCache;
         private readonly ProfilingLogger _logger;
         private readonly IOHelper _ioHelper;
         private readonly EnvironmentHelper _environmentHelper;
         private readonly ITypeFinder _typeFinder;
-        private readonly IUmbracoAssemblyProvider _umbracoAssemblyProvider;
-        private readonly IAssemblyLoadContextAccessor _loadContextAccessor;
         private const string CacheKey = "umbraco-plugins.list";
-        static PluginManager _resolver;
         private readonly string _tempFolder;
         private long _cachedAssembliesHash = -1;
         private long _currentAssembliesHash = -1;       
@@ -577,8 +566,14 @@ namespace Umbraco.Core.Plugins
                                             // return types currently loaded. 
 
                                             var typeName = new TypeName(t);
+
                                             //TODO: IS this it? Or do we need to lok into the _umbracoAssemblyProvider.CandidateAssemblies?
-                                            var assem = _loadContextAccessor.Default.Load(typeName.AssemblyName);
+                                            //TODO: This was changed in RC2 - not sure if this works the way we think, we'll see
+                                            // The other things to consider are 
+                                            //  DependencyContextLoader.Default
+                                            //  DependencyContext
+                                            
+                                            var assem = Assembly.Load(typeName.AssemblyName);
                                             var type = assem.GetType(t, true, false);
 
                                             // TODO: This overload allows us to look into all assemblies given to us

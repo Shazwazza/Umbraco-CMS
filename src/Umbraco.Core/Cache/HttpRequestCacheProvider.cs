@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNet.Http;
+using Microsoft.AspNetCore.Http;
 
 namespace Umbraco.Core.Cache
 {

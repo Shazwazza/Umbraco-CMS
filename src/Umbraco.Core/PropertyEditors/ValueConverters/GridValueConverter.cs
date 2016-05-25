@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using Microsoft.AspNet.Http;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Umbraco.Core.Configuration;

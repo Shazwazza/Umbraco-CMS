@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading;
-using Microsoft.AspNet.Hosting;
+using Microsoft.AspNetCore.Hosting;
 using Umbraco.Core.Cache;
 using Umbraco.Core.Configuration;
 using Umbraco.Core.Logging;

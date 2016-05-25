@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Http;
-using Microsoft.AspNet.Identity;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.OptionsModel;
+using Microsoft.Extensions.Options;
 using Umbraco.Core.Models.Identity;
 
 namespace Umbraco.Core.Security
@@ -14,8 +15,8 @@ namespace Umbraco.Core.Security
     /// </summary>
     public class BackOfficeUserManager : BackOfficeUserManager<BackOfficeIdentityUser>
     {
-        public BackOfficeUserManager(IUserStore<BackOfficeIdentityUser> store, IOptions<IdentityOptions> optionsAccessor, IPasswordHasher<BackOfficeIdentityUser> passwordHasher, IEnumerable<IUserValidator<BackOfficeIdentityUser>> userValidators, IEnumerable<IPasswordValidator<BackOfficeIdentityUser>> passwordValidators, ILookupNormalizer keyNormalizer, IdentityErrorDescriber errors, IServiceProvider services, ILogger<UserManager<BackOfficeIdentityUser>> logger, IHttpContextAccessor contextAccessor) 
-            : base(store, optionsAccessor, passwordHasher, userValidators, passwordValidators, keyNormalizer, errors, services, logger, contextAccessor)
+        public BackOfficeUserManager(IUserStore<BackOfficeIdentityUser> store, IOptions<IdentityOptions> optionsAccessor, IPasswordHasher<BackOfficeIdentityUser> passwordHasher, IEnumerable<IUserValidator<BackOfficeIdentityUser>> userValidators, IEnumerable<IPasswordValidator<BackOfficeIdentityUser>> passwordValidators, ILookupNormalizer keyNormalizer, IdentityErrorDescriber errors, IServiceProvider services, ILogger<UserManager<BackOfficeIdentityUser>> logger) 
+            : base(store, optionsAccessor, passwordHasher, userValidators, passwordValidators, keyNormalizer, errors, services, logger)
         {
         }
     }
@@ -27,8 +28,8 @@ namespace Umbraco.Core.Security
         where T : BackOfficeIdentityUser
     {
        
-        public BackOfficeUserManager(IUserStore<T> store, IOptions<IdentityOptions> optionsAccessor, IPasswordHasher<T> passwordHasher, IEnumerable<IUserValidator<T>>  userValidators, IEnumerable<IPasswordValidator<T>>  passwordValidators, ILookupNormalizer keyNormalizer, IdentityErrorDescriber errors, IServiceProvider services, ILogger<UserManager<T>> logger, IHttpContextAccessor contextAccessor)
-            : base(store, optionsAccessor, passwordHasher, userValidators, passwordValidators, keyNormalizer, errors, services, logger, contextAccessor)
+        public BackOfficeUserManager(IUserStore<T> store, IOptions<IdentityOptions> optionsAccessor, IPasswordHasher<T> passwordHasher, IEnumerable<IUserValidator<T>>  userValidators, IEnumerable<IPasswordValidator<T>>  passwordValidators, ILookupNormalizer keyNormalizer, IdentityErrorDescriber errors, IServiceProvider services, ILogger<UserManager<T>> logger)
+            : base(store, optionsAccessor, passwordHasher, userValidators, passwordValidators, keyNormalizer, errors, services, logger)
         {
         }
 

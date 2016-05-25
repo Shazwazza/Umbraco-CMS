@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Microsoft.AspNet.Identity;
+using Microsoft.AspNetCore.Identity;
 using Umbraco.Core.Events;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models.Identity;

@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Hosting;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.PlatformAbstractions;
 using Umbraco.Core.Configuration.UmbracoSettings;
 using Umbraco.Core.Exceptions;
@@ -16,9 +16,9 @@ namespace Umbraco.Core.IO
 	public class IOHelper
     {
 	    private readonly IHostingEnvironment _hostingEnvironment;
-	    private readonly IApplicationEnvironment _appEnv;
+	    private readonly IHostingEnvironment _appEnv;
 
-	    public IOHelper(IHostingEnvironment hostingEnvironment, IApplicationEnvironment appEnv)
+	    public IOHelper(IHostingEnvironment hostingEnvironment, IHostingEnvironment appEnv)
 	    {
 	        _hostingEnvironment = hostingEnvironment;
 	        _appEnv = appEnv;
@@ -92,9 +92,30 @@ namespace Umbraco.Core.IO
 
 	    private string ToAbsolute(string virtualPath)
 	    {
-	        return string.Concat(_appEnv.ApplicationBasePath, virtualPath.TrimStart('~')).Replace("//", "/");
+	        return string.Concat(_appEnv.ContentRootPath, virtualPath.TrimStart('~')).Replace("//", "/");
 	    }
 
+        /// <summary>
+        /// Map a path to the web root
+        /// </summary>
+        /// <param name="contentFile"></param>
+        /// <returns></returns>
+        public string MapWebPath(string contentFile)
+        {
+            var content = contentFile.TrimStart(new[] { '~' });
+
+            var fileInfo = _hostingEnvironment.WebRootFileProvider.GetFileInfo(content);
+            if (fileInfo.Exists)
+                return fileInfo.PhysicalPath;
+
+            throw new FileNotFoundException($"No such file exists {fileInfo.PhysicalPath} (mapped from {contentFile})", fileInfo.PhysicalPath);
+        }
+
+        /// <summary>
+        /// Map a path to the application root
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
         public string MapPath(string path)
         {
             // Check if the path is already mapped
@@ -104,7 +125,14 @@ namespace Umbraco.Core.IO
                 return path;
             }
 
-            return _hostingEnvironment.MapPath(path);
+            var content = path.TrimStart(new[] { '~' });
+
+            var fileInfo = _hostingEnvironment.ContentRootFileProvider.GetFileInfo(content);
+            if (fileInfo.Exists)
+                return fileInfo.PhysicalPath;
+
+            throw new FileNotFoundException($"No such file exists {fileInfo.PhysicalPath} (mapped from {path})", fileInfo.PhysicalPath);
+            
         }
 
   //      //use a tilde character instead of the complete path
