@@ -30,16 +30,12 @@ namespace Umbraco.Core.Persistence.Migrations.Syntax.Insert
         private static InsertionDataDefinition GetData(object dataAsAnonymousType)
         {
             var data = new InsertionDataDefinition();
-#if NET461
             var properties = TypeDescriptor.GetProperties(dataAsAnonymousType);
 
             foreach (PropertyDescriptor property in properties)
             {
                 data.Add(new KeyValuePair<string, object>(property.Name, property.GetValue(dataAsAnonymousType)));
             }
-#else
-            throw new NotImplementedException("TODO: Fix GetData with RC2 since TypeDescriptor.GetProperties is supported");
-#endif
 
             return data;
         }

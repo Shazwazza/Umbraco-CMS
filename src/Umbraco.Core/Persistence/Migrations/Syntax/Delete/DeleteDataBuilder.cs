@@ -43,16 +43,12 @@ namespace Umbraco.Core.Persistence.Migrations.Syntax.Delete
         private static DeletionDataDefinition GetData(object dataAsAnonymousType)
         {
             var data = new DeletionDataDefinition();
-#if NET461
             var properties = TypeDescriptor.GetProperties(dataAsAnonymousType);
 
             foreach (PropertyDescriptor property in properties)
             {
                 data.Add(new KeyValuePair<string, object>(property.Name, property.GetValue(dataAsAnonymousType)));
             }
-#else
-            throw new NotImplementedException("TODO: Fix GetData with RC2 since TypeDescriptor.GetProperties is supported");
-#endif
 
             return data;
         }

@@ -54,7 +54,6 @@ namespace Umbraco.Core.Persistence.Migrations
             var type = val.GetType();
 
 
-#if NET461
             switch (Type.GetTypeCode(type))
             {
                 case TypeCode.Boolean:
@@ -76,22 +75,7 @@ namespace Umbraco.Core.Persistence.Migrations
                 default:
                     return SqlSyntax.GetQuotedValue(val.ToString());
             }
-#else
-            //TODO: This is temporary until RC2 of aspnetcore
-            
-            if (type == typeof(bool)) {
-                return ((bool)val) ? "1" : "0";
-            }
-            else if (type == typeof(DateTime)) {
-                return SqlSyntax.GetQuotedValue(SqlSyntax.FormatDateTime((DateTime)val));
-            }
-            else if (type == typeof(string)){
-                return SqlSyntax.GetQuotedValue(val.ToString());
-            }
-            else {
-                return val.ToString();
-            }
-#endif
+
         }
     }
 }

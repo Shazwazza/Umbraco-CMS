@@ -444,11 +444,7 @@ namespace Umbraco.Core
         {
             if (o != null)
             {
-#if NET461
                 var props = TypeDescriptor.GetProperties(o).Cast<PropertyDescriptor>();
-#else
-                var props = o.GetType().GetTypeInfo().DeclaredProperties;
-#endif
                 var d = new Dictionary<string, TVal>();
                 foreach (var prop in props.Where(x => !ignoreProperties.Contains(x.Name)))
                 {
