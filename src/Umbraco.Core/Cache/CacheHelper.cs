@@ -1,4 +1,6 @@
 ﻿using System;
+using LightInject;
+using Umbraco.Core.DependencyInjection;
 
 namespace Umbraco.Core.Cache
 {
@@ -44,8 +46,8 @@ namespace Umbraco.Core.Cache
 	    /// <param name="isolatedCacheManager"></param>
 	    public CacheHelper(
             IRuntimeCacheProvider httpCacheProvider,
-            ICacheProvider staticCacheProvider,
-            ICacheProvider requestCacheProvider,
+            [Inject(CacheCompositionRoot.StaticCache)]ICacheProvider staticCacheProvider,
+            [Inject(CacheCompositionRoot.RequestCache)]ICacheProvider requestCacheProvider,
             IsolatedRuntimeCache isolatedCacheManager)            
         {
 	        if (httpCacheProvider == null) throw new ArgumentNullException("httpCacheProvider");

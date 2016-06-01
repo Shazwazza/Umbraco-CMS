@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.PlatformAbstractions;
 using ReflectionBridge.Extensions;
 
 namespace Umbraco.Core.Plugins
@@ -16,11 +17,11 @@ namespace Umbraco.Core.Plugins
     {
         private readonly Lazy<HashSet<Assembly>> _localFilteredAssemblyCache = null;
         private readonly TypeHelper _typeHelper;
-        private readonly IEnumerable<IUmbracoAssemblyProvider> _assemblyProvider;
+        private readonly IEnumerable<IAssemblyProvider> _assemblyProvider;
         private readonly ILogger _logger;
 
-        public TypeFinder(ILoggerFactory loggerFactory, TypeHelper typeHelper, IEnumerable<IUmbracoAssemblyProvider> assemblyProvider, IEnumerable<Assembly> excludeFromResults = null)
-        {
+        public TypeFinder(ILoggerFactory loggerFactory, TypeHelper typeHelper, IEnumerable<IAssemblyProvider> assemblyProvider, IEnumerable<Assembly> excludeFromResults = null)
+        {            
             _typeHelper = typeHelper;
             _assemblyProvider = assemblyProvider;
             _logger = loggerFactory.CreateLogger<TypeFinder>();
@@ -64,7 +65,7 @@ namespace Umbraco.Core.Plugins
             if (exclusionFilter == null)
                 exclusionFilter = new string[] { };
 
-            return _assemblyProvider.SelectMany(x => x.CandidateAssemblies)
+            return _assemblyProvider.SelectMany(x => x.Assemblies)
                 .Where(x => excludeFromResults.Contains(x) == false
 #if NET461
                             && x.GlobalAssemblyCache == false 

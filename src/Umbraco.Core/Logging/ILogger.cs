@@ -1,4 +1,5 @@
 using System;
+using Microsoft.Extensions.Logging;
 
 namespace Umbraco.Core.Logging
 {
@@ -21,4 +22,5 @@ namespace Umbraco.Core.Logging
 
         void Debug(Type type, string generateMessageFormat, params Func<object>[] formatItems);
     }
+
 }

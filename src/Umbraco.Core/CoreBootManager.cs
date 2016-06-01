@@ -50,7 +50,6 @@ namespace Umbraco.Core
         private bool _isStarted = false;
         private bool _isComplete = false;
         private readonly UmbracoApplication _umbracoApplication;
-        private readonly IConfiguration _umbracoConfig;
         protected ApplicationContext ApplicationContext { get; private set; }
         protected CacheHelper ApplicationCache { get; private set; }
 
@@ -64,11 +63,10 @@ namespace Umbraco.Core
             get { return _umbracoApplication.Container; }
         }
         
-        public CoreBootManager(UmbracoApplication umbracoApplication, IConfiguration umbracoConfig)
+        public CoreBootManager(UmbracoApplication umbracoApplication)
         {
             if (umbracoApplication == null) throw new ArgumentNullException("umbracoApplication");
             _umbracoApplication = umbracoApplication;
-            _umbracoConfig = umbracoConfig;
         }
      
         public virtual IBootManager Initialize()
@@ -83,10 +81,7 @@ namespace Umbraco.Core
             _timer = ProfilingLogger.TraceDuration<CoreBootManager>(
                 $"Umbraco {UmbracoVersion.GetSemanticVersion().ToSemanticString()} application starting on {_umbracoApplication.HostingEnvironment.EnvironmentName}",
                 "Umbraco application startup complete");
-            
-            //build up core IoC servoces
-            ConfigureCoreServices(Container);
-
+           
             //set the singleton resolved from the core container
             ApplicationContext.Current = ApplicationContext = Container.GetInstance<ApplicationContext>();
 
@@ -101,10 +96,7 @@ namespace Umbraco.Core
             _appStartupEvtContainer = Container.CreateChildContainer();
             _appStartupEvtContainer.BeginScope();
             _appStartupEvtContainer.RegisterCollection<PerScopeLifetime>(pluginMgr.ResolveApplicationStartupHandlers());
-
-            //build up standard IoC services
-            ConfigureApplicationServices(Container);
-
+            
             InitializeResolvers();
             InitializeModelMappers();
 
@@ -134,51 +126,6 @@ namespace Umbraco.Core
             return this;
         }
 
-        /// <summary>
-        /// Build the core container which contains all core things requird to build an app context
-        /// </summary>
-        internal virtual void ConfigureCoreServices(IServiceContainer container)
-        {
-            container.Register<IServiceContainer>(factory => container);
-
-            //Logging
-            container.RegisterSingleton<ILogger>(factory => _umbracoApplication.Logger);
-            container.RegisterSingleton<IProfiler>(factory => ProfilingLogger.Profiler);
-            container.RegisterSingleton<ProfilingLogger>(factory => ProfilingLogger);
-
-            //Config
-            container.RegisterFrom(new ConfigurationCompositionRoot(_umbracoConfig));
-
-            //Cache
-            container.RegisterSingleton<CacheHelper>(factory => ApplicationCache);
-            container.RegisterSingleton<IRuntimeCacheProvider>(factory => ApplicationCache.RuntimeCache);
-
-            //Datalayer/Repositories/SQL/Database/etc...
-            container.RegisterFrom<RepositoryCompositionRoot>();
-
-            //Data Services/ServiceContext/etc...
-            container.RegisterFrom<ServicesCompositionRoot>();
-
-            //ModelMappers
-            //container.RegisterFrom<CoreModelMappersCompositionRoot>();
-
-            container.RegisterSingleton<IServiceProvider, ActivatorServiceProvider>();
-            container.RegisterSingleton<PluginManager>();
-
-            container.RegisterSingleton<ApplicationContext>();
-
-            //TODO: We need to use Options<T> for IFileSystem implementations!
-
-        }
-
-        /// <summary>
-        /// Called to customize the IoC container
-        /// </summary>
-        /// <param name="container"></param>
-        internal virtual void ConfigureApplicationServices(IServiceContainer container)
-        {
-
-        }
 
         /// <summary>
         /// Creates the ApplicationCache based on a new instance of System.Web.Caching.Cache

@@ -6,8 +6,10 @@ using System.Threading;
 using LightInject;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Umbraco.Core.Logging;
 using Umbraco.Core.ObjectResolution;
+using ILogger = Umbraco.Core.Logging.ILogger;
 
 namespace Umbraco.Core
 {
@@ -27,23 +29,15 @@ namespace Umbraco.Core
         /// <summary>
         /// Constructor
         /// </summary>
-        public UmbracoApplication(IHostingEnvironment hostingEnvironment, IApplicationLifetime applicationLifetime, IConfiguration umbracoConfig)
+        public UmbracoApplication()
         {
-            HostingEnvironment = hostingEnvironment;
-            //TODO: This must be initialized FIRST
-            Logger = null;
-            Profiler = null;
-
             // create the container for the application, the boot managers are responsible for registrations
             var container = new ServiceContainer();
             container.EnableAnnotatedConstructorInjection();
 
             Container = container;
 
-            //register the application shutdown handler
-            applicationLifetime.ApplicationStopping.Register(DisposeResources);
-
-            _bootManager = new CoreBootManager(this, umbracoConfig);           
+            _bootManager = new CoreBootManager(this);           
         }
 
         public event EventHandler ApplicationStarting;
@@ -55,8 +49,19 @@ namespace Umbraco.Core
         /// <summary>
         /// Boots up the Umbraco application
         /// </summary>
-        public void StartApplication()
+        public void StartApplication(
+            IHostingEnvironment hostingEnvironment, 
+            IApplicationLifetime applicationLifetime, 
+            IConfiguration umbracoConfig)
         {
+            //TODO: set these accordingly - based on config, etc...
+            Logger = new DebugDiagnosticsLogger();
+            Profiler = null;
+            Configuration = umbracoConfig;
+
+            //register the application shutdown handler
+            applicationLifetime.ApplicationStopping.Register(DisposeResources);
+
             Thread.CurrentThread.SanitizeThreadCulture();
 
 #if NET461
@@ -174,14 +179,16 @@ namespace Umbraco.Core
             return _bootManager;
         }
 
+        public IConfiguration Configuration { get; private set; }
+
         /// <summary>
         /// Returns the logger instance for the application - this will be used throughout the entire app
         /// </summary>
-        public virtual ILogger Logger { get; }
+        public virtual ILogger Logger { get; private set; }
 
         /// <summary>
         /// Returns the Profiler instance for the application - this will be used throughout the entire app
         /// </summary>
-        public virtual IProfiler Profiler { get; }
+        public virtual IProfiler Profiler { get; private set; }
     }
 }

@@ -59,6 +59,7 @@
         "DependencyInjection/LightInjectExtensions.cs",
         "DependencyInjection/TEMP_Annotation.cs",
         "DependencyInjection/RepositoryCompositionRoot.cs",
+        "DependencyInjection/CacheCompositionRoot.cs",
         "DependencyInjection/ServicesCompositionRoot.cs",
         "DependencyInjection/ConfigurationCompositionRoot.cs",
 
@@ -106,6 +107,7 @@
         "Logging/IProfiler.cs",
         "Logging/ProfilingLogger.cs",
         "Logging/ProfilerExtensions.cs",
+        "Logging/DebugDiagnosticsLogger.cs",
 
         "Sync/IServerAddress.cs",
         "Sync/MessageType.cs",
@@ -119,6 +121,7 @@
         "Serialization/JsonCreationConverter.cs",
 
         "IApplicationEventHandler.cs",
+        "UmbracoCoreStartup.cs",
         "UmbracoApplication.cs",
         "IBootManager.cs",
         "CoreBootManager.cs",
@@ -230,19 +233,20 @@
         "portable-net45+win8"
       ],
       "dependencies": {
-        "System.Runtime": "4.1.0-rc2-24027",
-        "System.Runtime.Loader": "4.0.0-rc2-24027",
-        "Microsoft.CSharp": "4.0.1-rc2-24027",
-        "System.Threading": "4.0.11-rc2-24027",
-        "System.Threading.ThreadPool": "4.0.10-rc2-24027",
-        "System.Threading.Thread": "4.0.0-rc2-24027",
-        "System.Reflection.TypeExtensions": "4.1.0-rc2-24027",
-        "System.Data.Common": "4.0.1-rc2-24027",
-        "System.Threading.Tasks.Parallel": "4.0.1-rc2-24027",
-        "System.Xml.XDocument": "4.0.11-rc2-24027",
-        "System.Globalization": "4.0.11-rc2-24027",
-        "System.Linq": "4.1.0-rc2-24027",
-        "System.Collections": "4.0.11-rc2-24027"
+        "System.Runtime": "4.1.0-rc3-*",
+        "System.Runtime.Loader": "4.0.0-rc3-*",
+        "Microsoft.CSharp": "4.0.1-rc3-*",
+        "System.Threading": "4.0.11-rc3-*",
+        "System.Threading.ThreadPool": "4.0.10-rc3-*",
+        "System.Threading.Thread": "4.0.0-rc3-*",
+        "System.Reflection.TypeExtensions": "4.1.0-rc3-*",
+        "System.Data.Common": "4.0.1-rc3-*",
+        "System.Threading.Tasks.Parallel": "4.0.1-rc3-*",
+        "System.Xml.XDocument": "4.0.11-rc3-*",
+        "System.Globalization": "4.0.11-rc3-*",
+        "System.Linq": "4.1.0-rc3-*",
+        "System.Collections": "4.0.11-rc3-*",
+        "System.ComponentModel.TypeConverter": "4.1.0-rc3-*"
       }
     }
   }

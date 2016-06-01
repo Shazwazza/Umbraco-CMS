@@ -35,6 +35,19 @@ namespace Umbraco.Core.DependencyInjection
         }
 
         /// <summary>
+        /// Registers the TService with the TImplementation as a singleton.
+        /// </summary>
+        /// <typeparam name="TService"></typeparam>
+        /// <typeparam name="TImplementation"></typeparam>
+        /// <param name="container"></param>
+        /// <param name="name"></param>
+        public static void RegisterSingleton<TService, TImplementation>(this IServiceRegistry container, string name)
+            where TImplementation : TService
+        {
+            container.Register<TService, TImplementation>(name, new PerContainerLifetime());
+        }
+
+        /// <summary>
         /// Registers a concrete type as a singleton service.
         /// </summary>
         /// <typeparam name="TImplementation"></typeparam>
