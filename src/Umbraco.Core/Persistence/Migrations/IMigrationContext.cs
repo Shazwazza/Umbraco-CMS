@@ -8,9 +8,9 @@ namespace Umbraco.Core.Persistence.Migrations
     public interface IMigrationContext
     {
         UmbracoDatabase Database { get; }
-        DatabaseType DatabaseType { get; }
+
         ICollection<IMigrationExpression> Expressions { get; set; }
+
         ILogger Logger { get; }
-        ISqlSyntaxProvider SqlSyntax { get; }
     }
 }
