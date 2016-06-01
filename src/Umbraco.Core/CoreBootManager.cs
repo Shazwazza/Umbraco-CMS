@@ -93,7 +93,7 @@ namespace Umbraco.Core
             var pluginMgr = Container.GetInstance<PluginManager>();
             _appStartupEvtContainer = Container.Clone();
             _appStartupEvtContainer.BeginScope();
-            _appStartupEvtContainer.RegisterCollection<PerScopeLifetime>(PluginManager.ResolveApplicationStartupHandlers());            
+            _appStartupEvtContainer.RegisterCollection<PerScopeLifetime>(pluginMgr.ResolveApplicationStartupHandlers());            
             
             InitializeResolvers();
             InitializeModelMappers();

@@ -389,7 +389,7 @@ namespace Umbraco.Core.Services
         /// <param name="totalRecords">Total number of records found (out)</param>
         /// <param name="matchType">The type of match to make as <see cref="StringPropertyMatchType"/>. Default is <see cref="StringPropertyMatchType.StartsWith"/></param>
         /// <returns><see cref="IEnumerable{IUser}"/></returns>
-        public IEnumerable<IUser> FindByEmail(string emailStringToMatch, int pageIndex, int pageSize, out int totalRecords, StringPropertyMatchType matchType = StringPropertyMatchType.StartsWith)
+        public IEnumerable<IUser> FindByEmail(string emailStringToMatch, long pageIndex, int pageSize, out long totalRecords, StringPropertyMatchType matchType = StringPropertyMatchType.StartsWith)
         {
             using (var uow = UowProvider.CreateUnitOfWork())
             {
@@ -432,7 +432,7 @@ namespace Umbraco.Core.Services
         /// <param name="totalRecords">Total number of records found (out)</param>
         /// <param name="matchType">The type of match to make as <see cref="StringPropertyMatchType"/>. Default is <see cref="StringPropertyMatchType.StartsWith"/></param>
         /// <returns><see cref="IEnumerable{IUser}"/></returns>
-        public IEnumerable<IUser> FindByUsername(string login, int pageIndex, int pageSize, out int totalRecords, StringPropertyMatchType matchType = StringPropertyMatchType.StartsWith)
+        public IEnumerable<IUser> FindByUsername(string login, long pageIndex, int pageSize, out long totalRecords, StringPropertyMatchType matchType = StringPropertyMatchType.StartsWith)
         {
             using (var uow = UowProvider.CreateUnitOfWork())
             {
@@ -520,7 +520,7 @@ namespace Umbraco.Core.Services
         /// <param name="pageSize">Size of the page</param>
         /// <param name="totalRecords">Total number of records found (out)</param>
         /// <returns><see cref="IEnumerable{IMember}"/></returns>
-        public IEnumerable<IUser> GetAll(int pageIndex, int pageSize, out int totalRecords)
+        public IEnumerable<IUser> GetAll(long pageIndex, int pageSize, out long totalRecords)
         {
             using (var uow = UowProvider.CreateUnitOfWork())
             {
