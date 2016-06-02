@@ -47,6 +47,7 @@
         "Sync/**/*.*",
         "Xml/**/*.*"
       ],
+      
       "excludeFiles": [
         "DependencyInjection/CoreModelMappersCompositionRoot.cs"
       ],
@@ -58,6 +59,22 @@
         "Configuration/Grid/IGridEditorConfig.cs",
         "Configuration/UmbracoConfigurationSection.cs",
         "Configuration/UmbracoVersion.cs",
+        "Configuration/UmbracoSettings/IUmbracoSettingsSection.cs",
+        "Configuration/UmbracoSettings/ISecuritySection.cs",
+        "Configuration/UmbracoSettings/IRequestHandlerSection.cs",
+        "Configuration/UmbracoSettings/IDeveloperSection.cs",
+        "Configuration/UmbracoSettings/ILoggingSection.cs",
+        "Configuration/UmbracoSettings/ILogType.cs",
+        "Configuration/UmbracoSettings/IScheduledTasksSection.cs",
+        "Configuration/UmbracoSettings/IDistributedCallSection.cs",
+        "Configuration/UmbracoSettings/IRepositoriesSection.cs",
+        "Configuration/UmbracoSettings/IProvidersSection.cs",
+        "Configuration/UmbracoSettings/IWebRoutingSection.cs",
+        "Configuration/UmbracoSettings/IFileExtension.cs",
+        "Configuration/UmbracoSettings/IServer.cs",
+        "Configuration/UmbracoSettings/IRepository.cs",
+        "Configuration/UmbracoSettings/IChar.cs",
+        "Configuration/UmbracoSettings/IScheduledTask.cs",
 
         "IO/IFileSystem.cs",
         "IO/PhysicalFileSystem.cs",
@@ -86,6 +103,8 @@
         "Models/Identity/IdentityUserLogin.cs",
         "Models/Identity/IdentityUserRole.cs",
         "Models/Identity/IIdentityUserLogin.cs",
+
+        "Models/IPublishedContent.cs",
 
         "Macros/MacroErrorBehaviour.cs",
 

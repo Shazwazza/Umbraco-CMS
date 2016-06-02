@@ -7,9 +7,7 @@
         ISecuritySection Security { get; }
 
         IRequestHandlerSection RequestHandler { get; }
-
-        ITemplatesSection Templates { get; }
-
+        
         IDeveloperSection Developer { get; }
 
 

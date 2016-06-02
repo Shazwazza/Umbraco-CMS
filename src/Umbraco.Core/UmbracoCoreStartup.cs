@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using LightInject;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -32,6 +33,10 @@ namespace Umbraco.Core
         public static void AddUmbracoCore(this IServiceCollection services, UmbracoApplication umbracoApplication)
         {
             var umbContainer = umbracoApplication.Container;
+
+            //ensure it's not run twice
+            if (umbContainer.AvailableServices.Any())
+                return;
 
             //TODO: hrm, should we do anything with the aspnetcore service container? Maybe not here
             // but we could allow devs to do this: http://www.lightinject.net/microsoft.dependencyinjection/
@@ -91,12 +96,9 @@ namespace Umbraco.Core
         public static void UseUmbracoCore(this IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime applicationLifetime)
         {
             var umbApp = app.ApplicationServices.GetRequiredService<UmbracoApplication>();
-            var umbContainer = umbApp.Container;
-
+            
             //Boot!
             umbApp.StartApplication(env, applicationLifetime);
-
-            //var appCtx = umbContainer.GetInstance<ApplicationContext>();
         }
     }
 }
