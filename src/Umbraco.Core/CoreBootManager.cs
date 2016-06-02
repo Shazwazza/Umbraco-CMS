@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using AutoMapper;
 using LightInject;
+using Microsoft.AspNetCore.Hosting;
 using Umbraco.Core.Cache;
 using Umbraco.Core.Configuration;
 using Umbraco.Core.Configuration.UmbracoSettings;
@@ -41,15 +42,13 @@ namespace Umbraco.Core
         protected ProfilingLogger ProfilingLogger { get; private set; }
         private DisposableTimer _timer;
         protected MapperConfiguration MapperConfiguration { get; private set; }
-        //protected PluginManager PluginManager { get; private set; }
 
         private IServiceContainer _appStartupEvtContainer;
         private bool _isInitialized = false;
         private bool _isStarted = false;
         private bool _isComplete = false;
         private readonly UmbracoApplication _umbracoApplication;
-        protected ApplicationContext ApplicationContext { get; private set; }
-        protected CacheHelper ApplicationCache { get; private set; }
+        protected ApplicationContext ApplicationContext { get; private set; }        
 
         protected UmbracoApplication UmbracoApplication
         {
@@ -74,12 +73,10 @@ namespace Umbraco.Core
             
             ProfilingLogger = new ProfilingLogger(_umbracoApplication.Logger, _umbracoApplication.Profiler);
             
-            ApplicationCache = CreateApplicationCache();
-
             _timer = ProfilingLogger.TraceDuration<CoreBootManager>(
                 $"Umbraco {UmbracoVersion.GetSemanticVersion().ToSemanticString()} application starting on {_umbracoApplication.HostingEnvironment.EnvironmentName}",
                 "Umbraco application startup complete");
-           
+
             //set the singleton resolved from the core container
             ApplicationContext.Current = ApplicationContext = Container.GetInstance<ApplicationContext>();
 
@@ -122,29 +119,7 @@ namespace Umbraco.Core
             _isInitialized = true;
 
             return this;
-        }
-
-            //TODO: Don't think we'll need this when the resolvers are all container resolvers
-
-        /// <summary>
-        /// Creates the ApplicationCache based on a new instance of System.Web.Caching.Cache
-        /// </summary>
-        protected virtual CacheHelper CreateApplicationCache()
-        {
-            var cacheHelper = new CacheHelper(
-                //we need to have the dep clone runtime cache provider to ensure 
-                //all entities are cached properly (cloned in and cloned out)
-                new DeepCloneRuntimeCacheProvider(new ObjectCacheRuntimeCacheProvider()),
-                new StaticCacheProvider(),
-                //we have no request based cache when not running in web-based context
-                new NullCacheProvider(),
-                new IsolatedRuntimeCache(type =>
-                    //we need to have the dep clone runtime cache provider to ensure 
-                    //all entities are cached properly (cloned in and cloned out)
-                    new DeepCloneRuntimeCacheProvider(new ObjectCacheRuntimeCacheProvider())));
-
-            return cacheHelper;
-        }
+        }       
 
         /// <summary>
         /// This method initializes all of the model mappers registered in the container

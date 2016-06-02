@@ -106,9 +106,8 @@ namespace Umbraco.Core.Cache
                 if (value == null) return null; // do not store null values (backward compat)
 
                 return CheckCloneableAndTracksChanges(value);
-            //}, timeout, isSliding, priority, removedCallback, dependentFiles);
-            }, timeout, isSliding, priority, dependentFiles);
-
+            }, timeout, isSliding, priority, removedCallback, dependentFiles);
+            
             return CheckCloneableAndTracksChanges(cached);
         }
 
@@ -121,8 +120,7 @@ namespace Umbraco.Core.Cache
                 if (value == null) return null; // do not store null values (backward compat)
 
                 return CheckCloneableAndTracksChanges(value);
-            //}, timeout, isSliding, priority, removedCallback, dependentFiles);   
-            }, timeout, isSliding, priority, dependentFiles);   
+            }, timeout, isSliding, priority, removedCallback, dependentFiles);               
         }
 
         private static object CheckCloneableAndTracksChanges(object input)

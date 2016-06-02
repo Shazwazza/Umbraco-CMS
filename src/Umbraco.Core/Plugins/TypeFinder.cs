@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.PlatformAbstractions;
 using ReflectionBridge.Extensions;
+using Umbraco.Core.Logging;
 
 namespace Umbraco.Core.Plugins
 {
@@ -16,15 +16,13 @@ namespace Umbraco.Core.Plugins
     public class TypeFinder : ITypeFinder
     {
         private readonly Lazy<HashSet<Assembly>> _localFilteredAssemblyCache = null;
-        private readonly TypeHelper _typeHelper;
         private readonly IEnumerable<IAssemblyProvider> _assemblyProvider;
         private readonly ILogger _logger;
 
-        public TypeFinder(ILoggerFactory loggerFactory, TypeHelper typeHelper, IEnumerable<IAssemblyProvider> assemblyProvider, IEnumerable<Assembly> excludeFromResults = null)
+        public TypeFinder(ILogger logger, IEnumerable<IAssemblyProvider> assemblyProvider, IEnumerable<Assembly> excludeFromResults = null)
         {            
-            _typeHelper = typeHelper;
             _assemblyProvider = assemblyProvider;
-            _logger = loggerFactory.CreateLogger<TypeFinder>();
+            _logger = logger;
 
             _localFilteredAssemblyCache = new Lazy<HashSet<Assembly>>(() =>
             {
@@ -233,7 +231,7 @@ namespace Umbraco.Core.Plugins
             //find all assembly references that are referencing the attribute type's assembly since we
             //should only be scanning those assemblies because any other assembly will definitely not
             //contain a class that has this attribute.
-            var referencedAssemblies = _typeHelper.GetReferencedAssemblies(attributeType, assemblyList);
+            var referencedAssemblies = TypeHelper.GetReferencedAssemblies(attributeType, assemblyList);
 
             //get a list of non-referenced assemblies (we'll use this when we recurse below)
             var otherAssemblies = assemblyList.Where(x => referencedAssemblies.Contains(x) == false).ToArray();
@@ -251,20 +249,15 @@ namespace Umbraco.Core.Plugins
                     //now filter the types based on the onlyConcreteClasses flag, not interfaces, not static classes but have
                     //the specified attribute
                     attributedTypes = allTypes
-                        .Where(t => (_typeHelper.IsNonStaticClass(t)
-
-#if NET461
-                                        && (onlyConcreteClasses == false || t.IsAbstract == false))
-#else
-                                        && (onlyConcreteClasses == false || t.GetTypeInfo().IsAbstract == false))                                        
-#endif
-                                        //the type must have this attribute
-                                        && t.GetCustomAttributes(attributeType, false).Any())
+                        .Where(t => (TypeHelper.IsNonStaticClass(t)
+                                     && (onlyConcreteClasses == false || t.GetTypeInfo().IsAbstract == false))
+                                    //the type must have this attribute
+                                    && t.GetCustomAttributes(attributeType, false).Any())
                         .ToArray();
                 }
                 catch (TypeLoadException ex)
                 {
-                    _logger.LogError($"Could not query types on {a} assembly, this is most likely due to this assembly not being compatible with the current Umbraco version", ex);
+                    _logger.Error<TypeFinder>($"Could not query types on {a} assembly, this is most likely due to this assembly not being compatible with the current Umbraco version", ex);
                     continue;
                 }
 
@@ -287,15 +280,11 @@ namespace Umbraco.Core.Plugins
                     // * We should also not search for sub types if the type is sealed since you cannot inherit from a sealed class
                     // * We should not search for sub types if the type is static since you cannot inherit from them.
                     var subTypeList = subTypesInAssembly
-#if NET461
-                        .Where(t => t.IsSealed == false  
-#else
                         .Where(t => t.GetTypeInfo().IsSealed == false
-#endif
-                        && _typeHelper.IsStaticClass(t) == false)
+                        && TypeHelper.IsStaticClass(t) == false)
                         .ToArray();
 
-                    var baseClassAttempt = _typeHelper.GetLowestBaseType(subTypeList);
+                    var baseClassAttempt = TypeHelper.GetLowestBaseType(subTypeList);
 
                     //if there's a base class amongst the types then we'll only search for that type.
                     //otherwise we'll have to search for all of them.
@@ -385,7 +374,7 @@ namespace Umbraco.Core.Plugins
             //find all assembly references that are referencing the current type's assembly since we
             //should only be scanning those assemblies because any other assembly will definitely not
             //contain sub type's of the one we're currently looking for
-            var referencedAssemblies = _typeHelper.GetReferencedAssemblies(assignTypeFrom, assemblyList);
+            var referencedAssemblies = TypeHelper.GetReferencedAssemblies(assignTypeFrom, assemblyList);
 
             //get a list of non-referenced assemblies (we'll use this when we recurse below)
             var otherAssemblies = assemblyList.Where(x => referencedAssemblies.Contains(x) == false).ToArray();
@@ -403,21 +392,18 @@ namespace Umbraco.Core.Plugins
                 {
                     //now filter the types based on the onlyConcreteClasses flag, not interfaces, not static classes
                     filteredTypes = allSubTypes
-                        .Where(t => (_typeHelper.IsNonStaticClass(t)
-                                    //Do not include nested private classes - since we are in full trust now this will find those too!
-#if NET461
-                                    && t.IsNestedPrivate == false && (onlyConcreteClasses == false || t.IsAbstract == false)
-#else
-                                    && t.GetTypeInfo().IsNestedPrivate == false && (onlyConcreteClasses == false || t.GetTypeInfo().IsAbstract == false)
-#endif
-                                    //Do not include classes that are flagged to hide from the type finder
-                                    && t.GetCustomAttributes(typeof(HideFromTypeFinderAttribute), false) == null
-                                    && additionalFilter(t)))
+                        .Where(t => (TypeHelper.IsNonStaticClass(t)
+                                     //Do not include nested private classes - since we are in full trust now this will find those too!
+                                     && t.GetTypeInfo().IsNestedPrivate == false
+                                     && (onlyConcreteClasses == false || t.IsAbstract() == false)
+                                     //Do not include classes that are flagged to hide from the type finder
+                                     && t.GetTypeInfo().GetCustomAttribute<HideFromTypeFinderAttribute>() == null
+                                     && additionalFilter(t)))
                         .ToArray();
                 }
                 catch (TypeLoadException ex)
                 {
-                    _logger.LogError($"Could not query types on {a} assembly, this is most likely due to this assembly not being compatible with the current Umbraco version", ex);
+                    _logger.Error<TypeFinder>($"Could not query types on {a} assembly, this is most likely due to this assembly not being compatible with the current Umbraco version", ex);
                     continue;
                 }
 
@@ -437,15 +423,11 @@ namespace Umbraco.Core.Plugins
                     // * We should also not search for sub types if the type is sealed since you cannot inherit from a sealed class
                     // * We should not search for sub types if the type is static since you cannot inherit from them.
                     var subTypeList = subTypesInAssembly
-#if NET461
-                        .Where(t => t.IsSealed == false  
-#else
                         .Where(t => t.GetTypeInfo().IsSealed == false
-#endif
-                                    && _typeHelper.IsStaticClass(t) == false)
+                                    && TypeHelper.IsStaticClass(t) == false)
                         .ToArray();
 
-                    var baseClassAttempt = _typeHelper.GetLowestBaseType(subTypeList);
+                    var baseClassAttempt = TypeHelper.GetLowestBaseType(subTypeList);
 
                     //if there's a base class amongst the types then we'll only search for that type.
                     //otherwise we'll have to search for all of them.

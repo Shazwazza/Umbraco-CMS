@@ -42,14 +42,27 @@ namespace Umbraco.Core.Plugins
         /// <param name="ioHelper"></param>
         /// <param name="environmentHelper"></param>
         /// <param name="typeFinder"></param>
-        /// <param name="detectChanges"></param>
-        /// <param name="serviceProvider"></param>
         /// <param name="runtimeCache"></param>
-        public PluginManager(IServiceProvider serviceProvider, IRuntimeCacheProvider runtimeCache, 
-            ProfilingLogger logger, IOHelper ioHelper, EnvironmentHelper environmentHelper, ITypeFinder typeFinder,
-            bool detectChanges = true)
+        public PluginManager(IRuntimeCacheProvider runtimeCache,
+            ProfilingLogger logger, IOHelper ioHelper, EnvironmentHelper environmentHelper, ITypeFinder typeFinder)
+            : this(runtimeCache,logger, ioHelper, environmentHelper, typeFinder, true)
         {
-            if (serviceProvider == null) throw new ArgumentNullException("serviceProvider");
+        }
+
+        /// <summary>
+        /// Creates a new PluginManager with an ApplicationContext instance which ensures that the plugin xml 
+        /// file is cached temporarily until app startup completes.
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <param name="ioHelper"></param>
+        /// <param name="environmentHelper"></param>
+        /// <param name="typeFinder"></param>
+        /// <param name="runtimeCache"></param>
+        /// <param name="detectChanges"></param>
+        public PluginManager(IRuntimeCacheProvider runtimeCache, 
+            ProfilingLogger logger, IOHelper ioHelper, EnvironmentHelper environmentHelper, ITypeFinder typeFinder,
+            bool detectChanges)
+        {
             if (runtimeCache == null) throw new ArgumentNullException("runtimeCache");
             if (logger == null) throw new ArgumentNullException("logger");
             if (ioHelper == null) throw new ArgumentNullException(nameof(ioHelper));

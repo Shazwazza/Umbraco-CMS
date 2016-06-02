@@ -15,7 +15,7 @@
         "*.cs",
         "_Legacy/**/*.cs",
         "Configuration/**/*.*",
-        "DependencyInjection/**/*.*",
+
         "Dynamics/**/*.*",
         "FileResources/**/*.*",
         "IO/**/*.*",
@@ -47,6 +47,9 @@
         "Sync/**/*.*",
         "Xml/**/*.*"
       ],
+      "excludeFiles": [
+        "DependencyInjection/CoreModelMappersCompositionRoot.cs"
+      ],
       "includeFiles": [
         "Configuration/IUmbracoConfig.cs",
         "Configuration/UmbracoSettings/IContentSection.cs",
@@ -55,13 +58,6 @@
         "Configuration/Grid/IGridEditorConfig.cs",
         "Configuration/UmbracoConfigurationSection.cs",
         "Configuration/UmbracoVersion.cs",
-
-        "DependencyInjection/LightInjectExtensions.cs",
-        "DependencyInjection/TEMP_Annotation.cs",
-        "DependencyInjection/RepositoryCompositionRoot.cs",
-        "DependencyInjection/CacheCompositionRoot.cs",
-        "DependencyInjection/ServicesCompositionRoot.cs",
-        "DependencyInjection/ConfigurationCompositionRoot.cs",
 
         "IO/IFileSystem.cs",
         "IO/PhysicalFileSystem.cs",
@@ -108,6 +104,7 @@
         "Logging/ProfilingLogger.cs",
         "Logging/ProfilerExtensions.cs",
         "Logging/DebugDiagnosticsLogger.cs",
+        "Logging/NoopProfiler.cs",
 
         "Sync/IServerAddress.cs",
         "Sync/MessageType.cs",
@@ -189,22 +186,22 @@
     "Newtonsoft.Json": "8.0.3",
     "NPoco": "3.3.3",
     "AutoMapper": "4.2",
-    "LightInject": "4.0.9",
-    "Microsoft.Extensions.Configuration.Abstractions": "1.0.0-rc2-final",
+    "LightInject": "4.0.10-rc2-2",
+    "Microsoft.Extensions.Configuration.Abstractions": "1.0.0-rc2-*",
     "Microsoft.Extensions.Configuration.Json": "1.0.0-rc2-final",
     "Microsoft.Extensions.DependencyInjection": "1.0.0-rc2-final",
-    "System.Text.Encodings.Web": "4.0.0-rc2-24027",
+    "System.Text.Encodings.Web": "4.0.0-rc2-*",
     "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-final",
     "Microsoft.Extensions.Logging": "1.0.0-rc2-final",
     "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-final",
     "Microsoft.AspNetCore.DataProtection": "1.0.0-rc2-final",
-    "System.Security.Cryptography.Algorithms": "4.1.0-rc2-24027",
+    "System.Security.Cryptography.Algorithms": "4.1.0-rc2-*",
     "Microsoft.AspNetCore.Identity": "1.0.0-rc2-final",
     "ReflectionBridge": "0.0.11",
-    "System.Xml.XmlDocument": "4.0.1-rc2-24027",
-    "System.Xml.XPath": "4.0.1-rc2-24027",
-    "System.Xml.XPath.XDocument": "4.0.1-rc2-24027",
-    "System.ComponentModel.Annotations": "4.1.0-rc2-24027",
+    "System.Xml.XmlDocument": "4.0.1-rc2-*",
+    "System.Xml.XPath": "4.0.1-rc2-*",
+    "System.Xml.XPath.XDocument": "4.0.1-rc2-*",
+    "System.ComponentModel.Annotations": "4.1.0-rc2-*",
     "Microsoft.Extensions.DependencyModel": "1.0.0-rc2-final"
   },
 

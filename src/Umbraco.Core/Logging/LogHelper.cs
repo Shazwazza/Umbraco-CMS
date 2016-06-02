@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 
@@ -8,8 +9,9 @@ namespace Umbraco.Core.Logging
 	/// Used for logging, ILogger should be used instead but this is available for static access to logging
 	///</summary>
 	/// <remarks>
-    /// this wraps ILogger 
+    /// This is legacy stuff only - it shouldn't be used but we currently don't need to spend the time removing it
 	/// </remarks>
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	public static class LogHelper
 	{
 		#region Error
@@ -21,16 +23,14 @@ namespace Umbraco.Core.Logging
 		/// <param name="exception"></param>
 		public static void Error<T>(string message, Exception exception)
 		{
-            throw new NotImplementedException("Fix LogHelper!");
-		    //if (LoggerResolver.HasCurrent == false || LoggerResolver.Current.HasValue == false) return;
-		    //LoggerResolver.Current.Logger.Error<T>(message, exception);
+            if (ApplicationContext.Current == null || ApplicationContext.Current.ProfilingLogger == null) return;
+            ApplicationContext.Current.ProfilingLogger.Logger.Error<T>(message, exception);
 		}
 
 		public static void Error(Type callingType, string message, Exception exception)
 		{
-            throw new NotImplementedException("Fix LogHelper!");
-            //if (LoggerResolver.HasCurrent == false || LoggerResolver.Current.HasValue == false) return;
-            //LoggerResolver.Current.Logger.Error(callingType, message, exception);
+            if (ApplicationContext.Current == null || ApplicationContext.Current.ProfilingLogger == null) return;
+            ApplicationContext.Current.ProfilingLogger.Logger.Error(callingType, message, exception);
         }
 
 		#endregion
@@ -39,15 +39,13 @@ namespace Umbraco.Core.Logging
 
 		public static void Warn(Type callingType, string message, params Func<object>[] formatItems)
 		{
-            throw new NotImplementedException("Fix LogHelper!");
-            //if (LoggerResolver.HasCurrent == false || LoggerResolver.Current.HasValue == false) return;
-            //LoggerResolver.Current.Logger.Warn(callingType, message, formatItems);
+            if (ApplicationContext.Current == null || ApplicationContext.Current.ProfilingLogger == null) return;
+            ApplicationContext.Current.ProfilingLogger.Logger.Warn(callingType, message, formatItems);
         }
       
 		public static void WarnWithException(Type callingType, string message, Exception e, params Func<object>[] formatItems)
 		{
-            throw new NotImplementedException("Fix LogHelper!");
-            //WarnWithException(callingType, message, false, e, formatItems);
+            ApplicationContext.Current.ProfilingLogger.Logger.WarnWithException(callingType, message, e, formatItems);
         }
 
 		/// <summary>
@@ -87,9 +85,8 @@ namespace Umbraco.Core.Logging
 		/// <param name="generateMessage"></param>
 		public static void Info(Type callingType, Func<string> generateMessage)
 		{
-            throw new NotImplementedException("Fix LogHelper!");
-            //if (LoggerResolver.HasCurrent == false || LoggerResolver.Current.HasValue == false) return;
-            //LoggerResolver.Current.Logger.Info(callingType, generateMessage);
+            if (ApplicationContext.Current == null || ApplicationContext.Current.ProfilingLogger == null) return;
+            ApplicationContext.Current.ProfilingLogger.Logger.Info(callingType, generateMessage);
         }
 
 		/// <summary>
@@ -100,9 +97,8 @@ namespace Umbraco.Core.Logging
 		/// <param name="formatItems">The format items.</param>
 		public static void Info(Type type, string generateMessageFormat, params Func<object>[] formatItems)
 		{
-            throw new NotImplementedException("Fix LogHelper!");
-            //if (LoggerResolver.HasCurrent == false || LoggerResolver.Current.HasValue == false) return;
-            //LoggerResolver.Current.Logger.Info(type, generateMessageFormat, formatItems);
+            if (ApplicationContext.Current == null || ApplicationContext.Current.ProfilingLogger == null) return;
+            ApplicationContext.Current.ProfilingLogger.Logger.Info(type, generateMessageFormat, formatItems);
         }
 
 		/// <summary>
@@ -137,9 +133,8 @@ namespace Umbraco.Core.Logging
 		/// <param name="generateMessage"></param>
 		public static void Debug(Type callingType, Func<string> generateMessage)
 		{
-            throw new NotImplementedException("Fix LogHelper!");
-            //if (LoggerResolver.HasCurrent == false || LoggerResolver.Current.HasValue == false) return;
-            //LoggerResolver.Current.Logger.Debug(callingType, generateMessage);
+            if (ApplicationContext.Current == null || ApplicationContext.Current.ProfilingLogger == null) return;
+            ApplicationContext.Current.ProfilingLogger.Logger.Debug(callingType, generateMessage);
         }
 
 		/// <summary>
@@ -150,9 +145,8 @@ namespace Umbraco.Core.Logging
 		/// <param name="formatItems">The format items.</param>
 		public static void Debug(Type type, string generateMessageFormat, params Func<object>[] formatItems)
 		{
-            throw new NotImplementedException("Fix LogHelper!");
-            //if (LoggerResolver.HasCurrent == false || LoggerResolver.Current.HasValue == false) return;
-            //LoggerResolver.Current.Logger.Debug(type, generateMessageFormat, formatItems);
+            if (ApplicationContext.Current == null || ApplicationContext.Current.ProfilingLogger == null) return;
+            ApplicationContext.Current.ProfilingLogger.Logger.Debug(type, generateMessageFormat, formatItems);
         }
 
 		/// <summary>

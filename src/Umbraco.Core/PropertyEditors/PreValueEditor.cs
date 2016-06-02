@@ -23,13 +23,13 @@ namespace Umbraco.Core.PropertyEditors
     {
         private readonly IOHelper _ioHelper;
 
-        public PreValueEditor(TypeHelper typeHelper, IOHelper ioHelper)
+        public PreValueEditor(IOHelper ioHelper)
         {
             _ioHelper = ioHelper;
             var fields = new List<PreValueField>();
                
             //the ctor checks if we have PreValueFieldAttributes applied and if so we construct our fields from them
-            var props = typeHelper.CachedDiscoverableProperties(GetType())
+            var props = TypeHelper.CachedDiscoverableProperties(GetType())
                 .Where(x => x.Name != "Fields");
             foreach (var p in props)
             {

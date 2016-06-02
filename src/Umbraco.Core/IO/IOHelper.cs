@@ -16,12 +16,10 @@ namespace Umbraco.Core.IO
 	public class IOHelper
     {
 	    private readonly IHostingEnvironment _hostingEnvironment;
-	    private readonly IHostingEnvironment _appEnv;
 
-	    public IOHelper(IHostingEnvironment hostingEnvironment, IHostingEnvironment appEnv)
+	    public IOHelper(IHostingEnvironment hostingEnvironment)
 	    {
 	        _hostingEnvironment = hostingEnvironment;
-	        _appEnv = appEnv;
 	    }
 
 	    // static compiled regex for faster performance
@@ -92,7 +90,7 @@ namespace Umbraco.Core.IO
 
 	    private string ToAbsolute(string virtualPath)
 	    {
-	        return string.Concat(_appEnv.ContentRootPath, virtualPath.TrimStart('~')).Replace("//", "/");
+	        return string.Concat(_hostingEnvironment.ContentRootPath, virtualPath.TrimStart('~')).Replace("//", "/");
 	    }
 
         /// <summary>
@@ -128,11 +126,7 @@ namespace Umbraco.Core.IO
             var content = path.TrimStart(new[] { '~' });
 
             var fileInfo = _hostingEnvironment.ContentRootFileProvider.GetFileInfo(content);
-            if (fileInfo.Exists)
-                return fileInfo.PhysicalPath;
-
-            throw new FileNotFoundException($"No such file exists {fileInfo.PhysicalPath} (mapped from {path})", fileInfo.PhysicalPath);
-            
+            return fileInfo.PhysicalPath;
         }
 
   //      //use a tilde character instead of the complete path

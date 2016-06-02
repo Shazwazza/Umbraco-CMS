@@ -24,13 +24,12 @@ namespace Umbraco.Core.Manifest
         private readonly DirectoryInfo _pluginsDir;
         private readonly IRuntimeCacheProvider _cache;
         private readonly IOHelper _ioHelper;
-        private readonly TypeHelper _typeHelper;
 
         //used to strip comments
         private static readonly Regex CommentsSurround = new Regex(@"/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/", RegexOptions.Compiled);
         private static readonly Regex CommentsLine = new Regex(@"^\s*//.*?$", RegexOptions.Compiled | RegexOptions.Multiline);
 
-        public ManifestParser(ILogger logger, DirectoryInfo pluginsDir, IRuntimeCacheProvider cache, IOHelper ioHelper, TypeHelper typeHelper)
+        public ManifestParser(ILogger logger, DirectoryInfo pluginsDir, IRuntimeCacheProvider cache, IOHelper ioHelper)
         {
             if (logger == null) throw new ArgumentNullException("logger");
             if (pluginsDir == null) throw new ArgumentNullException("pluginsDir");
@@ -38,7 +37,6 @@ namespace Umbraco.Core.Manifest
             _logger = logger;
             _cache = cache;
             _ioHelper = ioHelper;
-            _typeHelper = typeHelper;
         }
 
         /// <summary>
@@ -62,7 +60,7 @@ namespace Umbraco.Core.Manifest
         {
             return JsonConvert.DeserializeObject<IEnumerable<PropertyEditor>>(
                 jsonEditors.ToString(),
-                new PropertyEditorConverter(_logger, _ioHelper, _typeHelper),
+                new PropertyEditorConverter(_logger, _ioHelper),
                 new PreValueFieldConverter());
         }
 

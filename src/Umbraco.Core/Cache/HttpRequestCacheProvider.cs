@@ -20,14 +20,7 @@ namespace Umbraco.Core.Cache
         {
             _context = context;
         }
-
-        // main constructor
-        // will use HttpContext.Current
-        public HttpRequestCacheProvider(/*Func<HttpContext> context*/)
-        {
-            //_context2 = context;
-        }
-
+        
         protected override IEnumerable<KeyValuePair<object, object>> GetDictionaryEntries()
         {
             const string prefix = CacheItemPrefix + "-";

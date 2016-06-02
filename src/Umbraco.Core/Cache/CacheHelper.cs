@@ -23,19 +23,7 @@ namespace Umbraco.Core.Cache
         public static CacheHelper CreateDisabledCacheHelper()
         {
             return new CacheHelper(NullRuntimeCache, NullStaticCache, NullRequestCache, new IsolatedRuntimeCache(t => NullRuntimeCache));
-        }
-
-	    /// <summary>
-	    /// Initializes a new instance for use in the web
-	    /// </summary>
-	    public CacheHelper()
-	        : this(
-                new ObjectCacheRuntimeCacheProvider(),
-	            new StaticCacheProvider(),
-                new HttpRequestCacheProvider(),
-                new IsolatedRuntimeCache(t => new ObjectCacheRuntimeCacheProvider()))
-	    {
-	    }
+        }	  
         
 	    /// <summary>
 	    /// Initializes a new instance based on the provided providers
@@ -46,8 +34,8 @@ namespace Umbraco.Core.Cache
 	    /// <param name="isolatedCacheManager"></param>
 	    public CacheHelper(
             IRuntimeCacheProvider httpCacheProvider,
-            [Inject(CacheCompositionRoot.StaticCache)]ICacheProvider staticCacheProvider,
-            [Inject(CacheCompositionRoot.RequestCache)]ICacheProvider requestCacheProvider,
+            ICacheProvider staticCacheProvider,
+            ICacheProvider requestCacheProvider,
             IsolatedRuntimeCache isolatedCacheManager)            
         {
 	        if (httpCacheProvider == null) throw new ArgumentNullException("httpCacheProvider");

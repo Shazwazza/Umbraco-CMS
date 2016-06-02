@@ -48,7 +48,7 @@ namespace Umbraco.Core
             var appId = string.Empty;           
 
             if (environment.ApplicationId != null)
-                appId = environment.ApplicationId.ReplaceNonAlphanumericChars(string.Empty);
+                appId = environment.ApplicationId;
 
             var lockName = "UMBRACO-" + appId + "-MAINDOM-LCK";
             _asyncLock = new AsyncLock(lockName);

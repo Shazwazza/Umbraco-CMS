@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using LightInject;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Core.Cache;
@@ -9,14 +11,18 @@ using Umbraco.Core.DependencyInjection;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Plugins;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Umbraco.Core.Configuration;
+using Umbraco.Core.IO;
+using Microsoft.AspNetCore.DataProtection;
+using Umbraco.Core.Services;
 
 namespace Umbraco.Core
 {
     public static class UmbracoCoreStartup
     {
-        public static void AddUmbracoCore(this IServiceCollection services)
+        public static void AddUmbracoCore(this IServiceCollection services, IConfiguration config)
         {
-            var app = new UmbracoApplication();
+            var app = new UmbracoApplication(config);
             services.AddUmbracoCore(app);
         }
 
@@ -25,39 +31,58 @@ namespace Umbraco.Core
         /// </summary>
         public static void AddUmbracoCore(this IServiceCollection services, UmbracoApplication umbracoApplication)
         {
+            var umbContainer = umbracoApplication.Container;
+
             //TODO: hrm, should we do anything with the aspnetcore service container? Maybe not here
             // but we could allow devs to do this: http://www.lightinject.net/microsoft.dependencyinjection/
             // maybe in the above method since this method 'could' be used for extensibility if devs created
             // their own instance of UmbracoApplication? we'll see. 
 
-            var container = umbracoApplication.Container;
+            // For now we're gonna put our app in the aspnet default container
+            services.AddTransient<UmbracoApplication>(factory => umbracoApplication);
+            umbContainer.Register<UmbracoApplication>(factory => umbracoApplication);
 
-            container.Register<IServiceContainer>(factory => container);
+            //register our own container in our own container too
+            umbContainer.Register<IServiceContainer>(factory => umbContainer);
+
+            //register aspnet bits
+            umbContainer.Register<IHostingEnvironment>(factory => factory.GetInstance<UmbracoApplication>().HostingEnvironment);
+            umbContainer.RegisterSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             //Umbraco Logging
-            container.RegisterSingleton<ILogger>(factory => umbracoApplication.Logger);
-            container.RegisterSingleton<IProfiler>(factory => umbracoApplication.Profiler);
-            container.RegisterSingleton<ProfilingLogger>(factory => new ProfilingLogger(factory.GetInstance<ILogger>(), factory.GetInstance<IProfiler>()));
+            umbContainer.RegisterSingleton<ILogger>(factory => umbracoApplication.Logger);
+            umbContainer.RegisterSingleton<IProfiler>(factory => umbracoApplication.Profiler);
+            umbContainer.RegisterSingleton<ProfilingLogger>(factory => new ProfilingLogger(factory.GetInstance<ILogger>(), factory.GetInstance<IProfiler>()));
 
             //Config
-            container.RegisterFrom(new ConfigurationCompositionRoot(umbracoApplication.Configuration));
+            umbContainer.RegisterFrom(new ConfigurationCompositionRoot(umbracoApplication.Configuration));
 
             //Cache
-            container.RegisterFrom<CacheCompositionRoot>();
+            umbContainer.RegisterFrom<CacheCompositionRoot>();
             
             //Datalayer/Repositories/SQL/Database/etc...
-            container.RegisterFrom<RepositoryCompositionRoot>();
+            umbContainer.RegisterFrom<RepositoryCompositionRoot>();
 
             //Data Services/ServiceContext/etc...
-            container.RegisterFrom<ServicesCompositionRoot>();
+            umbContainer.RegisterFrom<ServicesCompositionRoot>();
 
             //ModelMappers
             //container.RegisterFrom<CoreModelMappersCompositionRoot>();
-
-            container.RegisterSingleton<IServiceProvider, ActivatorServiceProvider>();
-            container.RegisterSingleton<PluginManager>();
-
-            container.RegisterSingleton<ApplicationContext>();
+            
+            umbContainer.RegisterSingleton<ITypeFinder>(factory => new TypeFinder(
+                factory.GetInstance<ILogger>(),
+                factory.GetInstance<IEnumerable<IAssemblyProvider>>()));
+            umbContainer.RegisterSingleton<IAssemblyProvider, DefaultUmbracoAssemblyProvider>();
+            umbContainer.RegisterSingleton<PluginManager>();
+            umbContainer.RegisterSingleton<IOHelper>();
+            umbContainer.RegisterSingleton<EnvironmentHelper>(factory => new EnvironmentHelper(
+                factory.GetInstance<IHostingEnvironment>(),
+                //Getting the application Id in aspnetcore is certainly not normal, here's the code that does this:
+                // https://github.com/aspnet/DataProtection/blob/82d92064c50c13f2737f96c6d76b45d68e9a9d05/src/Microsoft.AspNetCore.DataProtection.Interfaces/DataProtectionExtensions.cs#L97
+                // here's the comment that says it shouldn't be in hosting: https://github.com/aspnet/Hosting/issues/177#issuecomment-80738319
+                //Seems as though we can also use IApplicationDiscriminator which is what this does in this method but it also contains fallbacks
+                new LightInjectServiceProvider(factory).GetApplicationUniqueIdentifier()));
+            umbContainer.RegisterSingleton<ApplicationContext>();
 
             //TODO: We need to use Options<T> for IFileSystem implementations!
 
@@ -65,7 +90,13 @@ namespace Umbraco.Core
 
         public static void UseUmbracoCore(this IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime applicationLifetime)
         {
-            
+            var umbApp = app.ApplicationServices.GetRequiredService<UmbracoApplication>();
+            var umbContainer = umbApp.Container;
+
+            //Boot!
+            umbApp.StartApplication(env, applicationLifetime);
+
+            //var appCtx = umbContainer.GetInstance<ApplicationContext>();
         }
     }
 }

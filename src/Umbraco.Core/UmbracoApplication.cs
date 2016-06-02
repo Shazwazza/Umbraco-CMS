@@ -7,6 +7,7 @@ using LightInject;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Umbraco.Core.DependencyInjection;
 using Umbraco.Core.Logging;
 using Umbraco.Core.ObjectResolution;
 using ILogger = Umbraco.Core.Logging.ILogger;
@@ -18,8 +19,10 @@ namespace Umbraco.Core
     /// </summary>
     public class UmbracoApplication : DisposableObject
     {
-        public IHostingEnvironment HostingEnvironment { get; set; }
         private readonly IBootManager _bootManager;
+        private ILogger _logger;
+        private IProfiler _profiler;
+        private IHostingEnvironment _hostingEnvironment;
 
         /// <summary>
         /// Umbraco application's IoC container
@@ -27,15 +30,57 @@ namespace Umbraco.Core
         public IServiceContainer Container { get; }
 
         /// <summary>
+        /// Returns the configuration instance
+        /// </summary>
+        public IConfiguration Configuration { get; }
+
+        /// <summary>
+        /// Returns the logger instance for the application - this will be used throughout the entire app
+        /// </summary>
+        public virtual ILogger Logger
+        {
+            get
+            {
+                if (_logger == null) throw new InvalidOperationException($"{nameof(UmbracoApplication)}.{nameof(StartApplication)} has not been executed");
+                return _logger;
+            }
+        }
+
+        /// <summary>
+        /// Returns the hosting environment instance
+        /// </summary>
+        public IHostingEnvironment HostingEnvironment
+        {
+            get
+            {
+                if (_hostingEnvironment == null) throw new InvalidOperationException($"{nameof(UmbracoApplication)}.{nameof(StartApplication)} has not been executed");
+                return _hostingEnvironment;
+            }
+        }
+
+        /// <summary>
+        /// Returns the Profiler instance for the application - this will be used throughout the entire app
+        /// </summary>
+        public virtual IProfiler Profiler
+        {
+            get
+            {
+                if (_profiler == null) throw new InvalidOperationException($"{nameof(UmbracoApplication)}.{nameof(StartApplication)} has not been executed");
+                return _profiler;
+            }
+        }
+
+        /// <summary>
         /// Constructor
         /// </summary>
-        public UmbracoApplication()
+        public UmbracoApplication(IConfiguration config)
         {
             // create the container for the application, the boot managers are responsible for registrations
             var container = new ServiceContainer();
             container.EnableAnnotatedConstructorInjection();
-
             Container = container;
+
+            Configuration = config;
 
             _bootManager = new CoreBootManager(this);           
         }
@@ -51,13 +96,13 @@ namespace Umbraco.Core
         /// </summary>
         public void StartApplication(
             IHostingEnvironment hostingEnvironment, 
-            IApplicationLifetime applicationLifetime, 
-            IConfiguration umbracoConfig)
+            IApplicationLifetime applicationLifetime)
         {
             //TODO: set these accordingly - based on config, etc...
-            Logger = new DebugDiagnosticsLogger();
-            Profiler = null;
-            Configuration = umbracoConfig;
+
+            _logger = new DebugDiagnosticsLogger();
+            _profiler = new NoopProfiler();
+            _hostingEnvironment = hostingEnvironment;
 
             //register the application shutdown handler
             applicationLifetime.ApplicationStopping.Register(DisposeResources);
@@ -179,16 +224,6 @@ namespace Umbraco.Core
             return _bootManager;
         }
 
-        public IConfiguration Configuration { get; private set; }
-
-        /// <summary>
-        /// Returns the logger instance for the application - this will be used throughout the entire app
-        /// </summary>
-        public virtual ILogger Logger { get; private set; }
-
-        /// <summary>
-        /// Returns the Profiler instance for the application - this will be used throughout the entire app
-        /// </summary>
-        public virtual IProfiler Profiler { get; private set; }
+        
     }
 }

@@ -34,6 +34,8 @@ namespace Umbraco.Core.DependencyInjection
 
             container.RegisterSingleton<IScopeContextAdapter, DefaultScopeContextAdapter>();
 
+            container.RegisterSingleton<IDbProviderFactories, DefaultDbProviderFactories>();
+
             // register database factory
             // will be initialized with syntax providers and a logger, and will try to configure
             // from the default connection string name, if possible, else will remain non-configured

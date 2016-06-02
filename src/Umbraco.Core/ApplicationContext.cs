@@ -28,15 +28,15 @@ namespace Umbraco.Core
         // ReSharper disable once InconsistentNaming
         internal string _umbracoApplicationUrl;
 
-	    /// <summary>
-	    /// Initializes a new instance of the <see cref="ApplicationContext"/> class.
-	    /// </summary>
-	    /// <param name="dbContext">A database context.</param>
-	    /// <param name="serviceContext">A service context.</param>
-	    /// <param name="cache">A cache helper.</param>
-	    /// <param name="logger">A logger.</param>
-	    /// <param name="umbracoConfiggs"></param>
-	    public ApplicationContext(DatabaseContext dbContext, ServiceContext serviceContext, CacheHelper cache, ProfilingLogger logger, IUmbracoConfig umbracoConfig)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ApplicationContext"/> class.
+        /// </summary>
+        /// <param name="dbContext">A database context.</param>
+        /// <param name="serviceContext">A service context.</param>
+        /// <param name="cache">A cache helper.</param>
+        /// <param name="logger">A logger.</param>
+        /// <param name="umbracoConfig"></param>
+        public ApplicationContext(DatabaseContext dbContext, ServiceContext serviceContext, CacheHelper cache, ProfilingLogger logger, IUmbracoConfig umbracoConfig)
 	    {
             if (dbContext == null) throw new ArgumentNullException(nameof(dbContext));
             if (serviceContext == null) throw new ArgumentNullException(nameof(serviceContext));
@@ -46,25 +46,28 @@ namespace Umbraco.Core
             _databaseContext = dbContext;
             _services = serviceContext;
 	        _umbracoConfig = umbracoConfig;
+
 	        ApplicationCache = cache;
             ProfilingLogger = logger;
 
             Initialize();
 	    }
 
-	    /// <summary>
-	    /// Initializes a new instance of the <see cref="ApplicationContext"/> class.
-	    /// </summary>
-	    /// <param name="cache">A cache helper.</param>
-	    /// <param name="logger">A logger.</param>
-	    /// <param name="umbracoConfiggs"></param>
-	    /// <remarks>For Unit Tests only.</remarks>
-	    public ApplicationContext(CacheHelper cache, ProfilingLogger logger, IUmbracoConfig umbracoConfig)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ApplicationContext"/> class.
+        /// </summary>
+        /// <param name="cache">A cache helper.</param>
+        /// <param name="logger">A logger.</param>
+        /// <param name="umbracoConfig"></param>
+        /// <remarks>For Unit Tests only.</remarks>
+        public ApplicationContext(CacheHelper cache, ProfilingLogger logger, IUmbracoConfig umbracoConfig)
         {
 	        if (cache == null) throw new ArgumentNullException(nameof(cache));
 	        if (logger == null) throw new ArgumentNullException(nameof(logger));
 
-	        ApplicationCache = cache;
+            _umbracoConfig = umbracoConfig;
+
+            ApplicationCache = cache;
 	        ProfilingLogger = logger;
 
             Initialize();

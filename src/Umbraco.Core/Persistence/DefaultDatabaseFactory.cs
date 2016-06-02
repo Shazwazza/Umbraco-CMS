@@ -92,6 +92,9 @@ namespace Umbraco.Core.Persistence
 
             _logger.Debug<DefaultDatabaseFactory>("Created!");
 
+            if (string.IsNullOrWhiteSpace(connectionString.ConnectionString) || string.IsNullOrWhiteSpace(connectionString.ProviderName))
+                return; // not configured
+
             Configure(connectionString.ConnectionString, connectionString.ProviderName);
         }
 

@@ -20,7 +20,6 @@ namespace Umbraco.Core.PropertyEditors
     public class PropertyEditor : IParameterEditor
     {
         private readonly IOHelper _ioHelper;
-        private readonly TypeHelper _typeHelper;
 
         /// <summary>
         /// Exposes a logger
@@ -32,11 +31,10 @@ namespace Umbraco.Core.PropertyEditors
         /// <summary>
         /// The constructor will setup the property editor based on the attribute if one is found
         /// </summary>
-        public PropertyEditor(ILogger logger, IOHelper ioHelper, TypeHelper typeHelper)
+        public PropertyEditor(ILogger logger, IOHelper ioHelper)
         {            
             if (logger == null) throw new ArgumentNullException("logger");
             _ioHelper = ioHelper;
-            _typeHelper = typeHelper;
             Logger = logger;
             //defaults
             Icon = Constants.Icons.PropertyEditor;
@@ -177,7 +175,7 @@ namespace Umbraco.Core.PropertyEditors
             }
 
             //There's no manifest, just return an empty one
-            return new PreValueEditor(_typeHelper, _ioHelper);
+            return new PreValueEditor(_ioHelper);
         }
 
         protected bool Equals(PropertyEditor other)
