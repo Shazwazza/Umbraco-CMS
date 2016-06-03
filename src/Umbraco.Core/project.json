@@ -221,7 +221,8 @@
     "System.Xml.XPath": "4.0.1-rc2-*",
     "System.Xml.XPath.XDocument": "4.0.1-rc2-*",
     "System.ComponentModel.Annotations": "4.1.0-rc2-*",
-    "Microsoft.Extensions.DependencyModel": "1.0.0-rc2-final"
+    "Microsoft.Extensions.DependencyModel": "1.0.0-rc2-final",
+    "LightInject.Microsoft.DependencyInjection": "1.0.1-rc2-2"
   },
 
 

@@ -1,3 +1,4 @@
+using LightInject.Microsoft.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,27 +22,43 @@ namespace Umbraco.Core
 {
     public static class UmbracoCoreStartup
     {
-        public static void AddUmbracoCore(this IServiceCollection services, IConfiguration config)
+        /// <summary>
+        /// Build the core container which contains all core things required to build an app context
+        /// </summary>
+        /// <remarks>
+        /// In a web application, this is not called directly
+        /// </remarks>
+        public static IServiceProvider AddUmbracoCore(this IServiceCollection services, IConfiguration config)
         {
             var app = new UmbracoApplication(config);
             services.AddUmbracoCore(app);
+
+            return services.WrapAspNetContainer(app.Container);
+        }
+
+        /// <summary>
+        /// This sets up the default ASP.Net container to use LightInject
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="container"></param>
+        /// <remarks>
+        /// Developers may choose to replace that during startup but by default Umbraco will make ASP.Net use the LightInject container
+        /// </remarks>
+        public static IServiceProvider WrapAspNetContainer(this IServiceCollection services, IServiceContainer container)
+        {
+            return container.CreateServiceProvider(services);
         }
 
         /// <summary>
         /// Build the core container which contains all core things requird to build an app context
         /// </summary>
-        public static void AddUmbracoCore(this IServiceCollection services, UmbracoApplication umbracoApplication)
+        internal static void AddUmbracoCore(this IServiceCollection services, UmbracoApplication umbracoApplication)
         {
             var umbContainer = umbracoApplication.Container;
 
             //ensure it's not run twice
             if (umbContainer.AvailableServices.Any())
                 return;
-
-            //TODO: hrm, should we do anything with the aspnetcore service container? Maybe not here
-            // but we could allow devs to do this: http://www.lightinject.net/microsoft.dependencyinjection/
-            // maybe in the above method since this method 'could' be used for extensibility if devs created
-            // their own instance of UmbracoApplication? we'll see. 
 
             // For now we're gonna put our app in the aspnet default container
             services.AddTransient<UmbracoApplication>(factory => umbracoApplication);
@@ -64,7 +81,7 @@ namespace Umbraco.Core
 
             //Cache
             umbContainer.RegisterFrom<CacheCompositionRoot>();
-            
+
             //Datalayer/Repositories/SQL/Database/etc...
             umbContainer.RegisterFrom<RepositoryCompositionRoot>();
 
@@ -73,7 +90,7 @@ namespace Umbraco.Core
 
             //ModelMappers
             //container.RegisterFrom<CoreModelMappersCompositionRoot>();
-            
+
             umbContainer.RegisterSingleton<ITypeFinder>(factory => new TypeFinder(
                 factory.GetInstance<ILogger>(),
                 factory.GetInstance<IEnumerable<IAssemblyProvider>>()));
@@ -86,19 +103,31 @@ namespace Umbraco.Core
                 // https://github.com/aspnet/DataProtection/blob/82d92064c50c13f2737f96c6d76b45d68e9a9d05/src/Microsoft.AspNetCore.DataProtection.Interfaces/DataProtectionExtensions.cs#L97
                 // here's the comment that says it shouldn't be in hosting: https://github.com/aspnet/Hosting/issues/177#issuecomment-80738319
                 //Seems as though we can also use IApplicationDiscriminator which is what this does in this method but it also contains fallbacks
-                new LightInjectServiceProvider(factory).GetApplicationUniqueIdentifier()));
+                new Umbraco.Core.DependencyInjection.LightInjectServiceProvider(factory).GetApplicationUniqueIdentifier()));
             umbContainer.RegisterSingleton<ApplicationContext>();
-
+            
             //TODO: We need to use Options<T> for IFileSystem implementations!
+
 
         }
 
+        /// <summary>
+        /// Start the umbraco application
+        /// </summary>
+        /// <param name="app"></param>
+        /// <param name="env"></param>
+        /// <param name="applicationLifetime"></param>
         public static void UseUmbracoCore(this IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime applicationLifetime)
         {
+            if (app.Properties.ContainsKey("umbraco-core-started"))
+                throw new InvalidOperationException($"{nameof(UseUmbracoCore)} has already been called");
+
             var umbApp = app.ApplicationServices.GetRequiredService<UmbracoApplication>();
             
             //Boot!
             umbApp.StartApplication(env, applicationLifetime);
+
+            app.Properties["umbraco-core-started"] = true;
         }
     }
 }
