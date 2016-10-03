@@ -295,7 +295,7 @@ namespace Umbraco.Core.Persistence
                     .Skip(tIndex * (int)itemsPerTrans)
                     .Take((int)itemsPerTrans);
 
-                var cmd = db.CreateCommand(connection, "");
+                var cmd = db.CreateCommand(connection, CommandType.Text,  "");
                 var pocoValues = new List<string>();
                 var index = 0;
                 foreach (var poco in itemsForTrans)

@@ -7,7 +7,7 @@ namespace Umbraco.Core.Models.Mapping
     /// </summary>    
     public abstract class ModelMapperConfiguration
     {
-        public abstract void ConfigureMappings(IMapperConfiguration config);
+        public abstract void ConfigureMappings(IMapperConfigurationExpression config);
     }
 
     

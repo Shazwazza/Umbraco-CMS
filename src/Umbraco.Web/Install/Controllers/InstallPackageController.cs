@@ -3,10 +3,10 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
-using System.Web;
-using System.Web.Http;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
-using umbraco;
+
 using Umbraco.Core;
 using Umbraco.Web.Install.Models;
 using Umbraco.Web.WebApi;
@@ -20,10 +20,10 @@ namespace Umbraco.Web.Install.Controllers
 	/// Currently this is used for web services however we should/could eventually migrate the whole installer to MVC as it
 	/// is a bit of a mess currently.
 	/// </remarks>
-	[HttpInstallAuthorize]
+	[Authorize("Umbraco-Installation")]
     [AngularJsonOnlyConfiguration]
     [Obsolete("This is only used for the legacy way of installing starter kits in the back office")]
-    public class InstallPackageController : ApiController
+    public class InstallPackageController : Controller
 	{
 		private readonly ApplicationContext _applicationContext;
 

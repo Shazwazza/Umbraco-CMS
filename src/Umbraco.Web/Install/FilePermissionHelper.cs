@@ -4,7 +4,6 @@ using System.Linq;
 using System.Web;
 using System.IO;
 using Umbraco.Core.IO;
-using umbraco;
 
 namespace Umbraco.Web.Install
 {

@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
-using System.Web.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.Mvc;
 using Umbraco.Core;
 using Umbraco.Core.Configuration;
 using Umbraco.Core.IO;
-using Umbraco.Web.Security;
 
 namespace Umbraco.Web.Install.Controllers
 {
@@ -17,21 +19,17 @@ namespace Umbraco.Web.Install.Controllers
     /// <remarks>
     /// NOTE: All views must have their full paths as we do not have a custom view engine for the installation views!
     /// </remarks>
-    [InstallAuthorizeAttribute]
+    [Authorize("Umbraco-Installation")]
     public class InstallController : Controller
     {
         private readonly UmbracoContext _umbracoContext;
+        private readonly IOHelper _ioHelper;
 
-		public InstallController()
-			: this(UmbracoContext.Current)
-		{
-			
-		}
-
-        public InstallController(UmbracoContext umbracoContext)
-		{
-			_umbracoContext = umbracoContext;
-		}
+        public InstallController(UmbracoContext umbracoContext, IOHelper ioHelper)
+        {
+            _umbracoContext = umbracoContext;
+            _ioHelper = ioHelper;        
+        }
 
 
         [HttpGet]
@@ -42,30 +40,34 @@ namespace Umbraco.Web.Install.Controllers
                 return Redirect(SystemDirectories.Umbraco.EnsureEndsWith('/'));   
             }
 
-            if (ApplicationContext.Current.IsUpgrading)
-            {
-                var result = _umbracoContext.Security.ValidateCurrentUser(false);
+            //TODO: Make this happen
+            //if (ApplicationContext.Current.IsUpgrading)
+            //{
+            //    var result = _umbracoContext.Security.ValidateCurrentUser(false);
 
-                switch (result)
-                {
-                    case ValidateRequestAttempt.FailedNoPrivileges:
-                    case ValidateRequestAttempt.FailedNoContextId:
-                        return Redirect(SystemDirectories.Umbraco + "/AuthorizeUpgrade?redir=" + Server.UrlEncode(Request.RawUrl));
-                }
-            }
+            //    switch (result)
+            //    {
+            //        case ValidateRequestAttempt.FailedNoPrivileges:
+            //        case ValidateRequestAttempt.FailedNoContextId:
+            //            //TODO: Fix this up with correct config
+            //            return Redirect("umbraco/" + "/AuthorizeUpgrade?redir=" + UriHelper.Encode(Request.PathBase, Request.Path, Request.QueryString));
+            //    }
+            //}
        
 
             //gen the install base url
             ViewBag.InstallApiBaseUrl = Url.GetUmbracoApiService("GetSetup", "InstallApi", "UmbracoInstall").TrimEnd("GetSetup");
             
             //get the base umbraco folder
-            ViewBag.UmbracoBaseFolder = IOHelper.ResolveUrl(SystemDirectories.Umbraco);
+            ViewBag.UmbracoBaseFolder = _ioHelper.ResolveUrl(SystemDirectories.Umbraco);
 
             InstallHelper ih = new InstallHelper(_umbracoContext);
             ih.InstallStatus(false, "");
 
             //always ensure full path (see NOTE in the class remarks)
-            return View(GlobalSettings.Path.EnsureEndsWith('/') + "install/views/index.cshtml");
+            //TODO: Fix this up with correct config
+            //return View(GlobalSettings.Path.EnsureEndsWith('/') + "install/views/index.cshtml");            
+            return View("umbraco/" + "install/views/index.cshtml");
         }
 
     }

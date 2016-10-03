@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Formatting;
+using System.Buffers;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Newtonsoft.Json;
-using Umbraco.Core.Logging;
 
 namespace Umbraco.Web.WebApi
 {
@@ -18,37 +13,27 @@ namespace Umbraco.Web.WebApi
     /// <remarks>
     /// See: http://docs.angularjs.org/api/ng.$http (Security considerations)
     /// </remarks>
-    public class AngularJsonMediaTypeFormatter : JsonMediaTypeFormatter
+    public class AngularJsonMediaTypeFormatter : JsonOutputFormatter
     {
-
-        /// <summary>
-        /// This will prepend the special chars to the stream output that angular will strip
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="value"></param>
-        /// <param name="writeStream"></param>
-        /// <param name="content"></param>
-        /// <param name="transportContext"></param>
-        /// <returns></returns>
-        public override Task WriteToStreamAsync(Type type, object value, Stream writeStream, HttpContent content, TransportContext transportContext)
+        public AngularJsonMediaTypeFormatter(JsonSerializerSettings serializerSettings, ArrayPool<char> charPool) : base(serializerSettings, charPool)
         {
+        }
 
-            if (type == null) throw new ArgumentNullException("type");
-            if (writeStream == null) throw new ArgumentNullException("writeStream");
-
-            var effectiveEncoding = SelectCharacterEncoding(content == null ? null : content.Headers);
-
-            using (var streamWriter = new StreamWriter(writeStream, effectiveEncoding))
+        /// <inheritdoc />
+        public override async Task WriteResponseBodyAsync(OutputFormatterWriteContext context, Encoding selectedEncoding)
+        {
+            if (context == null) throw new ArgumentNullException("context");
+            if (selectedEncoding == null) throw new ArgumentNullException("selectedEncoding");
+            using (var writer = context.WriterFactory(context.HttpContext.Response.Body, selectedEncoding))
             {
                 //write the special encoding for angular json to the start
                 // (see: http://docs.angularjs.org/api/ng.$http)
-                streamWriter.Write(")]}',\n");
-                streamWriter.Flush();
-                return base.WriteToStreamAsync(type, value, writeStream, content, transportContext);
-            }
+                writer.Write(")]}',\n");
+                writer.Flush();
 
-            
+                WriteObject(writer, context.Object);
+                await writer.FlushAsync();
+            }                
         }
-
     }
 }

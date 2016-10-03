@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Web;
-using System.Web.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Umbraco.Core;
 using Umbraco.Core.IO;
 
@@ -14,17 +14,7 @@ namespace Umbraco.Web.Install
     {
         private readonly ApplicationContext _applicationContext;
         private readonly UmbracoContext _umbracoContext;
-
-        private ApplicationContext GetApplicationContext()
-        {
-            return _applicationContext ?? ApplicationContext.Current;
-        }
-
-        private UmbracoContext GetUmbracoContext()
-        {
-            return _umbracoContext ?? UmbracoContext.Current;
-        }
-
+        
         /// <summary>
         /// THIS SHOULD BE ONLY USED FOR UNIT TESTS
         /// </summary>

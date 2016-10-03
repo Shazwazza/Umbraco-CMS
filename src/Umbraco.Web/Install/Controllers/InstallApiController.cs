@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Web.Http;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Umbraco.Core;
@@ -15,15 +16,10 @@ using Umbraco.Web.WebApi;
 namespace Umbraco.Web.Install.Controllers
 {
     [AngularJsonOnlyConfiguration]
-    [HttpInstallAuthorize]
-    public class InstallApiController : ApiController
+    [Authorize("Umbraco-Installation")]
+    public class InstallApiController : Controller
     {
-        public InstallApiController()
-            : this(UmbracoContext.Current)
-        {
-
-        }
-
+        
         public InstallApiController(UmbracoContext umbracoContext)
         {
             if (umbracoContext == null) throw new ArgumentNullException("umbracoContext");
@@ -31,14 +27,14 @@ namespace Umbraco.Web.Install.Controllers
         }
 
         /// <summary>
-        /// Returns the current UmbracoContext
+        /// Returns the UmbracoContext
         /// </summary>
         public UmbracoContext UmbracoContext { get; private set; }
 
-        public ApplicationContext ApplicationContext
-        {
-            get { return UmbracoContext.Application; }
-        }
+        /// <summary>
+        /// Returns the ApplicationContext
+        /// </summary>
+        public ApplicationContext ApplicationContext { get; private set; }
 
         private InstallHelper _helper;
         internal InstallHelper InstallHelper
