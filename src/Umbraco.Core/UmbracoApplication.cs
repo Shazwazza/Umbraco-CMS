@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Umbraco.Core.DependencyInjection;
 using Umbraco.Core.Logging;
 using Umbraco.Core.ObjectResolution;
+using Microsoft.Extensions.PlatformAbstractions;
 using ILogger = Umbraco.Core.Logging.ILogger;
 
 namespace Umbraco.Core
@@ -22,7 +23,7 @@ namespace Umbraco.Core
         private readonly IBootManager _bootManager;
         private ILogger _logger;
         private IProfiler _profiler;
-        private IHostingEnvironment _hostingEnvironment;
+        //private ApplicationEnvironment _applicationEnvironment;
 
         /// <summary>
         /// Umbraco application's IoC container
@@ -46,17 +47,17 @@ namespace Umbraco.Core
             }
         }
 
-        /// <summary>
-        /// Returns the hosting environment instance
-        /// </summary>
-        public IHostingEnvironment HostingEnvironment
-        {
-            get
-            {
-                if (_hostingEnvironment == null) throw new InvalidOperationException($"{nameof(UmbracoApplication)}.{nameof(StartApplication)} has not been executed");
-                return _hostingEnvironment;
-            }
-        }
+        ///// <summary>
+        ///// Returns the hosting environment instance
+        ///// </summary>
+        //public ApplicationEnvironment ApplicationEnvironment
+        //{
+        //    get
+        //    {
+        //        if (_applicationEnvironment == null) throw new InvalidOperationException($"{nameof(UmbracoApplication)}.{nameof(StartApplication)} has not been executed");
+        //        return _applicationEnvironment;
+        //    }
+        //}
 
         /// <summary>
         /// Returns the Profiler instance for the application - this will be used throughout the entire app
@@ -95,14 +96,14 @@ namespace Umbraco.Core
         /// Boots up the Umbraco application
         /// </summary>
         public void StartApplication(
-            IHostingEnvironment hostingEnvironment, 
+            //ApplicationEnvironment hostingEnvironment, 
             IApplicationLifetime applicationLifetime)
         {
             //TODO: set these accordingly - based on config, etc...
 
             _logger = new DebugDiagnosticsLogger();
             _profiler = new NoopProfiler();
-            _hostingEnvironment = hostingEnvironment;
+            //_applicationEnvironment = hostingEnvironment;
 
             //register the application shutdown handler
             applicationLifetime.ApplicationStopping.Register(DisposeResources);

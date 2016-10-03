@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+
 using NPoco;
 
 namespace Umbraco.Core.Persistence.FaultHandling
@@ -26,6 +27,7 @@ namespace Umbraco.Core.Persistence.FaultHandling
 
         protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
         {
+            EnsureNotDisposed();
             return _inner.BeginTransaction(isolationLevel);
         }
 
@@ -33,37 +35,43 @@ namespace Umbraco.Core.Persistence.FaultHandling
         protected override bool CanRaiseEvents
         {
             get { return true; }
-        } 
+        }
 #endif
 
         public override void ChangeDatabase(string databaseName)
         {
+            EnsureNotDisposed();
             _inner.ChangeDatabase(databaseName);
         }
 
         public override void Close()
         {
-            _inner.Close();
+            _inner?.Close();
         }
 
         public override int ConnectionTimeout
         {
-            get { return _inner.ConnectionTimeout; }
+            get
+            {
+                EnsureNotDisposed();
+                return _inner.ConnectionTimeout;
+            }
         }
 
         protected override DbCommand CreateDbCommand()
         {
+            EnsureNotDisposed();
             return new FaultHandlingDbCommand(this, _inner.CreateCommand(), _cmdRetryPolicy);
         }
 
         public override string DataSource
         {
-            get { return _inner.DataSource; }
+            get { return _inner?.DataSource; }
         }
 
         public override string Database
         {
-            get { return _inner.Database; }
+            get { return _inner?.Database; }
         }
 
         protected override void Dispose(bool disposing)
@@ -77,8 +85,18 @@ namespace Umbraco.Core.Persistence.FaultHandling
             base.Dispose(disposing);
         }
 
+        protected void EnsureNotDisposed()
+        {
+            if (_inner == null)
+                throw new InvalidOperationException("This instance is already disposed");
+        }
+
 #if NET461
-        
+
+        public override void EnlistTransaction(System.Transactions.Transaction transaction)
+        {
+            _inner.EnlistTransaction(transaction);
+        }
 
         public override DataTable GetSchema()
         {
@@ -93,22 +111,27 @@ namespace Umbraco.Core.Persistence.FaultHandling
         public override DataTable GetSchema(string collectionName, string[] restrictionValues)
         {
             return _inner.GetSchema(collectionName, restrictionValues);
-        } 
+        }
 #endif
 
         public override void Open()
         {
+            EnsureNotDisposed();
             _conRetryPolicy.ExecuteAction(_inner.Open);
         }
 
         public override string ServerVersion
         {
-            get { return _inner.ServerVersion; }
+            get { return _inner?.ServerVersion; }
         }
 
         public override ConnectionState State
         {
-            get { return _inner.State; }
+            get
+            {
+                EnsureNotDisposed();
+                return _inner.State;
+            }
         }
 
         private void StateChangeHandler(object sender, StateChangeEventArgs stateChangeEventArguments)
@@ -148,14 +171,46 @@ namespace Umbraco.Core.Persistence.FaultHandling
 
         public override void Cancel()
         {
-            _inner.Cancel();
+            _inner?.Cancel();
         }
 
-        public override string CommandText { get { return _inner.CommandText; } set { _inner.CommandText = value; } }
+        public override string CommandText
+        {
+            get { return _inner?.CommandText; }
+            set
+            {
+                EnsureNotDisposed();
+                _inner.CommandText = value;
+            }
+        }
 
-        public override int CommandTimeout { get { return _inner.CommandTimeout; } set { _inner.CommandTimeout = value; } }
+        public override int CommandTimeout
+        {
+            get
+            {
+                EnsureNotDisposed();
+                return _inner.CommandTimeout;
+            }
+            set
+            {
+                EnsureNotDisposed();
+                _inner.CommandTimeout = value;
+            }
+        }
 
-        public override CommandType CommandType { get { return _inner.CommandType; } set { _inner.CommandType = value; } }
+        public override CommandType CommandType
+        {
+            get
+            {
+                EnsureNotDisposed();
+                return _inner.CommandType;
+            }
+            set
+            {
+                EnsureNotDisposed();
+                _inner.CommandType = value;
+            }
+        }
 
         protected override DbConnection DbConnection
         {
@@ -176,35 +231,46 @@ namespace Umbraco.Core.Persistence.FaultHandling
 
         protected override DbParameter CreateDbParameter()
         {
-            return _inner.CreateParameter();
+            return _inner?.CreateParameter();
         }
 
         protected override DbParameterCollection DbParameterCollection
         {
-            get { return _inner.Parameters; }
+            get { return _inner?.Parameters; }
         }
 
-        protected override DbTransaction DbTransaction { get { return _inner.Transaction; } set { _inner.Transaction = value; } }
+        protected override DbTransaction DbTransaction
+        {
+            get { return _inner?.Transaction; }
+            set
+            {
+                EnsureNotDisposed(); _inner.Transaction = value;
+            }
+        }
 
         public override bool DesignTimeVisible { get; set; }
 
         protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
         {
+            EnsureNotDisposed();
             return Execute(() => _inner.ExecuteReader(behavior));
         }
 
         public override int ExecuteNonQuery()
         {
+            EnsureNotDisposed();
             return Execute(() => _inner.ExecuteNonQuery());
         }
 
         public override object ExecuteScalar()
         {
+            EnsureNotDisposed();
             return Execute(() => _inner.ExecuteScalar());
         }
 
         private T Execute<T>(Func<T> f)
         {
+            EnsureNotDisposed();
             return _cmdRetryPolicy.ExecuteAction(() =>
             {
                 _connection.Ensure();
@@ -214,9 +280,15 @@ namespace Umbraco.Core.Persistence.FaultHandling
 
         public override void Prepare()
         {
-            _inner.Prepare();
+            _inner?.Prepare();
         }
 
         public override UpdateRowSource UpdatedRowSource { get { return _inner.UpdatedRowSource; } set { _inner.UpdatedRowSource = value; } }
+
+        protected void EnsureNotDisposed()
+        {
+            if (_inner == null)
+                throw new InvalidOperationException("This instance is already disposed");
+        }
     }
 }

@@ -22,7 +22,7 @@ namespace Umbraco.Core.DependencyInjection
                     //we need to have the dep clone runtime cache provider to ensure 
                     //all entities are cached properly (cloned in and cloned out)
                     new DeepCloneRuntimeCacheProvider(new ObjectCacheRuntimeCacheProvider())));
-
+            
             container.RegisterSingleton<CacheHelper>(factory => new CacheHelper(
                 factory.GetInstance<IRuntimeCacheProvider>(),
                 factory.GetInstance<ICacheProvider>(StaticCache),

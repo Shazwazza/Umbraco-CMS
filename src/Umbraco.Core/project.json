@@ -229,6 +229,14 @@
 
   "frameworks": {
     "net461": {
+      "frameworkAssemblies": {
+        "System.Configuration": "",
+        "System.Data": "",
+        "System.Runtime.Caching": "",
+        "System.Runtime.Serialization": "",
+        "System.Xml": "",
+        "System.Transactions":  ""
+      },
       "dependencies": {
         "MySql.Data": "6.9.9",
         "System.Runtime": "4.0.20.0",

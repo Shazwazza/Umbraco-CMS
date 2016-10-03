@@ -6,7 +6,7 @@ namespace Umbraco.Core.DependencyInjection
 {
     
 
-    internal static class LightInjectExtensions
+    public static class LightInjectExtensions
     {
         public static void RegisterFrom<TCompositionRoot>(this IServiceRegistry container, TCompositionRoot instance) 
             where TCompositionRoot : ICompositionRoot

@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "Umbraco.Test.Console": {
+      "commandName": "Project"
+    }
+  }
+}

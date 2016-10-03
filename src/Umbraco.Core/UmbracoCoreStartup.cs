@@ -15,6 +15,7 @@ using Umbraco.Core.Plugins;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Umbraco.Core.Configuration;
 using Umbraco.Core.IO;
+using Microsoft.Extensions.PlatformAbstractions;
 using Microsoft.AspNetCore.DataProtection;
 using Umbraco.Core.Services;
 
@@ -31,9 +32,7 @@ namespace Umbraco.Core
         public static IServiceProvider AddUmbracoCore(this IServiceCollection services, IConfiguration config)
         {
             var app = new UmbracoApplication(config);
-            services.AddUmbracoCore(app);
-
-            return services.WrapAspNetContainer(app.Container);
+            return services.AddUmbracoCore(app);
         }
 
         /// <summary>
@@ -52,13 +51,13 @@ namespace Umbraco.Core
         /// <summary>
         /// Build the core container which contains all core things requird to build an app context
         /// </summary>
-        internal static void AddUmbracoCore(this IServiceCollection services, UmbracoApplication umbracoApplication)
+        public static IServiceProvider AddUmbracoCore(this IServiceCollection services, UmbracoApplication umbracoApplication)
         {
             var umbContainer = umbracoApplication.Container;
 
-            //ensure it's not run twice
-            if (umbContainer.AvailableServices.Any())
-                return;
+            ////ensure it's not run twice
+            //if (umbContainer.AvailableServices.Any())
+            //    return services.WrapAspNetContainer(umbracoApplication.Container);
 
             // For now we're gonna put our app in the aspnet default container
             services.AddTransient<UmbracoApplication>(factory => umbracoApplication);
@@ -66,10 +65,10 @@ namespace Umbraco.Core
 
             //register our own container in our own container too
             umbContainer.Register<IServiceContainer>(factory => umbContainer);
-
-            //register aspnet bits
-            umbContainer.Register<IHostingEnvironment>(factory => factory.GetInstance<UmbracoApplication>().HostingEnvironment);
-            umbContainer.RegisterSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            
+            //umbContainer.Register<ApplicationEnvironment>(factory => factory.GetInstance<UmbracoApplication>().ApplicationEnvironment);
+            //register aspnet bits - TODO: DO we really want this registered for Umbraco Core?
+            //umbContainer.RegisterSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             //Umbraco Logging
             umbContainer.RegisterSingleton<ILogger>(factory => umbracoApplication.Logger);
@@ -105,29 +104,40 @@ namespace Umbraco.Core
                 //Seems as though we can also use IApplicationDiscriminator which is what this does in this method but it also contains fallbacks
                 new Umbraco.Core.DependencyInjection.LightInjectServiceProvider(factory).GetApplicationUniqueIdentifier()));
             umbContainer.RegisterSingleton<ApplicationContext>();
-            
+
             //TODO: We need to use Options<T> for IFileSystem implementations!
 
+            return services.WrapAspNetContainer(umbracoApplication.Container);
+        }
 
+        /// <summary>
+        /// Start the umbraco application and ensure it's only started once
+        /// </summary>
+        /// <param name="app"></param>
+        /// <param name="env"></param>
+        /// <param name="applicationLifetime"></param>
+        public static void UseUmbracoCore(this IApplicationBuilder app, /*ApplicationEnvironment env,*/ IApplicationLifetime applicationLifetime)
+        {
+            if (app.Properties.ContainsKey("umbraco-core-started"))
+                throw new InvalidOperationException($"{nameof(UseUmbracoCore)} has already been called");
+
+            app.ApplicationServices.UseUmbracoCore(/*env,*/ applicationLifetime);                       
+
+            app.Properties["umbraco-core-started"] = true;
         }
 
         /// <summary>
         /// Start the umbraco application
         /// </summary>
-        /// <param name="app"></param>
+        /// <param name="services"></param>
         /// <param name="env"></param>
         /// <param name="applicationLifetime"></param>
-        public static void UseUmbracoCore(this IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime applicationLifetime)
-        {
-            if (app.Properties.ContainsKey("umbraco-core-started"))
-                throw new InvalidOperationException($"{nameof(UseUmbracoCore)} has already been called");
+        public static void UseUmbracoCore(this IServiceProvider services, /*ApplicationEnvironment env,*/ IApplicationLifetime applicationLifetime)
+        {            
+            var umbApp = services.GetRequiredService<UmbracoApplication>();
 
-            var umbApp = app.ApplicationServices.GetRequiredService<UmbracoApplication>();
-            
             //Boot!
-            umbApp.StartApplication(env, applicationLifetime);
-
-            app.Properties["umbraco-core-started"] = true;
+            umbApp.StartApplication(/*env,*/ applicationLifetime);            
         }
     }
 }

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace Umbraco.Core
 {
-    internal class DefaultScopeContextAdapter : IScopeContextAdapter
+    public class DefaultScopeContextAdapter : IScopeContextAdapter
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly AsyncLocal<IDictionary<string,object>> _nonWebContext = new AsyncLocal<IDictionary<string, object>>();
@@ -16,9 +16,21 @@ namespace Umbraco.Core
         protected IDictionary<string, object> NonWebContext => 
             _nonWebContext.Value ?? (_nonWebContext.Value = new Dictionary<string, object>());
 
+        /// <summary>
+        /// Constructor for web applications
+        /// </summary>
+        /// <param name="httpContextAccessor"></param>
         public DefaultScopeContextAdapter(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
+        }
+
+        /// <summary>
+        /// Constructor for non-web applications
+        /// </summary>
+        public DefaultScopeContextAdapter()
+        {
+            _httpContextAccessor = null;
         }
 
         public object Get(string key)
@@ -48,7 +60,7 @@ namespace Umbraco.Core
 
         public void Clear(string key)
         {
-            if (_httpContextAccessor.HttpContext == null)
+            if (_httpContextAccessor?.HttpContext == null)
                 NonWebContext.Remove(key);
             else
                 _httpContextAccessor.HttpContext.Items.Remove(key);

@@ -1,6 +1,6 @@
 namespace Umbraco.Core
 {
-    internal interface IScopeContextAdapter
+    public interface IScopeContextAdapter
     {
         // ok to get a non-existing key, returns null
 

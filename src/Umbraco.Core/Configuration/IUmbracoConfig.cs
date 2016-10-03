@@ -28,6 +28,7 @@ namespace Umbraco.Core.Configuration
     public class UmbracoConfigSection : IUmbracoConfig
     {
         private readonly IConfiguration _config;
+        private IConnectionString _connectionString;
 
         public UmbracoConfigSection(IConfiguration configuration)
         {
@@ -38,9 +39,10 @@ namespace Umbraco.Core.Configuration
         {
             get
             {
+                if (_connectionString != null) return _connectionString;
                 var connectionString = _config.GetSection("connectionString");
                 if (connectionString == null) return null;
-                return new ConnectionStringSection(connectionString);
+                return _connectionString = new ConnectionStringSection(connectionString);
             }
         }
 
@@ -98,9 +100,8 @@ namespace Umbraco.Core.Configuration
 
         public void Set(string connString, string providerName)
         {
-            //TODO: Do we need to do something like this with a ConfigurationProvider?
-
-            throw new NotImplementedException();
+            _config["providerName"] = providerName;
+            _config["connectionString"] = connString;
         }
     }
 }

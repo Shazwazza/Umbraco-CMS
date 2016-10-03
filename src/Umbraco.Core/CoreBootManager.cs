@@ -74,7 +74,7 @@ namespace Umbraco.Core
             ProfilingLogger = new ProfilingLogger(_umbracoApplication.Logger, _umbracoApplication.Profiler);
             
             _timer = ProfilingLogger.TraceDuration<CoreBootManager>(
-                $"Umbraco {UmbracoVersion.GetSemanticVersion().ToSemanticString()} application starting on {_umbracoApplication.HostingEnvironment.EnvironmentName}",
+                $"Umbraco {UmbracoVersion.GetSemanticVersion().ToSemanticString()} application starting on {Environment.MachineName}",
                 "Umbraco application startup complete");
 
             //set the singleton resolved from the core container

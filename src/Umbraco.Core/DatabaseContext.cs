@@ -29,7 +29,7 @@ namespace Umbraco.Core
     {
         private readonly IDatabaseFactory _factory;
         private readonly ILogger _logger;
-        private readonly IHostingEnvironment _applicationEnvironment;
+        private readonly string _contentRootPath;
         private readonly IUmbracoConfig _umbracoConfig;
         private DatabaseSchemaResult _databaseSchemaValidationResult;
 
@@ -44,14 +44,14 @@ namespace Umbraco.Core
         /// Umbraco connection string is not available because we are installing. In which case this
         /// database context must sort things out and configure the database factory before it can be
         /// used.</remarks>
-        public DatabaseContext(IDatabaseFactory factory, ILogger logger, IHostingEnvironment applicationEnvironment, IUmbracoConfig umbracoConfig)
+        public DatabaseContext(IDatabaseFactory factory, ILogger logger, ApplicationEnvironment applicationEnvironment, IUmbracoConfig umbracoConfig)
         {
             if (factory == null) throw new ArgumentNullException(nameof(factory));
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
             _factory = factory;
             _logger = logger;
-            _applicationEnvironment = applicationEnvironment;
+            _contentRootPath = applicationEnvironment.ApplicationBasePath;
             _umbracoConfig = umbracoConfig;
         }
 
@@ -113,7 +113,7 @@ namespace Umbraco.Core
 #if NET461
             SaveConnectionString(EmbeddedDatabaseConnectionString, Constants.DbProviderNames.SqlCe, logger);
 
-            var path = Path.Combine(_applicationEnvironment.ContentRootPath, "App_Data", "Umbraco.sdf");
+            var path = Path.Combine(_contentRootPath, "App_Data", "Umbraco.sdf");
             if (File.Exists(path) == false)
             {
                 // this should probably be in a "using (new SqlCeEngine)" clause but not sure
@@ -287,7 +287,7 @@ namespace Umbraco.Core
 
         #region Database Schema
 
-        internal DatabaseSchemaResult ValidateDatabaseSchema()
+        public DatabaseSchemaResult ValidateDatabaseSchema()
         {
             if (_factory.Configured == false)
                 return new DatabaseSchemaResult(SqlSyntax);
@@ -301,7 +301,7 @@ namespace Umbraco.Core
             return _databaseSchemaValidationResult;
         }
 
-        internal Result CreateDatabaseSchemaAndData(ApplicationContext applicationContext)
+        public DbInstallResult CreateDatabaseSchemaAndData(ApplicationContext applicationContext)
         {
             try
             {
@@ -347,13 +347,13 @@ namespace Umbraco.Core
 
                     //now that everything is done, we need to determine the version of SQL server that is executing
                     _logger.Info<DatabaseContext>("Database configuration status: " + message);
-                    return new Result { Message = message, Success = true, Percentage = "100" };
+                    return new DbInstallResult { Message = message, Success = true, Percentage = "100" };
                 }
 
                 //we need to do an upgrade so return a new status message and it will need to be done during the next step
                 _logger.Info<DatabaseContext>("Database requires upgrade");
                 message = "<p>Upgrading database, this may take some time...</p>";
-                return new Result
+                return new DbInstallResult
                     {
                         RequiresUpgrade = true,
                         Message = message,
@@ -371,7 +371,7 @@ namespace Umbraco.Core
         /// This assumes all of the previous checks are done!
         /// </summary>
         /// <returns></returns>
-        internal Result UpgradeSchemaAndData(IMigrationEntryService migrationEntryService, IMigrationResolver migrationResolver)
+        public DbInstallResult UpgradeSchemaAndData(IMigrationEntryService migrationEntryService, IMigrationResolver migrationResolver)
         {
             try
             {
@@ -446,7 +446,7 @@ namespace Umbraco.Core
 
                 _logger.Info<DatabaseContext>("Database configuration status: " + message);
 
-                return new Result { Message = message, Success = true, Percentage = "100" };
+                return new DbInstallResult { Message = message, Success = true, Percentage = "100" };
             }
             catch (Exception ex)
             {
@@ -496,11 +496,11 @@ namespace Umbraco.Core
             return string.Empty;
         }*/
 
-        private Attempt<Result> CheckReadyForInstall()
+        private Attempt<DbInstallResult> CheckReadyForInstall()
         {
             if (_factory.Configured == false)
             {
-                return Attempt.Fail(new Result
+                return Attempt.Fail(new DbInstallResult
                 {
                     Message = "Database configuration is invalid. Please check that the entered database exists and"
                         + " that the provided username and password has write access to the database.",
@@ -508,10 +508,10 @@ namespace Umbraco.Core
                     Percentage = "10"
                 });
             }
-            return Attempt<Result>.Succeed();
+            return Attempt<DbInstallResult>.Succeed();
         }
 
-        private Result HandleInstallException(Exception ex)
+        private DbInstallResult HandleInstallException(Exception ex)
         {
             _logger.Error<DatabaseContext>("Database configuration failed", ex);
 
@@ -520,7 +520,7 @@ namespace Umbraco.Core
                 _logger.Info<DatabaseContext>("The database schema validation produced the following summary: \n" + _databaseSchemaValidationResult.GetSummary());
             }
 
-            return new Result
+            return new DbInstallResult
             {
                 Message =
                     "The database configuration failed with the following message: " + ex.Message +
@@ -530,13 +530,7 @@ namespace Umbraco.Core
             };
         }
 
-        internal class Result
-        {
-            public bool RequiresUpgrade { get; set; }
-            public string Message { get; set; }
-            public bool Success { get; set; }
-            public string Percentage { get; set; }
-        }
+        
 
         #endregion
 
@@ -578,5 +572,13 @@ namespace Umbraco.Core
         {
             return Database.Sql();
         }
+    }
+
+    public class DbInstallResult
+    {
+        public bool RequiresUpgrade { get; set; }
+        public string Message { get; set; }
+        public bool Success { get; set; }
+        public string Percentage { get; set; }
     }
 }

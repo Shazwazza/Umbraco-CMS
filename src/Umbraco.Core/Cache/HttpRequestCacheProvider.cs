@@ -13,9 +13,8 @@ namespace Umbraco.Core.Cache
     {
         
         private readonly IHttpContextAccessor _context;
-        private object _lock = new object();
+        private readonly object _lock = new object();
         
-        // for unit tests
         public HttpRequestCacheProvider(IHttpContextAccessor context)
         {
             _context = context;

@@ -1,5 +1,7 @@
 using LightInject;
+using Microsoft.AspNetCore.Hosting;
 using Umbraco.Core.Cache;
+using Umbraco.Core.Configuration;
 using Umbraco.Core.IO;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Persistence;
@@ -24,6 +26,7 @@ namespace Umbraco.Core.DependencyInjection
     public sealed class RepositoryCompositionRoot : ICompositionRoot
     {
         public const string DisabledCache = "DisabledCache";
+        public const string ScopeContextAdapter = "ScopeContextAdapter";
 
         public void Compose(IServiceRegistry container)
         {
@@ -32,7 +35,7 @@ namespace Umbraco.Core.DependencyInjection
             container.Register<ISqlSyntaxProvider, SqlCeSyntaxProvider>("SqlCeSyntaxProvider");
             container.Register<ISqlSyntaxProvider, SqlServerSyntaxProvider>("SqlServerSyntaxProvider");
 
-            container.RegisterSingleton<IScopeContextAdapter, DefaultScopeContextAdapter>();
+            container.RegisterSingleton<IScopeContextAdapter, DefaultScopeContextAdapter>(ScopeContextAdapter);
 
             container.RegisterSingleton<IDbProviderFactories, DefaultDbProviderFactories>();
 
