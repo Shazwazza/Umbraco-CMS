@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using ConsoleTables.Core;
 using Microsoft.Extensions.CommandLineUtils;
 using Umbraco.Core;
 using Umbraco.Core.Models;
+using Umbraco.Core.Services;
 
 namespace Umbraco.Test.Console
 {
@@ -10,36 +13,92 @@ namespace Umbraco.Test.Console
     /// </summary>
     public static class CommandLineApplicationCommands
     {
-        public static void UseDocumentTypeCommand(this CommandLineApplication app, ApplicationContext appContext)
+        private static void ContentTypeOptions<TContentType>(this CommandLineApplication c, 
+            string ctTypeName, 
+            IContentTypeServiceBase<TContentType> ctService, 
+            Func<int> onExecute = null) 
+            where TContentType : IContentTypeComposition
         {
-            app.Command("dt", c =>
+            c.Description = $"Commands for working with the Umbraco {ctTypeName} type objects";            
+            var optionList = c.Option("-l|--list", $"Lists the available {ctTypeName} types", CommandOptionType.NoValue);            
+            c.HelpOption("-h");
+            c.UseBackCommand();
+            c.OnExecute(() =>
             {
-                c.Description = "Commands for working with the Umbraco Document Type objects";
-                
-                var optionCreate = c.Option("-c|--create", "Creates a new content type", CommandOptionType.NoValue);
-                var optionName = c.Option("-n|--name <NAME>", "The name of the content type", CommandOptionType.SingleValue);
-                var optionAlias = c.Option("-a|--alias <ALIAS>", "The alias of the content type", CommandOptionType.SingleValue);
+                if (optionList.HasValue())
+                {
+                    var table = new ConsoleTable("Id", "Name", "Alias");
+
+                    var result = ctService.GetAll();
+                    foreach (var dt in result)
+                    {
+                        table.AddRow(dt.Id, dt.Name, dt.Alias);
+                    }
+                    table.Write();
+                    System.Console.WriteLine();
+                }
+
+                if (onExecute != null)
+                    return onExecute();
+
+                c.Prompt();
+
+                return 0;
+            });
+        }
+
+        public static void UseMediaTypeCommand(this CommandLineApplication app, ApplicationContext appContext)
+        {
+            app.Command("medtype", c =>
+            {                
+                c.ContentTypeOptions("media", appContext.Services.MediaTypeService);
+                c.UseContentTypeCreateCommand("media", appContext.Services.MediaTypeService,
+                    (name, alias) => new MediaType(-1)
+                    {
+                        Name = name,
+                        Alias = alias
+                    });
+            });
+        }
+
+        public static void UseContentTypeCreateCommand<TContentType>(this CommandLineApplication app,
+            string ctTypeName,
+            IContentTypeServiceBase<TContentType> ctService,             
+            Func<string, string, TContentType> create)
+            where TContentType : IContentTypeComposition
+        {
+            app.Command("create", c =>
+            {
+                c.Description = $"Creates an Umbraco {ctTypeName} type objects";
+                var optionName = c.Option("-n|--name <NAME>", $"The name of the {ctTypeName} type", CommandOptionType.SingleValue);
+                var optionAlias = c.Option("-a|--alias <ALIAS>", $"The alias of the {ctTypeName} type", CommandOptionType.SingleValue);
                 c.HelpOption("-h");
 
                 c.OnExecute(() =>
                 {
-                    if (optionCreate.HasValue())
-                    {
-                        var name = optionName.Value();
-                        var alias = optionAlias.Value();
+                    var name = optionName.Value();
+                    var alias = optionAlias.Value();
 
-                        System.Console.WriteLine($"Creating doc type: {name}, Alias: {alias}");
-                        var ct = new ContentType(-1)
-                        {
-                            Name = name,
-                            Alias = alias
-                        };
-                        appContext.Services.ContentTypeService.Save(ct);
-                        System.Console.WriteLine($"Created! Id: {ct.Id}");
-                    }
-
+                    System.Console.WriteLine($"Creating {ctTypeName} type: {name}, Alias: {alias}");
+                    var ct = create(name, alias);
+                    ctService.Save(ct);
+                    System.Console.WriteLine($"Created! Id: {ct.Id}");
                     return 0;
                 });
+            });
+        }
+
+        public static void UseDocumentTypeCommand(this CommandLineApplication app, ApplicationContext appContext)
+        {
+            app.Command("doctype", c =>
+            {
+                c.ContentTypeOptions("document", appContext.Services.MediaTypeService);
+                c.UseContentTypeCreateCommand("document", appContext.Services.ContentTypeService,
+                    (name, alias) => new ContentType(-1)
+                    {
+                        Name = name,
+                        Alias = alias
+                    });                
             });
         }
 
@@ -51,7 +110,8 @@ namespace Umbraco.Test.Console
                 c.HelpOption("-h");
 
                 c.UseDocumentTypeCommand(appContext);
-                c.UseQuitCommand();
+                c.UseMediaTypeCommand(appContext);
+                c.UseBackCommand();
 
                 c.OnExecute(() =>
                 {
@@ -70,7 +130,7 @@ namespace Umbraco.Test.Console
 
                 c.UseDbInstallCommand(appContext);
                 c.UseConnectCommand(appContext);
-                c.UseQuitCommand();
+                c.UseBackCommand();
 
                 c.OnExecute(() =>
                 {
@@ -104,11 +164,17 @@ namespace Umbraco.Test.Console
             });
         }
 
-        public static void UseQuitCommand(this CommandLineApplication app)
+        /// <summary>
+        /// Moves the cursor back on level (or exits)
+        /// </summary>
+        /// <param name="app"></param>
+        /// <param name="name"></param>
+        /// <param name="desc"></param>
+        public static void UseBackCommand(this CommandLineApplication app, string name = "back", string desc = "Moves the cursor back one level")
         {
-            app.Command("quit", c =>
+            app.Command(name, c =>
             {
-                c.Description = "Exits application";
+                c.Description = desc;
                 c.OnExecute(() => 101);
             });
         }

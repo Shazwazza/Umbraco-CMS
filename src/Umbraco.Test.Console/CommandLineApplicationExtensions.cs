@@ -42,7 +42,6 @@ namespace Umbraco.Test.Console
                 if (result >= 100)
                     return;
 
-                System.Console.WriteLine("Done.");
                 System.Console.WriteLine();
             }
         }

@@ -138,7 +138,7 @@ namespace Umbraco.Test.Console
 
             app.UseDbCommand(appCtx);
             app.UseSchemaCommand(appCtx);
-            app.UseQuitCommand();
+            app.UseBackCommand("quit", "Exits the application");
             
             //app.UseDbInstallCommand(_services.GetRequiredService<ApplicationContext>());
             //app.UseConnectCommand(_services.GetRequiredService<ApplicationContext>());

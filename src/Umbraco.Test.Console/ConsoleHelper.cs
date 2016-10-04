@@ -3,7 +3,8 @@
 namespace Umbraco.Test.Console
 {
     public static class ConsoleHelper
-    {
+    {       
+
         public static void WriteDictionaryVals(IDictionary<string, object> nameVals)
         {
             foreach (var item in nameVals)
