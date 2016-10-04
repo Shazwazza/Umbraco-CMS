@@ -55,6 +55,9 @@
       "includeFiles": [
         "Configuration/IUmbracoConfig.cs",
         "Configuration/UmbracoSettings/IContentSection.cs",
+        "Configuration/UmbracoSettings/IUmbracoSettingsSection.cs",
+        "Configuration/UmbracoSettings/ContentElement.cs",
+        "Configuration/UmbracoSettings/UmbracoSettingsSection.cs",
         "Configuration/UmbracoSettings/IImagingAutoFillUploadField.cs",
         "Configuration/UmbracoSettings/IContentErrorPage.cs",
         "Configuration/Grid/IGridEditorConfig.cs",
@@ -111,6 +114,8 @@
 
 
         "Strings/IShortStringHelper.cs",
+        "Strings/Utf8ToAsciiConverter.cs",
+        "Strings/DefaultShortStringHelper.cs",
         "Strings/CleanStringType.cs",
         "Strings/IUrlSegmentProvider.cs",
         "Strings/ContentBaseExtensions.cs",
@@ -202,28 +207,30 @@
   },
 
   "dependencies": {
-    "LightInject": "4.1.2",
-    "Microsoft.Extensions.Configuration.Abstractions": "1.0.0",
-    "System.Text.Encodings.Web": "4.0.0",
-    "ReflectionBridge": "0.0.11",
-    "System.Xml.XmlDocument": "4.0.1",
-    "System.Xml.XPath": "4.0.1",
-    "System.Xml.XPath.XDocument": "4.0.1",
-    "System.ComponentModel.Annotations": "4.1.0",
     "AutoMapper": "5.1.1",
+    "LightInject": "4.1.2",
     "LightInject.Microsoft.DependencyInjection": "1.1.1",
     "Microsoft.AspNetCore.DataProtection": "1.0.0",
     "Microsoft.AspNetCore.Identity": "1.0.0",
     "Microsoft.Extensions.Caching.Memory": "1.0.0",
+    "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0",
+    "Microsoft.Extensions.Configuration.Abstractions": "1.0.0",
     "Microsoft.Extensions.Configuration.Json": "1.0.0",
     "Microsoft.Extensions.DependencyInjection": "1.0.0",
     "Microsoft.Extensions.DependencyModel": "1.0.0",
     "Microsoft.Extensions.Logging": "1.0.0",
     "Microsoft.Extensions.PlatformAbstractions": "1.0.0",
+    "NETStandard.Library": "1.6.0",
     "Newtonsoft.Json": "9.0.1",
     "NPoco": "3.4.4",
+    "ReflectionBridge": "0.0.11",
+    "System.ComponentModel.Annotations": "4.1.0",
     "System.Data.Common": "4.1.0",
-    "System.Runtime.Serialization.Primitives": "4.1.1"    
+    "System.Runtime.Serialization.Primitives": "4.1.1",
+    "System.Text.Encodings.Web": "4.0.0",
+    "System.Xml.XmlDocument": "4.0.1",
+    "System.Xml.XPath": "4.0.1",
+    "System.Xml.XPath.XDocument": "4.0.1"
   },
 
 
@@ -235,11 +242,10 @@
         "System.Runtime.Caching": "",
         "System.Runtime.Serialization": "",
         "System.Xml": "",
-        "System.Transactions":  ""
+        "System.Transactions": ""
       },
       "dependencies": {
-        "MySql.Data": "6.9.9",
-        "System.Runtime": "4.0.20.0",
+        "MySql.Data": "6.9.9",        
         "System.Threading.Tasks.Parallel": "4.0.0.0",
         "MiniProfiler": "3.2.0.157",
         "Microsoft.SqlServer.Compact": "4.0.8876.1",

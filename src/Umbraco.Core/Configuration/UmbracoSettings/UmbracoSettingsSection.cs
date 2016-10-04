@@ -1,170 +1,83 @@
-﻿using System;
-using System.Configuration;
-using System.Linq;
+﻿
+using System;
 
 namespace Umbraco.Core.Configuration.UmbracoSettings
 {
 
-    public class UmbracoSettingsSection : ConfigurationSection, IUmbracoSettingsSection
+    public class UmbracoSettingsSection : IUmbracoSettingsSection
     {
-        [ConfigurationProperty("content")]
-        internal ContentElement Content
+        public UmbracoSettingsSection()
         {
-            get { return (ContentElement)this["content"]; }
+            Content = new ContentElement();
         }
 
-        [ConfigurationProperty("security")]
-        internal SecurityElement Security
-        {
-            get { return (SecurityElement)this["security"]; }
-        }
+        //bindable
+        internal ContentElement Content { get; set; }
 
-        [ConfigurationProperty("requestHandler")]
-        internal RequestHandlerElement RequestHandler
-        {
-            get { return (RequestHandlerElement)this["requestHandler"]; }
-        }
-
-        [ConfigurationProperty("templates")]
-        internal TemplatesElement Templates
-        {
-            get { return (TemplatesElement)this["templates"]; }
-        }
-
-        [ConfigurationProperty("developer")]
-        internal DeveloperElement Developer
-        {
-            get { return (DeveloperElement)this["developer"]; }
-        }
-
-
-        [ConfigurationProperty("logging")]
-        internal LoggingElement Logging
-        {
-            get { return (LoggingElement)this["logging"]; }
-        }
-
-        [ConfigurationProperty("scheduledTasks")]
-        internal ScheduledTasksElement ScheduledTasks
-        {
-            get { return (ScheduledTasksElement)this["scheduledTasks"]; }
-        }
-
-        [ConfigurationProperty("distributedCall")]
-        internal DistributedCallElement DistributedCall
-        {
-            get { return (DistributedCallElement)this["distributedCall"]; }
-        }
-
-        private RepositoriesElement _defaultRepositories;
-
-        [ConfigurationProperty("repositories")]
-        internal RepositoriesElement PackageRepositories
-        {
-            get
-            {
-
-                if (_defaultRepositories != null)
-                {
-                    return _defaultRepositories;
-                }
-
-                //here we need to check if this element is defined, if it is not then we'll setup the defaults
-                var prop = Properties["repositories"];
-                var repos = this[prop] as ConfigurationElement;
-                if (repos != null && repos.ElementInformation.IsPresent == false)
-                {
-                    var collection = new RepositoriesCollection
-                        {
-                            new RepositoryElement() {Name = "Umbraco package Repository", Id = new Guid("65194810-1f85-11dd-bd0b-0800200c9a66")}
-                        };
-
-                    
-                    _defaultRepositories = new RepositoriesElement()
-                        {
-                            Repositories = collection
-                        };
-
-                    return _defaultRepositories;
-                }
-
-                //now we need to ensure there is *always* our umbraco repo! its hard coded in the codebase!
-                var reposElement = (RepositoriesElement)base["repositories"];
-                if (reposElement.Repositories.All(x => x.Id != new Guid("65194810-1f85-11dd-bd0b-0800200c9a66")))
-                {
-                    reposElement.Repositories.Add(new RepositoryElement() { Name = "Umbraco package Repository", Id = new Guid("65194810-1f85-11dd-bd0b-0800200c9a66") });                    
-                }
-
-                return reposElement;
-            }
-        }
-
-        [ConfigurationProperty("providers")]
-        internal ProvidersElement Providers
-        {
-            get { return (ProvidersElement)this["providers"]; }
-        }
-
-        [ConfigurationProperty("web.routing")]
-        internal WebRoutingElement WebRouting
-        {
-            get { return (WebRoutingElement)this["web.routing"]; }
-        }
-
+        //explicit
         IContentSection IUmbracoSettingsSection.Content
         {
             get { return Content; }
         }
 
-        ISecuritySection IUmbracoSettingsSection.Security
-        {
-            get { return Security; }
-        }
+        //public IDeveloperSection Developer { get; set; }
 
-        IRequestHandlerSection IUmbracoSettingsSection.RequestHandler
-        {
-            get { return RequestHandler; }
-        }
+        //public IDistributedCallSection DistributedCall { get; set; }
 
-        ITemplatesSection IUmbracoSettingsSection.Templates
-        {
-            get { return Templates; }
-        }
+        //public ILoggingSection Logging { get; set; }
 
-        IDeveloperSection IUmbracoSettingsSection.Developer
-        {
-            get { return Developer; }
-        }
+        //public IRepositoriesSection PackageRepositories { get; set; }
 
-        ILoggingSection IUmbracoSettingsSection.Logging
-        {
-            get { return Logging; }
-        }
+        //public IProvidersSection Providers { get; set; }
 
-        IScheduledTasksSection IUmbracoSettingsSection.ScheduledTasks
-        {
-            get { return ScheduledTasks; }
-        }
+        //public IRequestHandlerSection RequestHandler { get; set; }
 
-        IDistributedCallSection IUmbracoSettingsSection.DistributedCall
-        {
-            get { return DistributedCall; }
-        }
+        //public IScheduledTasksSection ScheduledTasks { get; set; }
 
-        IRepositoriesSection IUmbracoSettingsSection.PackageRepositories
-        {
-            get { return PackageRepositories; }
-        }
+        //public ISecuritySection Security { get; set; }
 
-        IProvidersSection IUmbracoSettingsSection.Providers
-        {
-            get { return Providers; }
-        }
+        //public IWebRoutingSection WebRouting { get; set; }
 
-        IWebRoutingSection IUmbracoSettingsSection.WebRouting
-        {
-            get { return WebRouting; }
-        }
+        //[ConfigurationProperty("repositories")]
+        //internal RepositoriesElement PackageRepositories
+        //{
+        //    get
+        //    {
+
+        //        if (_defaultRepositories != null)
+        //        {
+        //            return _defaultRepositories;
+        //        }
+
+        //        //here we need to check if this element is defined, if it is not then we'll setup the defaults
+        //        var prop = Properties["repositories"];
+        //        var repos = this[prop] as ConfigurationElement;
+        //        if (repos != null && repos.ElementInformation.IsPresent == false)
+        //        {
+        //            var collection = new RepositoriesCollection
+        //                {
+        //                    new RepositoryElement() {Name = "Umbraco package Repository", Id = new Guid("65194810-1f85-11dd-bd0b-0800200c9a66")}
+        //                };
+
+
+        //            _defaultRepositories = new RepositoriesElement()
+        //                {
+        //                    Repositories = collection
+        //                };
+
+        //            return _defaultRepositories;
+        //        }
+
+        //        //now we need to ensure there is *always* our umbraco repo! its hard coded in the codebase!
+        //        var reposElement = (RepositoriesElement)base["repositories"];
+        //        if (reposElement.Repositories.All(x => x.Id != new Guid("65194810-1f85-11dd-bd0b-0800200c9a66")))
+        //        {
+        //            reposElement.Repositories.Add(new RepositoryElement() { Name = "Umbraco package Repository", Id = new Guid("65194810-1f85-11dd-bd0b-0800200c9a66") });                    
+        //        }
+
+        //        return reposElement;
+        //    }
+        //}
 
     }
 }

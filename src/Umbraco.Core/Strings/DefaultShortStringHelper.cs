@@ -19,20 +19,13 @@ namespace Umbraco.Core.Strings
     /// </remarks>
     public class DefaultShortStringHelper : IShortStringHelper
     {
-        private readonly IUmbracoSettingsSection _umbracoSettings;
+        //private readonly IUmbracoSettingsSection _umbracoSettings;
 
         #region Ctor and vars
 
-        [Obsolete("Use the other ctor that specifies all dependencies")]
-        public DefaultShortStringHelper()
+        public DefaultShortStringHelper(/*IUmbracoSettingsSection umbracoSettings*/)
         {
-            _umbracoSettings = _umbracoSettings;
-            InitializeLegacyUrlReplaceCharacters();
-        }
-
-        public DefaultShortStringHelper(IUmbracoSettingsSection umbracoSettings)
-        {
-            _umbracoSettings = umbracoSettings;
+            //_umbracoSettings = umbracoSettings;
             InitializeLegacyUrlReplaceCharacters();
         }
 
@@ -68,11 +61,11 @@ namespace Umbraco.Core.Strings
 
         private void InitializeLegacyUrlReplaceCharacters()
         {
-            foreach (var node in _umbracoSettings.RequestHandler.CharCollection)
-            {
-                if(string.IsNullOrEmpty(node.Char) == false)
-                    _urlReplaceCharacters[node.Char] = node.Replacement;
-            }
+            //foreach (var node in _umbracoSettings.RequestHandler.CharCollection)
+            //{
+            //    if(string.IsNullOrEmpty(node.Char) == false)
+            //        _urlReplaceCharacters[node.Char] = node.Replacement;
+            //}
         }
 
         /// <summary>
@@ -157,7 +150,8 @@ namespace Umbraco.Core.Strings
                 PreFilter = ApplyUrlReplaceCharacters,
                 PostFilter = x => CutMaxLength(x, 240),
                 IsTerm = (c, leading) => char.IsLetterOrDigit(c) || c == '_', // letter, digit or underscore
-                StringType = (_umbracoSettings.RequestHandler.ConvertUrlsToAscii ? CleanStringType.Ascii : CleanStringType.Utf8) | CleanStringType.LowerCase,
+                //StringType = (_umbracoSettings.RequestHandler.ConvertUrlsToAscii ? CleanStringType.Ascii : CleanStringType.Utf8) | CleanStringType.LowerCase,
+                StringType = (CleanStringType.Ascii) | CleanStringType.LowerCase,
                 BreakTermsOnUpper = false,
                 Separator = '-'
             }).WithConfig(CleanStringType.FileName, new Config
@@ -333,8 +327,9 @@ function validateSafeAlias(input, value, immediate, callback) {{
         /// </summary>
         public string GetShortStringServicesJavaScript(string controllerPath)
         {
-                return string.Format(SssjsFormat,
-                    _umbracoSettings.Content.ForceSafeAliases ? "true" : "false", controllerPath);
+            return string.Format(SssjsFormat,
+                "true", controllerPath);
+            //_umbracoSettings.Content.ForceSafeAliases ? "true" : "false", controllerPath);
         }
 
         #endregion
@@ -746,13 +741,13 @@ function validateSafeAlias(input, value, immediate, callback) {{
                     break;
 
                 case CleanStringType.LowerCase:
-                    term = term.ToLower(culture);
+                    term = term.ToLowerDotNetCoreFix(culture);
                     term.CopyTo(0, output, opos, term.Length);
                     opos += term.Length;
                     break;
 
                 case CleanStringType.UpperCase:
-                    term = term.ToUpper(culture);
+                    term = term.ToUpperDotNetCoreFix(culture);
                     term.CopyTo(0, output, opos, term.Length);
                     opos += term.Length;
                     break;
@@ -763,18 +758,18 @@ function validateSafeAlias(input, value, immediate, callback) {{
                     if (char.IsSurrogate(c))
                     {
                         s = term.Substring(ipos, 2);
-                        s = opos == 0 ? s.ToLower(culture) : s.ToUpper(culture);
+                        s = opos == 0 ? s.ToLowerDotNetCoreFix(culture) : s.ToUpperDotNetCoreFix(culture);
                         s.CopyTo(0, output, opos, s.Length);
                         opos += s.Length;
                         i++; // surrogate pair len is 2
                     }
                     else
                     {
-                        output[opos] = opos++ == 0 ? char.ToLower(c, culture) : char.ToUpper(c, culture);
+                        output[opos] = opos++ == 0 ? c.ToLowerDotNetCoreFix(culture) : c.ToUpperDotNetCoreFix(culture);
                     }
                     if (len > i)
                     {
-                        term = term.Substring(i).ToLower(culture);
+                        term = term.Substring(i).ToLowerDotNetCoreFix(culture);
                         term.CopyTo(0, output, opos, term.Length);
                         opos += term.Length;
                     }
@@ -786,18 +781,18 @@ function validateSafeAlias(input, value, immediate, callback) {{
                     if (char.IsSurrogate(c))
                     {
                         s = term.Substring(ipos, 2);
-                        s = s.ToUpper(culture);
+                        s = s.ToUpperDotNetCoreFix(culture);
                         s.CopyTo(0, output, opos, s.Length);
                         opos += s.Length;
                         i++; // surrogate pair len is 2
                     }
                     else
                     {
-                        output[opos++] = char.ToUpper(c, culture);
+                        output[opos++] = c.ToUpperDotNetCoreFix(culture);
                     }
                     if (len > i)
                     {
-                        term = term.Substring(i).ToLower(culture);
+                        term = term.Substring(i).ToLowerDotNetCoreFix(culture);
                         term.CopyTo(0, output, opos, term.Length);
                         opos += term.Length;
                     }
@@ -809,14 +804,14 @@ function validateSafeAlias(input, value, immediate, callback) {{
                     if (char.IsSurrogate(c))
                     {
                         s = term.Substring(ipos, 2);
-                        s = opos == 0 ? s : s.ToUpper(culture);
+                        s = opos == 0 ? s : s.ToUpperDotNetCoreFix(culture);
                         s.CopyTo(0, output, opos, s.Length);
                         opos += s.Length;
                         i++; // surrogate pair len is 2
                     }
                     else
                     {
-                        output[opos] = opos++ == 0 ? c : char.ToUpper(c, culture);
+                        output[opos] = opos++ == 0 ? c : c.ToUpperDotNetCoreFix(culture);
                     }
                     if (len > i)
                     {

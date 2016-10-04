@@ -4,6 +4,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using LightInject;
 using Umbraco.Core.DependencyInjection;
+using Umbraco.Core.Configuration;
 using LightInject.Microsoft.DependencyInjection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
@@ -16,7 +17,16 @@ using Microsoft.Extensions.Configuration.Memory;
 using Microsoft.Extensions.PlatformAbstractions;
 using Umbraco.Core.Cache;
 using Umbraco.Core.Persistence;
-
+using Umbraco.Core.Services;
+using Umbraco.Core.Persistence.UnitOfWork;
+using Umbraco.Core.Logging;
+using Umbraco.Core.Events;
+using Umbraco.Core.Strings;
+using System.Collections.Generic;
+using Umbraco.Core.IO;
+using Umbraco.Core.Configuration.UmbracoSettings;
+using Umbraco.Core.Persistence.Mappers;
+using Umbraco.Core.Persistence.Repositories;
 
 namespace Umbraco.Test.Console
 {
@@ -25,6 +35,7 @@ namespace Umbraco.Test.Console
     // ... only docs I can find currently: 
     //  https://nocture.dk/2015/11/07/developing-and-distributing-tools-with-dnx-and-dnu/
     //  http://blog.devbot.net/console-services/
+    //  https://github.com/GuardRex/GuardRex.AspNetCore.Server.IISIntegration.Tools/blob/master/Program.cs
 
     // This is the newer dotnetcore one: 
     //  https://github.com/dotnet/corefxlab/tree/master/src/System.CommandLine
@@ -32,8 +43,6 @@ namespace Umbraco.Test.Console
 
     public class Program
     {
-        private static IServiceProvider _services;        
-
         public static void Main(string[] args)
         {
             //Create some in memory config
@@ -46,34 +55,40 @@ namespace Umbraco.Test.Console
             var services = new ServiceCollection();
             //new umbraco app            
             var app = new UmbracoApplication(config);
+            
+            //setup Options            
+            var umbracoSection = config.GetSection("umbraco");
+            services.Configure<UmbracoConfigSection>(umbracoSection.GetSection("globalSettings"));            
+            services.Configure<UmbracoSettingsSection>(umbracoSection.GetSection("umbracoSettings"));
+
             //setup DI/Container
-            _services = ConfigureServices(app, services);
+            var serviceProvider = ConfigureServices(app, services);
             //boot the core
-            _services.UseUmbracoCore(new ConsoleApplicationLifetime());
+            serviceProvider.UseUmbracoCore(new ConsoleApplicationLifetime());
 
             //configure the command line app
-            var cmd = ConfigureConsoleApp();
+            var cmd = ConfigureConsoleApp(serviceProvider);
 
             if (args.Length > 0)
             {
-                RunArgs(args, cmd);
+                cmd.RunArgs(args);
                 System.Console.WriteLine("Press any key to exit");
                 System.Console.ReadLine();
             }
             else
             {
-                Prompt(cmd);
+                cmd.Prompt();
             }
         }
 
         private static IServiceProvider ConfigureServices(UmbracoApplication app, ServiceCollection services)
-        {   
+        {
             app.Container.RegisterSingleton(factory => PlatformServices.Default.Application);
             //register a faux IHostingEnvironment
             app.Container.RegisterSingleton<IHostingEnvironment, ConsoleHostingEnvironment>();
-
+            
             var result = services.AddUmbracoCore(app);
-
+            
             //replace with console objects
 
             //TODO: No matter what, i cannot just RegisterSingleton to override this registration even though it's not resolved yet, according to this it should
@@ -94,34 +109,12 @@ namespace Umbraco.Test.Console
 
             return result;
         }
-
-        private static void Prompt(CommandLineApplication c)
-        {
-            //Show help as default message
-            c.ShowHelp();
-
-            while (true)
-            {                
-                var val = System.Console.ReadLine();
-
-                var args = SplitArguments(val);
-                if (args.Length <= 0)
-                    continue;
-
-                var result = RunArgs(args, c);
-                if (result >= 100)
-                    return;
-
-                System.Console.WriteLine("Execution complete");
-                System.Console.WriteLine();
-            }
-        }
-
-        private static CommandLineApplication ConfigureConsoleApp()
+        
+        private static CommandLineApplication ConfigureConsoleApp(IServiceProvider services)
         {
             var app = new CommandLineApplication
             {
-                Name = "umbraco-cli",
+                Name = "umb",
                 FullName = "Command line for Umbraco",
                 Description = "Command line operations for Umbraco",
                 ShortVersionGetter = () => "1.0.0"
@@ -129,55 +122,30 @@ namespace Umbraco.Test.Console
 
             app.HelpOption("-?|-h|--help");
 
+            var appCtx = services.GetRequiredService<ApplicationContext>();
+            services.GetRequiredService<IDatabaseUnitOfWorkProvider>();
+            services.GetRequiredService<ILogger>();
+            services.GetRequiredService<IEventMessagesFactory>();
+            services.GetRequiredService<IDataTypeService>();
+            services.GetRequiredService<IUserService>();
+            services.GetRequiredService<IEnumerable<IUrlSegmentProvider>>();
+            services.GetRequiredService<IOHelper>();
+            services.GetRequiredService<MediaFileSystem>();
+            services.GetRequiredService<IContentSection>();
+            services.GetRequiredService<CacheHelper>();
+            services.GetRequiredService<IMappingResolver>();            
+            var contentService = services.GetRequiredService<IContentService>();
+
+            app.UseDbCommand(appCtx);
+            app.UseSchemaCommand(appCtx);
             app.UseQuitCommand();
-            app.UseDbInstallCommand(_services.GetRequiredService<ApplicationContext>());
-            app.UseConnectCommand(_services.GetRequiredService<ApplicationContext>());
+            
+            //app.UseDbInstallCommand(_services.GetRequiredService<ApplicationContext>());
+            //app.UseConnectCommand(_services.GetRequiredService<ApplicationContext>());
 
             return app;
         }
         
-        /// <summary>
-        /// Execute the args for the app
-        /// </summary>
-        /// <param name="args"></param>
-        /// <param name="c"></param>
-        private static int RunArgs(string[] args, CommandLineApplication c)
-        {
-            try
-            {
-                var result = c.Execute(args);
-                return result;
-            }
-            catch (Exception ex)
-            {
-                ConsoleHelper.WriteError(ex);
-                return 0;
-            }
-        }
-
-        //borrowed from: http://stackoverflow.com/a/2132004/694494
-        private static string[] SplitArguments(string commandLine)
-        {
-            var parmChars = commandLine.ToCharArray();
-            var inSingleQuote = false;
-            var inDoubleQuote = false;
-            for (var index = 0; index < parmChars.Length; index++)
-            {
-                if (parmChars[index] == '"' && !inSingleQuote)
-                {
-                    inDoubleQuote = !inDoubleQuote;
-                    parmChars[index] = '\n';
-                }
-                if (parmChars[index] == '\'' && !inDoubleQuote)
-                {
-                    inSingleQuote = !inSingleQuote;
-                    parmChars[index] = '\n';
-                }
-                if (!inSingleQuote && !inDoubleQuote && parmChars[index] == ' ')
-                    parmChars[index] = '\n';
-            }
-            return (new string(parmChars)).Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-        }
     }
 
     //borrowed from aspnet source

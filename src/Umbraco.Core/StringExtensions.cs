@@ -961,6 +961,70 @@ namespace Umbraco.Core
         }
 
         /// <summary>
+        /// This is due to compatibility between DotNetCore and DotNetFramework :/ 
+        /// we need to wait until 4.6.x is out when they both support NetStandard 1.6
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="culture"></param>
+        /// <returns></returns>
+        internal static char ToUpperDotNetCoreFix(this char input, CultureInfo culture)
+        {
+#if NET461
+            return char.ToUpper(input, culture);            
+#else
+            return char.ToUpper(input);
+#endif
+        }
+
+        /// <summary>
+        /// This is due to compatibility between DotNetCore and DotNetFramework :/ 
+        /// we need to wait until 4.6.x is out when they both support NetStandard 1.6
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="culture"></param>
+        /// <returns></returns>
+        internal static char ToLowerDotNetCoreFix(this char input, CultureInfo culture)
+        {
+#if NET461
+            return char.ToLower(input, culture);
+#else
+            return char.ToLower(input);
+#endif
+        }
+
+        /// <summary>
+        /// This is due to compatibility between DotNetCore and DotNetFramework :/ 
+        /// we need to wait until 4.6.x is out when they both support NetStandard 1.6
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="culture"></param>
+        /// <returns></returns>
+        internal static string ToUpperDotNetCoreFix(this string input, CultureInfo culture)
+        {
+#if NET461
+            return input.ToUpper(culture);            
+#else
+            return input.ToUpper();
+#endif
+        }
+
+        /// <summary>
+        /// This is due to compatibility between DotNetCore and DotNetFramework :/ 
+        /// we need to wait until 4.6.x is out when they both support NetStandard 1.6
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="culture"></param>
+        /// <returns></returns>
+        internal static string ToLowerDotNetCoreFix(this string input, CultureInfo culture)
+        {
+#if NET461
+            return input.ToLower(culture);            
+#else
+            return input.ToLower();
+#endif
+        }
+
+        /// <summary>
         /// Returns a copy of the string with the first character converted to uppercase using the casing rules of the specified culture.
         /// </summary>
         /// <param name="input">The string.</param>
@@ -1028,7 +1092,11 @@ namespace Umbraco.Core
         {
             get
             {
-                throw new NotImplementedException("IShortStringHelper is not defined yet");
+                if (_helper == null)
+                {
+                    _helper = new DefaultShortStringHelper();
+                }
+                return _helper;
 
                 //if (ShortStringHelperResolver.HasCurrent)
                 //    return ShortStringHelperResolver.Current.Helper;

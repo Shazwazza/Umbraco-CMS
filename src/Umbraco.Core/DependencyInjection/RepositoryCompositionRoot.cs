@@ -26,6 +26,7 @@ namespace Umbraco.Core.DependencyInjection
     public sealed class RepositoryCompositionRoot : ICompositionRoot
     {
         public const string DisabledCache = "DisabledCache";
+        public const string ViewFileSystem = "ViewFileSystem";
         public const string ScopeContextAdapter = "ScopeContextAdapter";
 
         public void Compose(IServiceRegistry container)
@@ -67,7 +68,7 @@ namespace Umbraco.Core.DependencyInjection
             container.RegisterSingleton<IFileSystem>(factory => new PhysicalFileSystem(factory.GetInstance<IOHelper>(), SystemDirectories.MvcViews + "/Partials/"), "PartialViewFileSystem");
             container.RegisterSingleton<IFileSystem>(factory => new PhysicalFileSystem(factory.GetInstance<IOHelper>(), SystemDirectories.MvcViews + "/MacroPartials/"), "PartialViewMacroFileSystem");
             container.RegisterSingleton<IFileSystem>(factory => new PhysicalFileSystem(factory.GetInstance<IOHelper>(), SystemDirectories.Css), "StylesheetFileSystem");
-            container.RegisterSingleton<IFileSystem>(factory => new PhysicalFileSystem(factory.GetInstance<IOHelper>(), SystemDirectories.MvcViews), "ViewFileSystem");
+            container.RegisterSingleton<IFileSystem>(factory => new PhysicalFileSystem(factory.GetInstance<IOHelper>(), SystemDirectories.MvcViews), ViewFileSystem);
 
             // register cache helpers
             // the main cache helper is registered by CoreBootManager and is used by most repositories

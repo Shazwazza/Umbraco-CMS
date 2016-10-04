@@ -4,10 +4,12 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using LightInject;
 using NPoco;
 using Umbraco.Core.Cache;
 using Umbraco.Core.Configuration;
 using Umbraco.Core.Configuration.UmbracoSettings;
+using Umbraco.Core.DependencyInjection;
 using Umbraco.Core.IO;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
@@ -30,15 +32,16 @@ namespace Umbraco.Core.Persistence.Repositories
     /// </summary>
     internal class TemplateRepository : NPocoRepositoryBase<int, ITemplate>, ITemplateRepository
     {
-        private readonly IFileSystem _masterpagesFileSystem;
         private readonly IFileSystem _viewsFileSystem;
         private readonly IOHelper _ioHelper;
         private readonly ViewHelper _viewHelper;
 
-        public TemplateRepository(IDatabaseUnitOfWork work, CacheHelper cache, ILogger logger, IFileSystem masterpageFileSystem, IFileSystem viewFileSystem, IOHelper ioHelper, IMappingResolver mappingResolver)
+        public TemplateRepository(IDatabaseUnitOfWork work, CacheHelper cache, ILogger logger,            
+            [Inject(RepositoryCompositionRoot.ViewFileSystem)]
+            IFileSystem viewFileSystem, 
+            IOHelper ioHelper, IMappingResolver mappingResolver)
             : base(work, cache, logger, mappingResolver)
         {
-            _masterpagesFileSystem = masterpageFileSystem;
             _viewsFileSystem = viewFileSystem;
             _ioHelper = ioHelper;
             _viewHelper = new ViewHelper(_viewsFileSystem);  
@@ -368,10 +371,7 @@ namespace Umbraco.Core.Persistence.Repositories
                     return GetFileContent(template, _viewsFileSystem, path, init);
                 path = string.Concat(template.Alias, ".vbhtml");
                 if (_viewsFileSystem.FileExists(path))
-                    return GetFileContent(template, _viewsFileSystem, path, init);
-                path = string.Concat(template.Alias, ".master");
-                if (_masterpagesFileSystem.FileExists(path))
-                    return GetFileContent(template, _masterpagesFileSystem, path, init);
+                    return GetFileContent(template, _viewsFileSystem, path, init);                
             }
             else
             {
@@ -381,9 +381,7 @@ namespace Umbraco.Core.Persistence.Repositories
                 {
                     case ".cshtml":
                     case ".vbhtml":
-                        return GetFileContent(template, _viewsFileSystem, path, init);
-                    case ".master":
-                        return GetFileContent(template, _masterpagesFileSystem, path, init);
+                        return GetFileContent(template, _viewsFileSystem, path, init);                    
                     default:
                         return string.Empty;
                 }
@@ -394,10 +392,7 @@ namespace Umbraco.Core.Persistence.Repositories
                 return GetFileContent(template, _viewsFileSystem, fsname, init);
             fsname = string.Concat(template.Alias, ".vbhtml");
             if (_viewsFileSystem.FileExists(fsname))
-                return GetFileContent(template, _viewsFileSystem, fsname, init);
-            fsname = string.Concat(template.Alias, ".master");
-            if (_masterpagesFileSystem.FileExists(fsname))
-                return GetFileContent(template, _masterpagesFileSystem, fsname, init);
+                return GetFileContent(template, _viewsFileSystem, fsname, init);                        
             return string.Empty;
         }
 

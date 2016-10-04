@@ -1,99 +1,95 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.CommandLineUtils;
 using Umbraco.Core;
 
 namespace Umbraco.Test.Console
 {
+    /// <summary>
+    /// Extension methods for working with the command line application
+    /// </summary>
     public static class CommandLineApplicationExtensions
     {
-        private static void ConnectDb(CommandOption optionConnString, ApplicationContext appContext)
+        public static void Prompt(this CommandLineApplication c)
         {
-            System.Console.WriteLine("Connecting to db...");
-
-            var dbContext = appContext.DatabaseContext;
-
-            if (dbContext.IsDatabaseConfigured == false)
+            if (c.Name.IsNullOrWhiteSpace())
             {
-                //Example:
-                //server=.\SQLExpress;database=UmbASPNetCore;user id=sa;password=test
-                var connString = optionConnString.Value();
-                if (connString.IsNullOrWhiteSpace())
+                throw new ArgumentException("The " + typeof(CommandLineApplication).Name + " must have a Name property assigned");
+            }
+
+            //Show help as default message
+            c.ShowHelp();
+
+            while (true)
+            {
+                System.Console.WriteLine();
+                var prompts = new List<string>() {c.Name};
+                var parent = c.Parent;
+                while (parent != null)
                 {
-                    throw new InvalidOperationException("No connection string specified");
+                    prompts.Add(parent.Name);
+                    parent = parent.Parent;
                 }
-                dbContext.ConfigureDatabaseConnection(connString);
+                prompts.Reverse();
+                System.Console.Write($"{string.Join(":", prompts)}> ");
+                var val = System.Console.ReadLine();
+
+                var args = SplitArguments(val);
+                if (args.Length <= 0)
+                    continue;
+
+                var result = c.RunArgs(args);
+                if (result >= 100)
+                    return;
+
+                System.Console.WriteLine("Done.");
+                System.Console.WriteLine();
             }
+        }
 
-            if (dbContext.CanConnect == false)
+        /// <summary>
+        /// Execute the args for the app
+        /// </summary>
+        /// <param name="args"></param>
+        /// <param name="c"></param>
+        public static int RunArgs(this CommandLineApplication c, string[] args)
+        {
+            try
             {
-                throw new InvalidOperationException("Cannot connect to the db with the connection string specified");
+                var result = c.Execute(args);
+                return result;
             }
-            System.Console.WriteLine("Connected to db !");
+            catch (Exception ex)
+            {
+                ConsoleHelper.WriteError(ex);
+                return 0;
+            }
         }
 
-        public static void UseConnectCommand(this CommandLineApplication app, ApplicationContext appContext)
+        //borrowed from: http://stackoverflow.com/a/2132004/694494
+        private static string[] SplitArguments(string commandLine)
         {
-            app.Command("db-connect", c =>
+            var parmChars = commandLine.ToCharArray();
+            var inSingleQuote = false;
+            var inDoubleQuote = false;
+            for (var index = 0; index < parmChars.Length; index++)
             {
-                c.Description = "Connects to an existing Umbraco Db";
-                var optionConnString = c.Option("-cs|--connectionstring <CONNECTIONSTRING>", "The database connection string", CommandOptionType.SingleValue);
-                c.HelpOption("-h");
-
-                c.OnExecute(() =>
+                if (parmChars[index] == '"' && !inSingleQuote)
                 {
-                    ConnectDb(optionConnString, appContext);
-
-                    System.Console.WriteLine("Validating schema...");
-                    var schemaResult = appContext.DatabaseContext.ValidateDatabaseSchema();
-
-                    if (schemaResult.ValidTables.Count <= 0 && schemaResult.ValidColumns.Count <= 0 && schemaResult.ValidConstraints.Count <= 0 && schemaResult.ValidIndexes.Count <= 0)
-                        throw new InvalidOperationException("The database is not installed, run db-install");                    
-
-                    return 0;
-                });
-            });
-        }
-
-        public static void UseQuitCommand(this CommandLineApplication app)
-        {
-            app.Command("quit", c =>
-            {
-                c.Description = "Exits application";
-                c.OnExecute(() => 101);
-            });
-        }
-
-        public static void UseDbInstallCommand(this CommandLineApplication app, ApplicationContext appContext)
-        {
-            app.Command("db-install", c =>
-            {
-                c.Description = "Installs a new Umbraco Db";
-
-                var optionConnString = c.Option("-cs|--connectionstring <CONNECTIONSTRING>", "The database connection string", CommandOptionType.SingleValue);
-
-                c.HelpOption("-h");
-
-                c.OnExecute(() =>
+                    inDoubleQuote = !inDoubleQuote;
+                    parmChars[index] = '\n';
+                }
+                if (parmChars[index] == '\'' && !inDoubleQuote)
                 {
-                    ConnectDb(optionConnString, appContext);
-
-                    System.Console.WriteLine("Validating schema...");
-                    var schemaResult = appContext.DatabaseContext.ValidateDatabaseSchema();
-
-                    if (schemaResult.ValidTables.Count > 0 || schemaResult.ValidColumns.Count > 0 || schemaResult.ValidConstraints.Count > 0 || schemaResult.ValidIndexes.Count > 0)
-                    {
-                        ConsoleHelper.WriteError("Database is already installed");
-                    }
-                    else
-                    {
-                        System.Console.WriteLine("Installing database...");
-                        var installResult = appContext.DatabaseContext.CreateDatabaseSchemaAndData(appContext);
-                        ConsoleHelper.WriteDictionaryVals(installResult.ToDictionary<object>());
-                    }
-
-                    return 0;
-                });
-            });
+                    inSingleQuote = !inSingleQuote;
+                    parmChars[index] = '\n';
+                }
+                if (!inSingleQuote && !inDoubleQuote && parmChars[index] == ' ')
+                    parmChars[index] = '\n';
+            }
+            return (new string(parmChars)).Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
         }
+
+        
     }
 }

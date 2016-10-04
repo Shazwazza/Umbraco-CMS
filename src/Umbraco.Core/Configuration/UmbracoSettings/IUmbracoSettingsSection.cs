@@ -4,24 +4,24 @@
     {
         IContentSection Content { get; }
 
-        ISecuritySection Security { get; }
+        //ISecuritySection Security { get; }
 
-        IRequestHandlerSection RequestHandler { get; }
+        //IRequestHandlerSection RequestHandler { get; }
         
-        IDeveloperSection Developer { get; }
+        //IDeveloperSection Developer { get; }
 
 
-        ILoggingSection Logging { get; }
+        //ILoggingSection Logging { get; }
 
-        IScheduledTasksSection ScheduledTasks { get; }
+        //IScheduledTasksSection ScheduledTasks { get; }
 
-        IDistributedCallSection DistributedCall { get; }
+        //IDistributedCallSection DistributedCall { get; }
 
-        IRepositoriesSection PackageRepositories { get; }
+        //IRepositoriesSection PackageRepositories { get; }
 
-        IProvidersSection Providers { get; }
+        //IProvidersSection Providers { get; }
         
-        IWebRoutingSection WebRouting { get; }
+        //IWebRoutingSection WebRouting { get; }
 
     }
 }

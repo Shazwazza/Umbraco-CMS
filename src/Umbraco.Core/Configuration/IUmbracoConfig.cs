@@ -27,48 +27,30 @@ namespace Umbraco.Core.Configuration
 
     public class UmbracoConfigSection : IUmbracoConfig
     {
-        private readonly IConfiguration _config;
-        private IConnectionString _connectionString;
-
-        public UmbracoConfigSection(IConfiguration configuration)
+        public UmbracoConfigSection()
         {
-            _config = configuration;
+            //set defaults
+            IsDebuggingEnabled = true;
+            UseSSL = false;
+            DefaultUILanguage = "en-US";
+            ConnectionString = new ConnectionStringSection();
         }
 
-        public IConnectionString ConnectionString
+        //bindable
+        public ConnectionStringSection ConnectionString { get; set; }
+        //explicit
+        IConnectionString IUmbracoConfig.ConnectionString
         {
-            get
-            {
-                if (_connectionString != null) return _connectionString;
-                var connectionString = _config.GetSection("connectionString");
-                if (connectionString == null) return null;
-                return _connectionString = new ConnectionStringSection(connectionString);
-            }
+            get { return ConnectionString; }
         }
 
-        public bool IsDebuggingEnabled
-        {
-            get
-            {
-                bool debug;
-                bool.TryParse(_config["isDebuggingEnabled"], out debug);
-                return debug;
-            }
-        }
+        public bool IsDebuggingEnabled { get; set; }
 
-        public bool UseSSL
-        {
-            get
-            {
-                bool debug;
-                bool.TryParse(_config["useSSL"], out debug);
-                return debug;
-            }
-        }
+        public bool UseSSL { get; set; }
 
-        public string DefaultUILanguage => _config["defaultUILanguage"];
+        public string DefaultUILanguage { get; set; }
 
-        public string ConfigurationStatus => _config["configurationStatus"];
+        public string ConfigurationStatus { get; set; }
     }
 
 
@@ -81,27 +63,19 @@ namespace Umbraco.Core.Configuration
         // see: https://docs.asp.net/en/latest/fundamentals/configuration.html
         string ConnectionString { get; }
         string ProviderName { get; }
-
         void Set(string connString, string providerName);
     }
 
     public class ConnectionStringSection : IConnectionString
     {
-        private readonly IConfiguration _config;
+        public string ConnectionString { get; set; }
 
-        public ConnectionStringSection(IConfiguration configuration)
-        {
-            _config = configuration;
-        }
-
-        public string ConnectionString => _config["connectionString"];
-
-        public string ProviderName => _config["providerName"];
+        public string ProviderName { get; set; }
 
         public void Set(string connString, string providerName)
         {
-            _config["providerName"] = providerName;
-            _config["connectionString"] = connString;
+            ProviderName = providerName;
+            ConnectionString = connString;
         }
     }
 }

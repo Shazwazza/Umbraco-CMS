@@ -18,6 +18,7 @@ using Umbraco.Core.IO;
 using Microsoft.Extensions.PlatformAbstractions;
 using Microsoft.AspNetCore.DataProtection;
 using Umbraco.Core.Services;
+using Umbraco.Core.Configuration.UmbracoSettings;
 
 namespace Umbraco.Core
 {
@@ -59,6 +60,8 @@ namespace Umbraco.Core
             //if (umbContainer.AvailableServices.Any())
             //    return services.WrapAspNetContainer(umbracoApplication.Container);
 
+            services.AddOptions();            
+
             // For now we're gonna put our app in the aspnet default container
             services.AddTransient<UmbracoApplication>(factory => umbracoApplication);
             umbContainer.Register<UmbracoApplication>(factory => umbracoApplication);
@@ -76,7 +79,7 @@ namespace Umbraco.Core
             umbContainer.RegisterSingleton<ProfilingLogger>(factory => new ProfilingLogger(factory.GetInstance<ILogger>(), factory.GetInstance<IProfiler>()));
 
             //Config
-            umbContainer.RegisterFrom(new ConfigurationCompositionRoot(umbracoApplication.Configuration));
+            umbContainer.RegisterFrom(new ConfigurationCompositionRoot(umbracoApplication.Configuration, services));
 
             //Cache
             umbContainer.RegisterFrom<CacheCompositionRoot>();
@@ -96,6 +99,18 @@ namespace Umbraco.Core
             umbContainer.RegisterSingleton<IAssemblyProvider, DefaultUmbracoAssemblyProvider>();
             umbContainer.RegisterSingleton<PluginManager>();
             umbContainer.RegisterSingleton<IOHelper>();
+
+            //TODO: Would need to deal with the root and underlying file system based on config
+            umbContainer.RegisterSingleton<MediaFileSystem>(factory =>
+            {
+                var fs = new MediaFileSystem(
+                    new PhysicalFileSystem(factory.GetInstance<IOHelper>(), "~/media"),
+                    factory.GetInstance<IContentSection>());
+
+                return fs;
+            });
+            //TODO: Would need to register FileSystemProviderManager too for backwards compat?
+
             umbContainer.RegisterSingleton<EnvironmentHelper>(factory => new EnvironmentHelper(
                 factory.GetInstance<IHostingEnvironment>(),
                 //Getting the application Id in aspnetcore is certainly not normal, here's the code that does this:
