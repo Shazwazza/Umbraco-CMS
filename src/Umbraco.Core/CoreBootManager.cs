@@ -325,9 +325,9 @@ namespace Umbraco.Core
             //    Container,
             //    factory => new DatabaseServerMessenger(ApplicationContext, true, new DatabaseServerMessengerOptions()));
 
-            MappingResolver.Current = new MappingResolver(
-                Container, ProfilingLogger.Logger,
-                () => pluginManager.ResolveAssignedMapperTypes());
+            //MappingResolver.Current = new MappingResolver(
+            //    Container, ProfilingLogger.Logger,
+            //    () => pluginManager.ResolveAssignedMapperTypes());
 
 
             //RepositoryResolver.Current = new RepositoryResolver(

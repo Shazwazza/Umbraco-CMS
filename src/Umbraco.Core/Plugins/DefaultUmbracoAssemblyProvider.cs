@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyModel;
+using Microsoft.Extensions.PlatformAbstractions;
 
 namespace Umbraco.Core.Plugins
 {
@@ -18,14 +18,14 @@ namespace Umbraco.Core.Plugins
     /// </remarks>
     public class DefaultUmbracoAssemblyProvider : IAssemblyProvider
     {
-        private readonly IHostingEnvironment _hosting;
+        private readonly ApplicationEnvironment _appEnv;
 
-        public DefaultUmbracoAssemblyProvider(IHostingEnvironment hosting)
+        public DefaultUmbracoAssemblyProvider(ApplicationEnvironment hosting)
         {
-            _hosting = hosting;
+            _appEnv = hosting;
         }
 
-        public IEnumerable<Assembly> Assemblies => DiscoverAssemblyParts(_hosting.ApplicationName);
+        public IEnumerable<Assembly> Assemblies => DiscoverAssemblyParts(_appEnv.ApplicationName);
 
         internal static HashSet<string> ReferenceAssemblies { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -35,9 +35,11 @@ namespace Umbraco.Core.Plugins
         internal static IEnumerable<Assembly> DiscoverAssemblyParts(string entryPointAssemblyName)
         {
             var entryAssembly = Assembly.Load(new AssemblyName(entryPointAssemblyName));
-            var context = DependencyContext.Load(Assembly.Load(new AssemblyName(entryPointAssemblyName)));
+            var context = DependencyContext.Load(entryAssembly);
+            
+            var candidates = GetCandidateAssemblies(entryAssembly, context);
 
-            return GetCandidateAssemblies(entryAssembly, context);
+            return candidates;
         }
 
         internal static IEnumerable<Assembly> GetCandidateAssemblies(Assembly entryAssembly, DependencyContext dependencyContext)
@@ -48,7 +50,8 @@ namespace Umbraco.Core.Plugins
                 return new[] { entryAssembly };
             }
 
-            return GetCandidateLibraries(dependencyContext)
+            //includeRefLibs == true - so that Umbraco.Core is also returned!
+            return GetCandidateLibraries(dependencyContext, includeRefLibs: true)
                 .SelectMany(library => library.GetDefaultAssemblyNames(dependencyContext))
                 .Select(Assembly.Load);
         }
@@ -57,28 +60,48 @@ namespace Umbraco.Core.Plugins
         /// Returns a list of libraries that references the assemblies in <see cref="ReferenceAssemblies"/>.       
         /// </summary>
         /// <param name="dependencyContext"></param>
+        /// <param name="includeRefLibs">
+        /// True to also include libs in the ReferenceAssemblies list
+        /// </param>
         /// <returns></returns>
-        internal static IEnumerable<RuntimeLibrary> GetCandidateLibraries(DependencyContext dependencyContext)
+        internal static IEnumerable<RuntimeLibrary> GetCandidateLibraries(DependencyContext dependencyContext, bool includeRefLibs)
         {
             if (ReferenceAssemblies == null)
             {
                 return Enumerable.Empty<RuntimeLibrary>();
             }
 
-            var candidatesResolver = new CandidateResolver(dependencyContext.RuntimeLibraries, ReferenceAssemblies);
+            var candidatesResolver = new CandidateResolver(dependencyContext.RuntimeLibraries, ReferenceAssemblies, includeRefLibs);
             return candidatesResolver.GetCandidates();
         }
 
         private class CandidateResolver
         {
+            private readonly bool _includeRefLibs;
             private readonly IDictionary<string, Dependency> _dependencies;
 
-            public CandidateResolver(IEnumerable<RuntimeLibrary> dependencies, ISet<string> referenceAssemblies)
+            /// <summary>
+            /// Constructor
+            /// </summary>
+            /// <param name="dependencies"></param>
+            /// <param name="referenceAssemblies"></param>
+            /// <param name="includeRefLibs">
+            /// True to also include libs in the ReferenceAssemblies list
+            /// </param>
+            public CandidateResolver(IEnumerable<RuntimeLibrary> dependencies, ISet<string> referenceAssemblies, bool includeRefLibs)
             {
+                _includeRefLibs = includeRefLibs;                
+
                 _dependencies = dependencies
                     .ToDictionary(d => d.Name, d => CreateDependency(d, referenceAssemblies), StringComparer.OrdinalIgnoreCase);
             }
 
+            /// <summary>
+            /// Create a Dependency
+            /// </summary>
+            /// <param name="library"></param>
+            /// <param name="referenceAssemblies"></param>            
+            /// <returns></returns>
             private static Dependency CreateDependency(RuntimeLibrary library, ISet<string> referenceAssemblies)
             {
                 var classification = DependencyClassification.Unknown;
@@ -123,7 +146,10 @@ namespace Umbraco.Core.Plugins
             {
                 foreach (var dependency in _dependencies)
                 {
-                    if (ComputeClassification(dependency.Key) == DependencyClassification.Candidate)
+                    var classification = ComputeClassification(dependency.Key);
+                    if (classification == DependencyClassification.Candidate ||
+                        //if the flag is set, also ensure to include any UmbracoReference classifications
+                            (_includeRefLibs && classification == DependencyClassification.UmbracoReference))
                     {
                         yield return dependency.Value.Library;
                     }

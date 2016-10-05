@@ -27,6 +27,7 @@ using Umbraco.Core.IO;
 using Umbraco.Core.Configuration.UmbracoSettings;
 using Umbraco.Core.Persistence.Mappers;
 using Umbraco.Core.Persistence.Repositories;
+using Umbraco.Core.Plugins;
 
 namespace Umbraco.Test.Console
 {
@@ -63,6 +64,11 @@ namespace Umbraco.Test.Console
 
             //setup DI/Container
             var serviceProvider = ConfigureServices(app, services);
+
+            //kill the cached plugins
+            var pluginMgr = serviceProvider.GetRequiredService<PluginManager>();
+            pluginMgr.ClearPluginCache();
+
             //boot the core
             serviceProvider.UseUmbracoCore(new ConsoleApplicationLifetime());
 
@@ -77,7 +83,7 @@ namespace Umbraco.Test.Console
             }
             else
             {
-                cmd.Prompt();
+                cmd.Prompt(showHelp:true);
             }
         }
 
@@ -86,7 +92,7 @@ namespace Umbraco.Test.Console
             app.Container.RegisterSingleton(factory => PlatformServices.Default.Application);
             //register a faux IHostingEnvironment
             app.Container.RegisterSingleton<IHostingEnvironment, ConsoleHostingEnvironment>();
-            
+
             var result = services.AddUmbracoCore(app);
             
             //replace with console objects
@@ -101,6 +107,7 @@ namespace Umbraco.Test.Console
                     Lifetime = r.Lifetime,
                     ServiceName = r.ServiceName,
                     Value = new CacheHelper(
+                        //TODO: Should probably change this all to null cache for console app
                         f.GetInstance<IRuntimeCacheProvider>(),
                         f.GetInstance<ICacheProvider>(CacheCompositionRoot.StaticCache),
                         f.GetInstance<ICacheProvider>(CacheCompositionRoot.StaticCache),
@@ -123,26 +130,11 @@ namespace Umbraco.Test.Console
             app.HelpOption("-?|-h|--help");
 
             var appCtx = services.GetRequiredService<ApplicationContext>();
-            services.GetRequiredService<IDatabaseUnitOfWorkProvider>();
-            services.GetRequiredService<ILogger>();
-            services.GetRequiredService<IEventMessagesFactory>();
-            services.GetRequiredService<IDataTypeService>();
-            services.GetRequiredService<IUserService>();
-            services.GetRequiredService<IEnumerable<IUrlSegmentProvider>>();
-            services.GetRequiredService<IOHelper>();
-            services.GetRequiredService<MediaFileSystem>();
-            services.GetRequiredService<IContentSection>();
-            services.GetRequiredService<CacheHelper>();
-            services.GetRequiredService<IMappingResolver>();            
-            var contentService = services.GetRequiredService<IContentService>();
 
             app.UseDbCommand(appCtx);
             app.UseSchemaCommand(appCtx);
             app.UseBackCommand("quit", "Exits the application");
             
-            //app.UseDbInstallCommand(_services.GetRequiredService<ApplicationContext>());
-            //app.UseConnectCommand(_services.GetRequiredService<ApplicationContext>());
-
             return app;
         }
         

@@ -10,19 +10,21 @@ namespace Umbraco.Test.Console
     /// </summary>
     public static class CommandLineApplicationExtensions
     {
-        public static void Prompt(this CommandLineApplication c)
+        public static void Prompt(this CommandLineApplication c, bool showHelp = false)
         {
             if (c.Name.IsNullOrWhiteSpace())
             {
                 throw new ArgumentException("The " + typeof(CommandLineApplication).Name + " must have a Name property assigned");
             }
 
-            //Show help as default message
-            c.ShowHelp();
+            if (showHelp)
+            {
+                c.ShowHelp();
+                System.Console.WriteLine();
+            }
 
             while (true)
-            {
-                System.Console.WriteLine();
+            {                
                 var prompts = new List<string>() {c.Name};
                 var parent = c.Parent;
                 while (parent != null)
@@ -31,7 +33,8 @@ namespace Umbraco.Test.Console
                     parent = parent.Parent;
                 }
                 prompts.Reverse();
-                System.Console.Write($"{string.Join(":", prompts)}> ");
+                System.Console.Write($"{string.Join("/", prompts)}> ");
+                
                 var val = System.Console.ReadLine();
 
                 var args = SplitArguments(val);

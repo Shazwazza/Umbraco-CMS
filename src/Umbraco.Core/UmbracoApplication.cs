@@ -74,7 +74,10 @@ namespace Umbraco.Core
         /// <summary>
         /// Constructor
         /// </summary>
-        public UmbracoApplication(IConfiguration config)
+        /// <param name="config"></param>
+        /// <param name="logger"></param>
+        /// <param name="profiler"></param>
+        public UmbracoApplication(IConfiguration config, ILogger logger, IProfiler profiler)
         {
             // create the container for the application, the boot managers are responsible for registrations
             var container = new ServiceContainer();
@@ -83,7 +86,19 @@ namespace Umbraco.Core
 
             Configuration = config;
 
-            _bootManager = new CoreBootManager(this);           
+            _bootManager = new CoreBootManager(this);
+
+            _logger = logger;
+            _profiler = profiler;
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public UmbracoApplication(IConfiguration config)
+            : this(config, new DebugDiagnosticsLogger(), new NoopProfiler())
+        {
+            
         }
 
         public event EventHandler ApplicationStarting;
