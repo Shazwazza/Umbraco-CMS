@@ -26,7 +26,7 @@ namespace Umbraco.Test.Console
                 {
                     c.Prompt();
 
-                    return 0;
+                    return 1;
                 });
             });
         }
@@ -45,7 +45,7 @@ namespace Umbraco.Test.Console
                 {
                     c.Prompt();
 
-                    return 0;
+                    return 1;
                 });
             });
         }
@@ -55,10 +55,10 @@ namespace Umbraco.Test.Console
             app.Command("connect", c =>
             {
                 c.Description = "Connects to an existing Umbraco Db";
-                var argConnString = c.Argument("<CONNECTIONSTRING>", "The database connection string");
+                var argConnString = c.Argument("[connectionstring]", "The database connection string");
                 c.HelpOption("-h");
 
-                c.OnExecute(() =>
+                c.OnExecuteAndReset(() =>
                 {
                     ConnectDb(argConnString.Value, appContext);
 
@@ -66,9 +66,12 @@ namespace Umbraco.Test.Console
                     var schemaResult = appContext.DatabaseContext.ValidateDatabaseSchema();
 
                     if (schemaResult.ValidTables.Count <= 0 && schemaResult.ValidColumns.Count <= 0 && schemaResult.ValidConstraints.Count <= 0 && schemaResult.ValidIndexes.Count <= 0)
-                        throw new InvalidOperationException("The database is not installed, run db-install");
+                    {
+                        System.Console.WriteLine("The database is not installed, run db-install");
+                        return 0;
+                    }
 
-                    return 0;
+                    return 1;
                 });
             });
         }
@@ -94,10 +97,10 @@ namespace Umbraco.Test.Console
             {
                 c.Description = "Installs a new Umbraco Db";
 
-                var argConnString = c.Argument("<CONNECTIONSTRING>", "The database connection string");
+                var argConnString = c.Argument("[connectionstring]", "The database connection string");
                 c.HelpOption("-h");
 
-                c.OnExecute(() =>
+                c.OnExecuteAndReset(() =>
                 {
                     ConnectDb(argConnString.Value, appContext);
 
@@ -139,8 +142,10 @@ namespace Umbraco.Test.Console
 
             if (dbContext.CanConnect == false)
             {
-                throw new InvalidOperationException("Cannot connect to the db with the connection string specified");
+                System.Console.WriteLine("Cannot connect to the db with the connection string specified");
+                return;
             }
+
             System.Console.WriteLine("Connected to db !");
         }
 

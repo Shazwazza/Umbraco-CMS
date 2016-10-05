@@ -34,13 +34,18 @@ namespace Umbraco.Test.Console
     // We are using this CLI parser: 
     //  https://github.com/aspnet/Common/blob/dev/src/Microsoft.Extensions.CommandLineUtils/CommandLine/CommandLineApplication.cs (https://www.nuget.org/packages/Microsoft.Extensions.CommandLineUtils/)
     // ... only docs I can find currently: 
+    //  https://msdn.microsoft.com/en-us/magazine/mt763239.aspx?f=255&MSPPError=-2147217396
     //  https://nocture.dk/2015/11/07/developing-and-distributing-tools-with-dnx-and-dnu/
     //  http://blog.devbot.net/console-services/
+    //      https://github.com/aspnet/dnx/blob/dev/src/Microsoft.Dnx.Tooling/Program.cs
     //  https://github.com/GuardRex/GuardRex.AspNetCore.Server.IISIntegration.Tools/blob/master/Program.cs
 
     // This is the newer dotnetcore one: 
     //  https://github.com/dotnet/corefxlab/tree/master/src/System.CommandLine
     // but it's not on Nuget yet... looks nicer though            
+
+
+    // TODO: Look into using: AnsiConsole this is what dotnet uses for coloring apparently
 
     public class Program
     {

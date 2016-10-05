@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.CommandLineUtils;
 using Umbraco.Core;
 
@@ -10,6 +11,31 @@ namespace Umbraco.Test.Console
     /// </summary>
     public static class CommandLineApplicationExtensions
     {
+        /// <summary>
+        /// Used to add the callback for a command and ensure that argument and option values are reset after
+        /// executing so they can be re-used.
+        /// </summary>
+        /// <param name="c"></param>
+        /// <param name="callback"></param>
+        public static void OnExecuteAndReset(this CommandLineApplication c, Func<int> callback)
+        {
+            c.OnExecute(() =>
+            {
+                var result = callback();
+
+                foreach (var commandArgument in c.Arguments)
+                {
+                    commandArgument.Values.Clear();
+                }
+                foreach (var commandOption in c.Options)
+                {
+                    commandOption.Values.Clear();
+                }
+
+                return result;
+            });            
+        }
+
         public static void Prompt(this CommandLineApplication c, bool showHelp = false)
         {
             if (c.Name.IsNullOrWhiteSpace())
