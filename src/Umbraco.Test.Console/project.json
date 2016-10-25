@@ -6,8 +6,8 @@
 
   "dependencies": {
     "Microsoft.NETCore.App": {
-      "version": "1.0.1",
-      "type": "platform"
+      "version": "1.0.1"
+      //"type": "platform"
     },
     "Umbraco.Core": {
       "target": "project",
@@ -20,12 +20,18 @@
     "System.Collections.Immutable": "1.2.0"
   },
 
-  "frameworks": {    
+  "frameworks": {
     "netcoreapp1.0": {
       "imports": [
         "dotnet5.6",
         "portable-net45+win8"
       ]
     }
+  },
+
+  "runtimes": {
+    "win10-x64": {},
+    "osx.10.10-x64": {},
+    "ubuntu.14.04-x64": {}
   }
 }

@@ -144,7 +144,7 @@ namespace Umbraco.Core
             SaveConnectionString(connectionString, providerName, _logger);
             _factory.Configure(connectionString, providerName);
         }
-
+      
         /// <summary>
         /// Configures a connection string from the installer.
         /// </summary>

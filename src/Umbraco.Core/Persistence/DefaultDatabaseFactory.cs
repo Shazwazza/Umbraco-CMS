@@ -134,7 +134,8 @@ namespace Umbraco.Core.Persistence
             {
                 _logger.Debug<DefaultDatabaseFactory>("Configuring!");
 
-                if (Configured) throw new InvalidOperationException("Already configured.");
+                //We are now allowing re-configuration
+                //if (Configured) throw new InvalidOperationException("Already configured.");
 
                 Mandate.ParameterNotNullOrEmpty(connectionString, nameof(connectionString));
                 Mandate.ParameterNotNullOrEmpty(providerName, nameof(providerName));

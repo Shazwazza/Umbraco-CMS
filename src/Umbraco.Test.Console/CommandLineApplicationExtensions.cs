@@ -21,19 +21,28 @@ namespace Umbraco.Test.Console
         {
             c.OnExecute(() =>
             {
-                var result = callback();
-
-                foreach (var commandArgument in c.Arguments)
+                try
                 {
-                    commandArgument.Values.Clear();
+                    var result = callback();
+                    return result;
                 }
-                foreach (var commandOption in c.Options)
+                finally
                 {
-                    commandOption.Values.Clear();
+                    Reset(c);
                 }
-
-                return result;
             });            
+        }
+
+        private static void Reset(CommandLineApplication c)
+        {
+            foreach (var commandArgument in c.Arguments)
+            {
+                commandArgument.Values.Clear();
+            }
+            foreach (var commandOption in c.Options)
+            {
+                commandOption.Values.Clear();
+            }
         }
 
         public static void Prompt(this CommandLineApplication c, bool showHelp = false)

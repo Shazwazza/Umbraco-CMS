@@ -129,16 +129,13 @@ namespace Umbraco.Test.Console
 
             var dbContext = appContext.DatabaseContext;
 
-            if (dbContext.IsDatabaseConfigured == false)
+            //Example:
+            //server=.\SQLExpress;database=UmbASPNetCore;user id=sa;password=test
+            if (connString.IsNullOrWhiteSpace())
             {
-                //Example:
-                //server=.\SQLExpress;database=UmbASPNetCore;user id=sa;password=test
-                if (connString.IsNullOrWhiteSpace())
-                {
-                    throw new InvalidOperationException("No connection string specified");
-                }
-                dbContext.ConfigureDatabaseConnection(connString);
+                throw new InvalidOperationException("No connection string specified");
             }
+            dbContext.ConfigureDatabaseConnection(connString);
 
             if (dbContext.CanConnect == false)
             {

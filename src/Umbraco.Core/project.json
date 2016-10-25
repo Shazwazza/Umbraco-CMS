@@ -245,7 +245,7 @@
         "System.Transactions": ""
       },
       "dependencies": {
-        "MySql.Data": "6.9.9",        
+        "MySql.Data": "6.9.9",
         "System.Threading.Tasks.Parallel": "4.0.0.0",
         "MiniProfiler": "3.2.0.157",
         "Microsoft.SqlServer.Compact": "4.0.8876.1",
@@ -263,8 +263,9 @@
         "dotnet5.6",
         "dnxcore50",
         "portable-net45+win8"
-      ], 
+      ],
       "dependencies": {
+        "MySql.Data.Core": "7.0.4-IR-191",
         "System.Runtime": "4.1.0",
         "System.Runtime.Loader": "4.0.0",
         "Microsoft.CSharp": "4.0.1",

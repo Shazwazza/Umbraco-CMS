@@ -398,7 +398,7 @@ ORDER BY TABLE_NAME, INDEX_NAME",
 #if NET461
             return NPocoDatabaseExtensions.EscapeAtSymbols(MySql.Data.MySqlClient.MySqlHelper.EscapeString(val)); 
 #else
-            throw new NotImplementedException("Fix MySql implementation on .Net Core");
+            return NPocoDatabaseExtensions.EscapeAtSymbols(MySql.Data.MySqlClient.MySqlHelper.EscapeString(val));
 #endif
         }
     }

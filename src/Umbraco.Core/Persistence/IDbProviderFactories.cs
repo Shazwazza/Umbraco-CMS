@@ -1,4 +1,5 @@
-﻿using System.Data.Common;
+﻿using System;
+using System.Data.Common;
 using System.Data.SqlClient;
 
 namespace Umbraco.Core.Persistence
@@ -19,7 +20,28 @@ namespace Umbraco.Core.Persistence
     {
         public DbProviderFactory GetFactory(string providerName)
         {
-            return SqlClientFactory.Instance;
+            //DbFactories.
+
+#if NET461
+            return DbProviderFactories.GetFactory(providerName);
+#else
+            switch (providerName)
+            {
+                case Constants.DbProviderNames.MySql:
+                    return MySql.Data.MySqlClient.MySqlClientFactory.Instance;
+                case Constants.DbProviderNames.SqlServer:
+                    return SqlClientFactory.Instance;
+                default:
+                    throw new NotSupportedException("Only MySql and SQL Server are supported on dotnetcore currently");
+            }
+            
+            
+#endif
+
+
+
+
+
         }
     }
 }
