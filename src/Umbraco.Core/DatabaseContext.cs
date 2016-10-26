@@ -301,7 +301,7 @@ namespace Umbraco.Core
             return _databaseSchemaValidationResult;
         }
 
-        public DbInstallResult CreateDatabaseSchemaAndData(ApplicationContext applicationContext)
+        public DbInstallResult CreateDatabaseSchemaAndData(ApplicationContext applicationContext, bool throwOnError = false)
         {
             try
             {
@@ -363,7 +363,14 @@ namespace Umbraco.Core
             }
             catch (Exception ex)
             {
-                return HandleInstallException(ex);
+                if (throwOnError)
+                {
+                    throw;
+                }
+                else
+                {
+                    return HandleInstallException(ex);
+                }
             }
         }
 

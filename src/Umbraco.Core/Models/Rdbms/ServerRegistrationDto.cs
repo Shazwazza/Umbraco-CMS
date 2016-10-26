@@ -29,6 +29,7 @@ namespace Umbraco.Core.Models.Rdbms
         public DateTime DateRegistered { get; set; }
 
         [Column("lastNotifiedDate")]
+        [Constraint(Default = SystemMethods.CurrentDateTime)]
         public DateTime DateAccessed { get; set; }
 
         [Column("isActive")]

@@ -114,7 +114,7 @@ namespace Umbraco.Test.Console
                     else
                     {
                         System.Console.WriteLine("Installing database...");
-                        var installResult = appContext.DatabaseContext.CreateDatabaseSchemaAndData(appContext);
+                        var installResult = appContext.DatabaseContext.CreateDatabaseSchemaAndData(appContext, true);
                         ConsoleHelper.WriteDictionaryVals(installResult.ToDictionary<object>());
                     }
 
