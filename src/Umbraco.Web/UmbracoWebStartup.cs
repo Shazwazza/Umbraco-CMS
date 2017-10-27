@@ -1,9 +1,12 @@
 ﻿using System;
+using LightInject;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Core;
+//using Umbraco.Web.Install;
 
 namespace Umbraco.Web
 {
@@ -34,8 +37,22 @@ namespace Umbraco.Web
             var umbContainer = umbracoApplication.Container;
             
             //no need to declare as per request, currently we manage it's lifetime as the singleton
-            //umbContainer.Register<UmbracoContext>(new PerRequestLifeTime());
+            umbContainer.Register<UmbracoContext>(new PerRequestLifeTime());
 
+            //umbContainer.Register<InstallAuthorizeHandler>(new PerRequestLifeTime());
+
+            services.ConfigureAuthorization();
+        }
+
+        private static void ConfigureAuthorization(this IServiceCollection services)
+        {
+            //services.AddAuthorization(options =>
+            //{
+            //    options.AddPolicy("Umbraco-Installation",
+            //        policy => policy.Requirements.Add(InstallAuthorizeHandler.CreateRequirement()));
+            //});
+
+            //services.AddTransient<IAuthorizationHandler, InstallAuthorizeHandler>();
         }
 
         /// <summary>
@@ -44,12 +61,12 @@ namespace Umbraco.Web
         /// <param name="app"></param>
         /// <param name="env"></param>
         /// <param name="applicationLifetime"></param>
-        public static void UseUmbracoWeb(this IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime applicationLifetime)
+        public static void UseUmbracoWeb(this IApplicationBuilder app, /*IHostingEnvironment env,*/ IApplicationLifetime applicationLifetime)
         {
             if (app.Properties.ContainsKey("umbraco-web-started"))
                 throw new InvalidOperationException($"{nameof(UseUmbracoWeb)} has already been called");
 
-            app.UseUmbracoCore(env, applicationLifetime);
+            app.UseUmbracoCore(/*env,*/ applicationLifetime);
 
             app.Properties["umbraco-web -started"] = true;            
         }

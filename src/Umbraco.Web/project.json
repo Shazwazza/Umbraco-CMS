@@ -77,6 +77,7 @@
   },
 
   "dependencies": {
+    "NETStandard.Library": "1.6.0",
     "LightInject": "4.1.2",
     "Microsoft.Extensions.Configuration.Abstractions": "1.0.0",
     "System.Text.Encodings.Web": "4.0.0",
@@ -101,14 +102,16 @@
     "Newtonsoft.Json": "9.0.1",
     "NPoco": "3.4.4",
     "System.Data.Common": "4.1.0",
-    "System.Runtime.Serialization.Primitives": "4.1.1"    
+    "System.Runtime.Serialization.Primitives": "4.1.1"
   },
 
   "frameworks": {
     "net461": {
+      "frameworkAssemblies": {
+        "System.Runtime": ""
+      },
       "dependencies": {
         "MySql.Data": "6.9.9",
-        "System.Runtime": "4.0.20.0",
         "System.Threading.Tasks.Parallel": "4.0.0.0",
         "MiniProfiler": "3.2.0.157",
         "Microsoft.SqlServer.Compact": "4.0.8876.1",
@@ -128,6 +131,7 @@
         "portable-net45+win8"
       ],
       "dependencies": {
+        "MySql.Data.Core": "7.0.4-IR-191",
         "System.Runtime": "4.1.0",
         "System.Runtime.Loader": "4.0.0",
         "Microsoft.CSharp": "4.0.1",
