@@ -1,26 +1,71 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Caching;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Web.Caching;
-using Umbraco.Core.Composing;
-using CacheItemPriority = System.Web.Caching.CacheItemPriority;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
+using Umbraco.Core.Cache.Umbraco.Core.Cache;
+using Umbraco.Core.Collections;
+
 
 namespace Umbraco.Core.Cache
 {
+
     /// <summary>
-    /// Represents a cache provider that caches item in a <see cref="MemoryCache"/>.
+    /// This is kind of silly but required for now because IMemoryCache does not expose keys, this might be available
+    /// later: 
+    /// https://github.com/aspnet/Caching/issues/155
+    /// </summary>
+    internal class KeyedMemoryCache : MemoryCache, IMemoryCache
+    {
+        public KeyedMemoryCache(IOptions<MemoryCacheOptions> optionsAccessor) : base(optionsAccessor)
+        {
+        }
+
+        private readonly ConcurrentHashSet<string> _keys = new ConcurrentHashSet<string>();
+
+        public IEnumerable<string> Keys => _keys;
+
+        void IDisposable.Dispose()
+        {
+            _keys.Clear();
+            base.Dispose();
+        }
+
+        ICacheEntry IMemoryCache.CreateEntry(object key)
+        {
+            _keys.TryAdd(key.ToString());
+            return base.CreateEntry(key);
+        }
+
+        /// <summary>Gets the item associated with this key if present.</summary>
+        /// <param name="key">An object identifying the requested entry.</param>
+        /// <param name="value">The located value or null.</param>
+        /// <returns>True if the key was found.</returns>
+        bool IMemoryCache.TryGetValue(object key, out object value)
+        {
+            return base.TryGetValue(key, out value);
+        }
+
+        /// <summary>Removes the object associated with the given key.</summary>
+        /// <param name="key">An object identifying the entry.</param>
+        void IMemoryCache.Remove(object key)
+        {
+            _keys.Remove(key.ToString());
+            base.Remove(key);
+        }
+    }
+
+    /// <summary>
     /// A cache provider that wraps the logic of a System.Runtime.Caching.ObjectCache
     /// </summary>
-    /// <remarks>The <see cref="MemoryCache"/> is created with name "in-memory". That name is
-    /// used to retrieve configuration options. It does not identify the memory cache, i.e.
-    /// each instance of this class has its own, independent, memory cache.</remarks>
-    public class ObjectCacheRuntimeCacheProvider : IRuntimeCacheProvider
+    internal class ObjectCacheRuntimeCacheProvider : IRuntimeCacheProvider
     {
+
         private readonly ReaderWriterLockSlim _locker = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
-        internal ObjectCache MemoryCache;
+        internal KeyedMemoryCache MemoryCache;
 
         /// <summary>
         /// Used for debugging
@@ -29,7 +74,7 @@ namespace Umbraco.Core.Cache
 
         public ObjectCacheRuntimeCacheProvider()
         {
-            MemoryCache = new MemoryCache("in-memory");
+            MemoryCache = new KeyedMemoryCache(new MemoryCacheOptions());
             InstanceId = Guid.NewGuid();
         }
 
@@ -40,7 +85,7 @@ namespace Umbraco.Core.Cache
             using (new WriteLock(_locker))
             {
                 MemoryCache.DisposeIfDisposable();
-                MemoryCache = new MemoryCache("in-memory");
+                MemoryCache = new KeyedMemoryCache(new MemoryCacheOptions());
             }
         }
 
@@ -48,31 +93,42 @@ namespace Umbraco.Core.Cache
         {
             using (new WriteLock(_locker))
             {
-                if (MemoryCache[key] == null) return;
+                object val;
+                if (MemoryCache.TryGetValue(key, out val) == false)
+                {
+                    return;
+                }
                 MemoryCache.Remove(key);
             }
         }
 
         public virtual void ClearCacheObjectTypes(string typeName)
         {
-            var type = TypeFinder.GetTypeByName(typeName);
+            //TODO: Does this work in aspnetcore?
+            //var type = TypeFinder.GetTypeByName(typeName);
+            var type = Type.GetType(typeName);
+
             if (type == null) return;
-            var isInterface = type.IsInterface;
+            var isInterface = type.GetTypeInfo().IsInterface;
             using (new WriteLock(_locker))
             {
-                foreach (var key in MemoryCache
+                foreach (var key in MemoryCache.Keys
                     .Where(x =>
                     {
                         // x.Value is Lazy<object> and not null, its value may be null
                         // remove null values as well, does not hurt
                         // get non-created as NonCreatedValue & exceptions as null
-                        var value = DictionaryCacheProviderBase.GetSafeLazyValue((Lazy<object>)x.Value, true);
+                        object cacheVal;
+                        if (MemoryCache.TryGetValue(x, out cacheVal))
+                        {
+                            var value = DictionaryCacheProviderBase.GetSafeLazyValue((Lazy<object>)cacheVal, true);
 
-                        // if T is an interface remove anything that implements that interface
-                        // otherwise remove exact types (not inherited types)
-                        return value == null || (isInterface ? (type.IsInstanceOfType(value)) : (value.GetType() == type));
+                            // if T is an interface remove anything that implements that interface
+                            // otherwise remove exact types (not inherited types)
+                            return value == null || (isInterface ? (type.IsInstanceOfType(value)) : (value.GetType() == type));
+                        }
+                        return false;
                     })
-                    .Select(x => x.Key)
                     .ToArray()) // ToArray required to remove
                     MemoryCache.Remove(key);
             }
@@ -82,22 +138,25 @@ namespace Umbraco.Core.Cache
         {
             using (new WriteLock(_locker))
             {
-                var typeOfT = typeof (T);
-                var isInterface = typeOfT.IsInterface;
-                foreach (var key in MemoryCache
+                var typeOfT = typeof(T);
+                var isInterface = typeOfT.GetTypeInfo().IsInterface;
+                foreach (var key in MemoryCache.Keys
                     .Where(x =>
                     {
-                        // x.Value is Lazy<object> and not null, its value may be null
-                        // remove null values as well, does not hurt
-                        // get non-created as NonCreatedValue & exceptions as null
-                        var value = DictionaryCacheProviderBase.GetSafeLazyValue((Lazy<object>)x.Value, true);
+                        object cacheVal;
+                        if (MemoryCache.TryGetValue(x, out cacheVal))
+                        {
+                            // x.Value is Lazy<object> and not null, its value may be null
+                            // remove null values as well, does not hurt
+                            // get non-created as NonCreatedValue & exceptions as null
+                            var value = DictionaryCacheProviderBase.GetSafeLazyValue((Lazy<object>)cacheVal, true);
 
-                        // if T is an interface remove anything that implements that interface
-                        // otherwise remove exact types (not inherited types)
-                        return value == null || (isInterface ? (value is T) : (value.GetType() == typeOfT));
-
+                            // if T is an interface remove anything that implements that interface
+                            // otherwise remove exact types (not inherited types)
+                            return value == null || (isInterface ? (value is T) : (value.GetType() == typeOfT));
+                        }
+                        return false;
                     })
-                    .Select(x => x.Key)
                     .ToArray()) // ToArray required to remove
                     MemoryCache.Remove(key);
             }
@@ -108,22 +167,26 @@ namespace Umbraco.Core.Cache
             using (new WriteLock(_locker))
             {
                 var typeOfT = typeof(T);
-                var isInterface = typeOfT.IsInterface;
-                foreach (var key in MemoryCache
+                var isInterface = typeOfT.GetTypeInfo().IsInterface;
+                foreach (var key in MemoryCache.Keys
                     .Where(x =>
                     {
-                        // x.Value is Lazy<object> and not null, its value may be null
-                        // remove null values as well, does not hurt
-                        // get non-created as NonCreatedValue & exceptions as null
-                        var value = DictionaryCacheProviderBase.GetSafeLazyValue((Lazy<object>)x.Value, true);
-                        if (value == null) return true;
+                        object cacheVal;
+                        if (MemoryCache.TryGetValue(x, out cacheVal))
+                        {
+                            // x.Value is Lazy<object> and not null, its value may be null
+                            // remove null values as well, does not hurt
+                            // get non-created as NonCreatedValue & exceptions as null
+                            var value = DictionaryCacheProviderBase.GetSafeLazyValue((Lazy<object>)cacheVal, true);
+                            if (value == null) return true;
 
-                        // if T is an interface remove anything that implements that interface
-                        // otherwise remove exact types (not inherited types)
-                        return (isInterface ? (value is T) : (value.GetType() == typeOfT))
-                               && predicate(x.Key, (T)value);
+                            // if T is an interface remove anything that implements that interface
+                            // otherwise remove exact types (not inherited types)
+                            return (isInterface ? (value is T) : (value.GetType() == typeOfT))
+                                   && predicate(x, (T)value);
+                        }
+                        return false;
                     })
-                    .Select(x => x.Key)
                     .ToArray()) // ToArray required to remove
                     MemoryCache.Remove(key);
             }
@@ -133,9 +196,8 @@ namespace Umbraco.Core.Cache
         {
             using (new WriteLock(_locker))
             {
-                foreach (var key in MemoryCache
-                    .Where(x => x.Key.InvariantStartsWith(keyStartsWith))
-                    .Select(x => x.Key)
+                foreach (var key in MemoryCache.Keys
+                    .Where(x => x.InvariantStartsWith(keyStartsWith))
                     .ToArray()) // ToArray required to remove
                     MemoryCache.Remove(key);
             }
@@ -145,9 +207,8 @@ namespace Umbraco.Core.Cache
         {
             using (new WriteLock(_locker))
             {
-                foreach (var key in MemoryCache
-                    .Where(x => Regex.IsMatch(x.Key, regexString))
-                    .Select(x => x.Key)
+                foreach (var key in MemoryCache.Keys
+                    .Where(x => Regex.IsMatch(x, regexString))
                     .ToArray()) // ToArray required to remove
                     MemoryCache.Remove(key);
             }
@@ -162,8 +223,19 @@ namespace Umbraco.Core.Cache
             KeyValuePair<string, object>[] entries;
             using (new ReadLock(_locker))
             {
-                entries = MemoryCache
-                    .Where(x => x.Key.InvariantStartsWith(keyStartsWith))
+                entries = MemoryCache.Keys
+                    .Where(x => x.InvariantStartsWith(keyStartsWith))
+                    .Select(x =>
+                    {
+                        object cacheVal;
+                        if (MemoryCache.TryGetValue(x, out cacheVal))
+                        {
+                            return new { key = x, val = cacheVal };
+                        }
+                        return null;
+                    })
+                    .WhereNotNull()
+                    .Select(x => new KeyValuePair<string, object>(x.key, x.val))
                     .ToArray(); // evaluate while locked
             }
             return entries
@@ -177,8 +249,19 @@ namespace Umbraco.Core.Cache
             KeyValuePair<string, object>[] entries;
             using (new ReadLock(_locker))
             {
-                entries = MemoryCache
-                    .Where(x => Regex.IsMatch(x.Key, regexString))
+                entries = MemoryCache.Keys
+                    .Where(x => Regex.IsMatch(x, regexString))
+                    .Select(x =>
+                    {
+                        object cacheVal;
+                        if (MemoryCache.TryGetValue(x, out cacheVal))
+                        {
+                            return new { key = x, val = cacheVal };
+                        }
+                        return null;
+                    })
+                    .WhereNotNull()
+                    .Select(x => new KeyValuePair<string, object>(x.key, x.val))
                     .ToArray(); // evaluate while locked
             }
             return entries
@@ -202,7 +285,9 @@ namespace Umbraco.Core.Cache
             return GetCacheItem(cacheKey, getCacheItem, null);
         }
 
-        public object GetCacheItem(string cacheKey, Func<object> getCacheItem, TimeSpan? timeout, bool isSliding = false, CacheItemPriority priority = CacheItemPriority.Normal, CacheItemRemovedCallback removedCallback = null, string[] dependentFiles = null)
+        public object GetCacheItem(string cacheKey, Func<object> getCacheItem, TimeSpan? timeout, bool isSliding = false, CacheItemPriority priority = CacheItemPriority.Normal,
+            PostEvictionCallbackRegistration removedCallback = null,
+            string[] dependentFiles = null)
         {
             // see notes in HttpRuntimeCacheProvider
 
@@ -214,7 +299,10 @@ namespace Umbraco.Core.Cache
                 if (result == null || DictionaryCacheProviderBase.GetSafeLazyValue(result, true) == null) // get non-created as NonCreatedValue & exceptions as null
                 {
                     result = DictionaryCacheProviderBase.GetSafeLazy(getCacheItem);
-                    var policy = GetPolicy(timeout, isSliding, removedCallback, dependentFiles);
+                    var policy = GetPolicy(timeout, isSliding,
+                        removedCallback,
+                        dependentFiles,
+                        priority);
 
                     lck.UpgradeToWriteLock();
                     //NOTE: This does an add or update
@@ -234,7 +322,9 @@ namespace Umbraco.Core.Cache
 
         #region Insert
 
-        public void InsertCacheItem(string cacheKey, Func<object> getCacheItem, TimeSpan? timeout = null, bool isSliding = false, CacheItemPriority priority = CacheItemPriority.Normal, CacheItemRemovedCallback removedCallback = null, string[] dependentFiles = null)
+        public void InsertCacheItem(string cacheKey, Func<object> getCacheItem, TimeSpan? timeout = null, bool isSliding = false, CacheItemPriority priority = CacheItemPriority.Normal,
+            PostEvictionCallbackRegistration removedCallback = null,
+            string[] dependentFiles = null)
         {
             // NOTE - here also we must insert a Lazy<object> but we can evaluate it right now
             // and make sure we don't store a null value.
@@ -243,58 +333,43 @@ namespace Umbraco.Core.Cache
             var value = result.Value; // force evaluation now
             if (value == null) return; // do not store null values (backward compat)
 
-            var policy = GetPolicy(timeout, isSliding, removedCallback, dependentFiles);
+            var policy = GetPolicy(timeout, isSliding,
+                removedCallback,
+                dependentFiles, priority);
             //NOTE: This does an add or update
             MemoryCache.Set(cacheKey, result, policy);
         }
 
         #endregion
 
-        private static CacheItemPolicy GetPolicy(TimeSpan? timeout = null, bool isSliding = false, CacheItemRemovedCallback removedCallback = null, string[] dependentFiles = null)
+        private static MemoryCacheEntryOptions GetPolicy(TimeSpan? timeout = null, bool isSliding = false,
+            PostEvictionCallbackRegistration removedCallback = null,
+            string[] dependentFiles = null,
+            CacheItemPriority priority = CacheItemPriority.Normal)
         {
-            var absolute = isSliding ? ObjectCache.InfiniteAbsoluteExpiration : (timeout == null ? ObjectCache.InfiniteAbsoluteExpiration : DateTime.Now.Add(timeout.Value));
-            var sliding = isSliding == false ? ObjectCache.NoSlidingExpiration : (timeout ?? ObjectCache.NoSlidingExpiration);
 
-            var policy = new CacheItemPolicy
+            var absolute = isSliding ? (DateTimeOffset?)null : (timeout == null ? (DateTimeOffset?)null : DateTime.Now.Add(timeout.Value));
+            var sliding = isSliding == false ? (TimeSpan?)null : (timeout ?? (TimeSpan?)null);
+
+            var options = new MemoryCacheEntryOptions
             {
                 AbsoluteExpiration = absolute,
-                SlidingExpiration = sliding
+                SlidingExpiration = sliding,
+                Priority = priority
             };
 
-            if (dependentFiles != null && dependentFiles.Any())
-            {
-                policy.ChangeMonitors.Add(new HostFileChangeMonitor(dependentFiles.ToList()));
-            }
+            //TODO: Fix how dependent files can work with the new caching format!
+            //if (dependentFiles != null && dependentFiles.Any())
+            //{
+            //    options.ExpirationTokens.Add(new ConfigurationReloadToken());
+            //    policy.ChangeMonitors.Add(new HostFileChangeMonitor(dependentFiles.ToList()));
+            //}
 
             if (removedCallback != null)
             {
-                policy.RemovedCallback = arguments =>
-                {
-                    //convert the reason
-                    var reason = CacheItemRemovedReason.Removed;
-                    switch (arguments.RemovedReason)
-                    {
-                        case CacheEntryRemovedReason.Removed:
-                            reason = CacheItemRemovedReason.Removed;
-                            break;
-                        case CacheEntryRemovedReason.Expired:
-                            reason = CacheItemRemovedReason.Expired;
-                            break;
-                        case CacheEntryRemovedReason.Evicted:
-                            reason = CacheItemRemovedReason.Underused;
-                            break;
-                        case CacheEntryRemovedReason.ChangeMonitorChanged:
-                            reason = CacheItemRemovedReason.Expired;
-                            break;
-                        case CacheEntryRemovedReason.CacheSpecificEviction:
-                            reason = CacheItemRemovedReason.Underused;
-                            break;
-                    }
-                    //call the callback
-                    removedCallback(arguments.CacheItem.Key, arguments.CacheItem.Value, reason);
-                };
+                options.PostEvictionCallbacks.Add(removedCallback);
             }
-            return policy;
+            return options;
         }
     }
 }

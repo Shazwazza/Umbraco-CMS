@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web.Caching;
+using Microsoft.Extensions.Caching.Memory;
 using Umbraco.Core.Models;
 using Umbraco.Core.Models.EntityBase;
 
@@ -104,7 +104,7 @@ namespace Umbraco.Core.Cache
             return CheckCloneableAndTracksChanges(cached);
         }
 
-        public object GetCacheItem(string cacheKey, Func<object> getCacheItem, TimeSpan? timeout, bool isSliding = false, CacheItemPriority priority = CacheItemPriority.Normal, CacheItemRemovedCallback removedCallback = null, string[] dependentFiles = null)
+        public object GetCacheItem(string cacheKey, Func<object> getCacheItem, TimeSpan? timeout, bool isSliding = false, CacheItemPriority priority = CacheItemPriority.Normal, PostEvictionCallbackRegistration removedCallback = null, string[] dependentFiles = null)
         {
             var cached = InnerProvider.GetCacheItem(cacheKey, () =>
             {
@@ -120,7 +120,7 @@ namespace Umbraco.Core.Cache
             return CheckCloneableAndTracksChanges(cached);
         }
 
-        public void InsertCacheItem(string cacheKey, Func<object> getCacheItem, TimeSpan? timeout = null, bool isSliding = false, CacheItemPriority priority = CacheItemPriority.Normal, CacheItemRemovedCallback removedCallback = null, string[] dependentFiles = null)
+        public void InsertCacheItem(string cacheKey, Func<object> getCacheItem, TimeSpan? timeout = null, bool isSliding = false, CacheItemPriority priority = CacheItemPriority.Normal, PostEvictionCallbackRegistration removedCallback = null, string[] dependentFiles = null)
         {
             InnerProvider.InsertCacheItem(cacheKey, () =>
             {

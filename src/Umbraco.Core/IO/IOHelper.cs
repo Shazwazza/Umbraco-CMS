@@ -5,8 +5,6 @@ using System.Reflection;
 using System.IO;
 using System.Configuration;
 using System.Linq;
-using System.Web;
-using System.Web.Hosting;
 using ICSharpCode.SharpZipLib.Zip;
 
 namespace Umbraco.Core.IO

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web.Caching;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Umbraco.Core.Cache
 {
@@ -16,7 +16,7 @@ namespace Umbraco.Core.Cache
             TimeSpan? timeout,
             bool isSliding = false,
             CacheItemPriority priority = CacheItemPriority.Normal,
-            CacheItemRemovedCallback removedCallback = null,
+            PostEvictionCallbackRegistration removedCallback = null,
             string[] dependentFiles = null)
         {
             var result = provider.GetCacheItem(cacheKey, () => getCacheItem(), timeout, isSliding, priority, removedCallback, dependentFiles);
@@ -29,7 +29,7 @@ namespace Umbraco.Core.Cache
             TimeSpan? timeout = null,
             bool isSliding = false,
             CacheItemPriority priority = CacheItemPriority.Normal,
-            CacheItemRemovedCallback removedCallback = null,
+            PostEvictionCallbackRegistration removedCallback = null,
             string[] dependentFiles = null)
         {
             provider.InsertCacheItem(cacheKey, () => getCacheItem(), timeout, isSliding, priority, removedCallback, dependentFiles);

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using System.Threading;
-using System.Web;
-using System.Web.Hosting;
 using log4net;
 using LightInject;
 using Umbraco.Core.Composing;
@@ -13,7 +11,7 @@ namespace Umbraco.Core
     /// <summary>
     /// Provides an abstract base class for the Umbraco HttpApplication.
     /// </summary>
-    public abstract class UmbracoApplicationBase : HttpApplication
+    public abstract class UmbracoApplicationBase
     {
         private IRuntime _runtime;
 
@@ -129,13 +127,12 @@ namespace Umbraco.Core
 
         // called by ASP.NET for every HttpApplication instance after all modules have been created
         // which means that this will be called *many* times for different apps when Umbraco runs
-        public override void Init()
+        public void Init()
         {
             // note: base.Init() is what initializes all of the httpmodules, ties up a bunch of stuff with IIS, etc...
             // therefore, since OWIN is an HttpModule when running in IIS/ASP.Net the OWIN startup is not executed
             // until this method fires and by that time - Umbraco has booted already
-
-            base.Init();
+            
             OnApplicationInit(this, new EventArgs());
         }
 
@@ -162,34 +159,9 @@ namespace Umbraco.Core
 
             Current.Reset(); // dispose the container and everything
 
-            if (SystemUtilities.GetCurrentTrustLevel() != AspNetHostingPermissionLevel.Unrestricted) return;
-
-            // try to log the detailed shutdown message (typical asp.net hack: http://weblogs.asp.net/scottgu/433194)
-            try
-            {
-                var runtime = (HttpRuntime) typeof(HttpRuntime).InvokeMember("_theRuntime",
-                    BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.GetField,
-                    null, null, null);
-                if (runtime == null)
-                    return;
-
-                var shutDownMessage = (string)runtime.GetType().InvokeMember("_shutDownMessage",
-                    BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField,
-                    null, runtime, null);
-
-                var shutDownStack = (string)runtime.GetType().InvokeMember("_shutDownStack",
-                    BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField,
-                    null, runtime, null);
-
-                var shutdownMsg = $"Application shutdown. Details: {HostingEnvironment.ShutdownReason}\r\n\r\n_shutDownMessage={shutDownMessage}\r\n\r\n_shutDownStack={shutDownStack}";
-
-                Current.Logger.Info<UmbracoApplicationBase>(shutdownMsg);
-            }
-            catch (Exception)
-            {
-                //if for some reason that fails, then log the normal output
-                Current.Logger.Info<UmbracoApplicationBase>("Application shutdown. Reason: " + HostingEnvironment.ShutdownReason);
-            }
+            //TODO: Get the shutdown details... how?
+            //var shutdownMsg = $"Application shutdown. Details: {HostingEnvironment.ShutdownReason}\r\n\r\n_shutDownMessage={shutDownMessage}\r\n\r\n_shutDownStack={shutDownStack}";
+            //Current.Logger.Info<UmbracoApplicationBase>(shutdownMsg);
         }
 
         // called by ASP.NET (auto event wireup) once per app domain
@@ -212,12 +184,14 @@ namespace Umbraco.Core
 
         private void HandleApplicationError()
         {
-            var exception = Server.GetLastError();
+            //TODO: This might be done with something called DiagnosticListener ?
 
-            // ignore HTTP errors
-            if (exception.GetType() == typeof(HttpException)) return;
+            //var exception = Server.GetLastError();
 
-            Current.Logger.Error<UmbracoApplicationBase>("An unhandled exception occurred.", exception);
+            //// ignore HTTP errors
+            //if (exception.GetType() == typeof(HttpException)) return;
+
+            //Current.Logger.Error<UmbracoApplicationBase>("An unhandled exception occurred.", exception);
         }
 
         // called by ASP.NET (auto event wireup) at any phase in the application life cycle

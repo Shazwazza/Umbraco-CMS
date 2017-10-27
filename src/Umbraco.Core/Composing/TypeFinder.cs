@@ -5,22 +5,48 @@ using System.Linq;
 using System.Reflection;
 using System.Security;
 using System.Text;
-using System.Web;
-using System.Web.Compilation;
-using System.Web.Hosting;
-using Umbraco.Core.Composing;
 using Umbraco.Core.IO;
 
 namespace Umbraco.Core.Composing
 {
+    public interface ITypeFinder
+    {
+        IEnumerable<Type> FindClassesOfType<T>();
+        IEnumerable<Type> FindClassesOfType<T>(IEnumerable<Assembly> assemblies);
+        IEnumerable<Type> FindClassesOfType<T>(IEnumerable<Assembly> assemblies, bool onlyConcreteClasses);
+        IEnumerable<Type> FindClassesOfTypeWithAttribute<TAttribute>(Type assignTypeFrom, IEnumerable<Assembly> assemblies, bool onlyConcreteClasses) where TAttribute : Attribute;
+        IEnumerable<Type> FindClassesOfTypeWithAttribute<T, TAttribute>() where TAttribute : Attribute;
+        IEnumerable<Type> FindClassesOfTypeWithAttribute<T, TAttribute>(IEnumerable<Assembly> assemblies) where TAttribute : Attribute;
+        IEnumerable<Type> FindClassesOfTypeWithAttribute<T, TAttribute>(IEnumerable<Assembly> assemblies, bool onlyConcreteClasses) where TAttribute : Attribute;
+        IEnumerable<Type> FindClassesWithAttribute(Type attributeType, IEnumerable<Assembly> assemblies, bool onlyConcreteClasses);
+        IEnumerable<Type> FindClassesWithAttribute<T>() where T : Attribute;
+        IEnumerable<Type> FindClassesWithAttribute<T>(IEnumerable<Assembly> assemblies) where T : Attribute;
+        IEnumerable<Type> FindClassesWithAttribute<T>(IEnumerable<Assembly> assemblies, bool onlyConcreteClasses) where T : Attribute;
+        IEnumerable<Assembly> AssembliesToScan { get; }
+    }
+
     /// <summary>
     /// A utility class to find all classes of a certain type by reflection in the current bin folder
     /// of the web application.
     /// </summary>
-    public static class TypeFinder
+    public class TypeFinder : ITypeFinder
     {
-        private static volatile HashSet<Assembly> _localFilteredAssemblyCache;
-        private static readonly object LocalFilteredAssemblyCacheLocker = new object();
+        private readonly Lazy<HashSet<Assembly>> _localFilteredAssemblyCache = null;
+
+        //TODO: Inject variables
+        public TypeFinder(IEnumerable<Assembly> excludeFromResults = null)
+        {
+            _localFilteredAssemblyCache = new Lazy<HashSet<Assembly>>(() =>
+            {
+                var localFilteredAssemblyCache = new HashSet<Assembly>();
+                var assemblies = GetFilteredAssemblies(excludeFromResults, KnownAssemblyExclusionFilter);
+                foreach (var a in assemblies)
+                {
+                    localFilteredAssemblyCache.Add(a);
+                }
+                return localFilteredAssemblyCache;
+            });
+        }
 
         /// <summary>
         /// lazily load a reference to all assemblies and only local assemblies.
@@ -34,59 +60,41 @@ namespace Umbraco.Core.Composing
         /// http://stackoverflow.com/questions/3552223/asp-net-appdomain-currentdomain-getassemblies-assemblies-missing-after-app
         /// http://stackoverflow.com/questions/2477787/difference-between-appdomain-getassemblies-and-buildmanager-getreferencedassembl
         /// </remarks>
-        internal static HashSet<Assembly> GetAllAssemblies()
+        internal HashSet<Assembly> GetAllAssemblies()
         {
-            return AllAssemblies.Value;
+            return _allAssemblies.Value;
         }
 
         //Lazy access to the all assemblies list
-        private static readonly Lazy<HashSet<Assembly>> AllAssemblies = new Lazy<HashSet<Assembly>>(() =>
+        private readonly Lazy<HashSet<Assembly>> _allAssemblies = new Lazy<HashSet<Assembly>>(() =>
         {
             HashSet<Assembly> assemblies = null;
             try
             {
-                var isHosted = HttpContext.Current != null || HostingEnvironment.IsHosted;
-
-                try
+                //NOTE: we cannot use AppDomain.CurrentDomain.GetAssemblies() because this only returns assemblies that have
+                // already been loaded in to the app domain, instead we will look directly into the bin folder and load each one.
+                var binFolder = IOHelper.GetRootDirectoryBinFolder();
+                var binAssemblyFiles = Directory.GetFiles(binFolder, "*.dll", SearchOption.TopDirectoryOnly).ToList();
+                //var binFolder = Assembly.GetExecutingAssembly().GetAssemblyFile().Directory;
+                //var binAssemblyFiles = Directory.GetFiles(binFolder.FullName, "*.dll", SearchOption.TopDirectoryOnly).ToList();
+                assemblies = new HashSet<Assembly>();
+                foreach (var a in binAssemblyFiles)
                 {
-                    if (isHosted)
+                    try
                     {
-                        assemblies = new HashSet<Assembly>(BuildManager.GetReferencedAssemblies().Cast<Assembly>());
+                        var assName = AssemblyName.GetAssemblyName(a);
+                        var ass = Assembly.Load(assName);
+                        assemblies.Add(ass);
                     }
-                }
-                catch (InvalidOperationException e)
-                {
-                    if (e.InnerException is SecurityException == false)
-                        throw;
-                }
-
-                if (assemblies == null)
-                {
-                    //NOTE: we cannot use AppDomain.CurrentDomain.GetAssemblies() because this only returns assemblies that have
-                    // already been loaded in to the app domain, instead we will look directly into the bin folder and load each one.
-                    var binFolder = IOHelper.GetRootDirectoryBinFolder();
-                    var binAssemblyFiles = Directory.GetFiles(binFolder, "*.dll", SearchOption.TopDirectoryOnly).ToList();
-                    //var binFolder = Assembly.GetExecutingAssembly().GetAssemblyFile().Directory;
-                    //var binAssemblyFiles = Directory.GetFiles(binFolder.FullName, "*.dll", SearchOption.TopDirectoryOnly).ToList();
-                    assemblies = new HashSet<Assembly>();
-                    foreach (var a in binAssemblyFiles)
+                    catch (Exception e)
                     {
-                        try
+                        if (e is SecurityException || e is BadImageFormatException)
                         {
-                            var assName = AssemblyName.GetAssemblyName(a);
-                            var ass = Assembly.Load(assName);
-                            assemblies.Add(ass);
+                            //swallow these exceptions
                         }
-                        catch (Exception e)
+                        else
                         {
-                            if (e is SecurityException || e is BadImageFormatException)
-                            {
-                                //swallow these exceptions
-                            }
-                            else
-                            {
-                                throw;
-                            }
+                            throw;
                         }
                     }
                 }
@@ -100,8 +108,10 @@ namespace Umbraco.Core.Composing
                     }
                 }
 
+                //TODO: IfDef for .NET Standard or normal .NET!
+
                 //here we are trying to get the App_Code assembly
-                var fileExtensions = new[] { ".cs", ".vb" }; //only vb and cs files are supported
+                var fileExtensions = new[] {".cs", ".vb"}; //only vb and cs files are supported
                 var appCodeFolder = new DirectoryInfo(IOHelper.MapPath(IOHelper.ResolveUrl("~/App_code")));
                 //check if the folder exists and if there are any files in it with the supported file extensions
                 if (appCodeFolder.Exists && fileExtensions.Any(x => appCodeFolder.GetFiles("*" + x).Any()))
@@ -126,28 +136,15 @@ namespace Umbraco.Core.Composing
             }
 
             return assemblies;
-        });
+        });        
 
         /// <summary>
         /// Return a list of found local Assemblies excluding the known assemblies we don't want to scan
         /// and exluding the ones passed in and excluding the exclusion list filter, the results of this are
         /// cached for perforance reasons.
         /// </summary>
-        /// <param name="excludeFromResults"></param>
         /// <returns></returns>
-        internal static HashSet<Assembly> GetAssembliesWithKnownExclusions(
-            IEnumerable<Assembly> excludeFromResults = null)
-        {
-            lock (LocalFilteredAssemblyCacheLocker)
-            {
-                if (_localFilteredAssemblyCache != null)
-                    return _localFilteredAssemblyCache;
-
-                var assemblies = GetFilteredAssemblies(excludeFromResults, KnownAssemblyExclusionFilter);
-                _localFilteredAssemblyCache = new HashSet<Assembly>(assemblies);
-                return _localFilteredAssemblyCache;
-            }
-        }
+        public IEnumerable<Assembly> AssembliesToScan => _localFilteredAssemblyCache.Value;
 
         /// <summary>
         /// Return a distinct list of found local Assemblies and exluding the ones passed in and excluding the exclusion list filter
@@ -155,7 +152,7 @@ namespace Umbraco.Core.Composing
         /// <param name="excludeFromResults"></param>
         /// <param name="exclusionFilter"></param>
         /// <returns></returns>
-        private static IEnumerable<Assembly> GetFilteredAssemblies(
+        private IEnumerable<Assembly> GetFilteredAssemblies(
             IEnumerable<Assembly> excludeFromResults = null,
             string[] exclusionFilter = null)
         {
@@ -177,7 +174,7 @@ namespace Umbraco.Core.Composing
         /// NOTE the comma vs period... comma delimits the name in an Assembly FullName property so if it ends with comma then its an exact name match
         /// NOTE this means that "foo." will NOT exclude "foo.dll" but only "foo.*.dll"
         /// </remarks>
-        internal static readonly string[] KnownAssemblyExclusionFilter = new[]
+        internal readonly string[] KnownAssemblyExclusionFilter = new[]
                 {
                     "mscorlib,",
                     "System.",
@@ -232,10 +229,10 @@ namespace Umbraco.Core.Composing
         /// <typeparam name="T"></typeparam>
         /// <typeparam name="TAttribute"></typeparam>
         /// <returns></returns>
-        public static IEnumerable<Type> FindClassesOfTypeWithAttribute<T, TAttribute>()
+        public IEnumerable<Type> FindClassesOfTypeWithAttribute<T, TAttribute>()
             where TAttribute : Attribute
         {
-            return FindClassesOfTypeWithAttribute<T, TAttribute>(GetAssembliesWithKnownExclusions(), true);
+            return FindClassesOfTypeWithAttribute<T, TAttribute>(AssembliesToScan, true);
         }
 
         /// <summary>
@@ -245,7 +242,7 @@ namespace Umbraco.Core.Composing
         /// <typeparam name="TAttribute"></typeparam>
         /// <param name="assemblies"></param>
         /// <returns></returns>
-        public static IEnumerable<Type> FindClassesOfTypeWithAttribute<T, TAttribute>(IEnumerable<Assembly> assemblies)
+        public IEnumerable<Type> FindClassesOfTypeWithAttribute<T, TAttribute>(IEnumerable<Assembly> assemblies)
             where TAttribute : Attribute
         {
             return FindClassesOfTypeWithAttribute<T, TAttribute>(assemblies, true);
@@ -259,7 +256,7 @@ namespace Umbraco.Core.Composing
         /// <param name="assemblies"></param>
         /// <param name="onlyConcreteClasses"></param>
         /// <returns></returns>
-        public static IEnumerable<Type> FindClassesOfTypeWithAttribute<T, TAttribute>(
+        public IEnumerable<Type> FindClassesOfTypeWithAttribute<T, TAttribute>(
             IEnumerable<Assembly> assemblies,
             bool onlyConcreteClasses)
             where TAttribute : Attribute
@@ -275,7 +272,7 @@ namespace Umbraco.Core.Composing
         /// <param name="assemblies"></param>
         /// <param name="onlyConcreteClasses"></param>
         /// <returns></returns>
-        public static IEnumerable<Type> FindClassesOfTypeWithAttribute<TAttribute>(
+        public IEnumerable<Type> FindClassesOfTypeWithAttribute<TAttribute>(
             Type assignTypeFrom,
             IEnumerable<Assembly> assemblies,
             bool onlyConcreteClasses)
@@ -293,9 +290,9 @@ namespace Umbraco.Core.Composing
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static IEnumerable<Type> FindClassesOfType<T>()
+        public IEnumerable<Type> FindClassesOfType<T>()
         {
-            return FindClassesOfType<T>(GetAssembliesWithKnownExclusions(), true);
+            return FindClassesOfType<T>(AssembliesToScan, true);
         }
 
         /// <summary>
@@ -305,7 +302,7 @@ namespace Umbraco.Core.Composing
         /// <param name="assemblies"></param>
         /// <param name="onlyConcreteClasses"></param>
         /// <returns></returns>
-        public static IEnumerable<Type> FindClassesOfType<T>(IEnumerable<Assembly> assemblies, bool onlyConcreteClasses)
+        public IEnumerable<Type> FindClassesOfType<T>(IEnumerable<Assembly> assemblies, bool onlyConcreteClasses)
         {
             if (assemblies == null) throw new ArgumentNullException(nameof(assemblies));
 
@@ -318,7 +315,7 @@ namespace Umbraco.Core.Composing
         /// <typeparam name="T"></typeparam>
         /// <param name="assemblies"></param>
         /// <returns></returns>
-        public static IEnumerable<Type> FindClassesOfType<T>(IEnumerable<Assembly> assemblies)
+        public IEnumerable<Type> FindClassesOfType<T>(IEnumerable<Assembly> assemblies)
         {
             return FindClassesOfType<T>(assemblies, true);
         }
@@ -330,7 +327,7 @@ namespace Umbraco.Core.Composing
         /// <param name="assemblies">The assemblies.</param>
         /// <param name="onlyConcreteClasses">if set to <c>true</c> only concrete classes.</param>
         /// <returns></returns>
-        public static IEnumerable<Type> FindClassesWithAttribute<T>(IEnumerable<Assembly> assemblies, bool onlyConcreteClasses)
+        public IEnumerable<Type> FindClassesWithAttribute<T>(IEnumerable<Assembly> assemblies, bool onlyConcreteClasses)
             where T : Attribute
         {
             return FindClassesWithAttribute(typeof(T), assemblies, onlyConcreteClasses);
@@ -343,7 +340,7 @@ namespace Umbraco.Core.Composing
         /// <param name="assemblies">The assemblies.</param>
         /// <param name="onlyConcreteClasses">if set to <c>true</c> only concrete classes.</param>
         /// <returns></returns>
-        public static IEnumerable<Type> FindClassesWithAttribute(
+        public IEnumerable<Type> FindClassesWithAttribute(
             Type attributeType,
             IEnumerable<Assembly> assemblies,
             bool onlyConcreteClasses)
@@ -357,7 +354,7 @@ namespace Umbraco.Core.Composing
         /// <typeparam name="T"></typeparam>
         /// <param name="assemblies">The assemblies.</param>
         /// <returns></returns>
-        public static IEnumerable<Type> FindClassesWithAttribute<T>(IEnumerable<Assembly> assemblies)
+        public IEnumerable<Type> FindClassesWithAttribute<T>(IEnumerable<Assembly> assemblies)
             where T : Attribute
         {
             return FindClassesWithAttribute<T>(assemblies, true);
@@ -368,15 +365,15 @@ namespace Umbraco.Core.Composing
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static IEnumerable<Type> FindClassesWithAttribute<T>()
+        public IEnumerable<Type> FindClassesWithAttribute<T>()
             where T : Attribute
         {
-            return FindClassesWithAttribute<T>(GetAssembliesWithKnownExclusions());
+            return FindClassesWithAttribute<T>(AssembliesToScan);
         }
 
         #region Private methods
 
-        private static IEnumerable<Type> GetClassesWithAttribute(
+        private IEnumerable<Type> GetClassesWithAttribute(
             Type attributeType,
             IEnumerable<Assembly> assemblies,
             bool onlyConcreteClasses)
@@ -443,7 +440,7 @@ namespace Umbraco.Core.Composing
         /// <param name="onlyConcreteClasses"></param>
         /// <param name="additionalFilter">An additional filter to apply for what types will actually be included in the return value</param>
         /// <returns></returns>
-        private static IEnumerable<Type> GetClassesWithBaseType(
+        private IEnumerable<Type> GetClassesWithBaseType(
             Type baseType,
             IEnumerable<Assembly> assemblies,
             bool onlyConcreteClasses,
@@ -499,7 +496,7 @@ namespace Umbraco.Core.Composing
             return types;
         }
 
-        internal static IEnumerable<Type> GetTypesWithFormattedException(Assembly a)
+        internal IEnumerable<Type> GetTypesWithFormattedException(Assembly a)
         {
             //if the assembly is dynamic, do not try to scan it
             if (a.IsDynamic)
@@ -534,7 +531,7 @@ namespace Umbraco.Core.Composing
             }
         }
 
-        private static void AppendCouldNotLoad(StringBuilder sb, Assembly a, bool getAll)
+        private void AppendCouldNotLoad(StringBuilder sb, Assembly a, bool getAll)
         {
             sb.Append("Could not load ");
             sb.Append(getAll ? "all" : "exported");
@@ -543,7 +540,7 @@ namespace Umbraco.Core.Composing
             sb.AppendLine("\" due to LoaderExceptions, skipping:");
         }
 
-        private static void AppendLoaderException(StringBuilder sb, Exception loaderException)
+        private void AppendLoaderException(StringBuilder sb, Exception loaderException)
         {
             sb.Append(". ");
             sb.Append(loaderException.GetType().FullName);
@@ -561,23 +558,6 @@ namespace Umbraco.Core.Composing
         }
 
         #endregion
-
-        public static Type GetTypeByName(string typeName)
-        {
-            var type = BuildManager.GetType(typeName, false);
-            if (type != null) return type;
-
-            //TODO: This isn't very elegant, and will have issues since the AppDomain.CurrentDomain
-            // doesn't actualy load in all assemblies, only the types that have been referenced so far.
-            // However, in a web context, the BuildManager will have executed which will force all assemblies
-            // to be loaded so it's fine for now.
-
-            //now try fall back procedures.
-            type = Type.GetType(typeName);
-            if (type != null) return type;
-            return AppDomain.CurrentDomain.GetAssemblies()
-                .Select(x => x.GetType(typeName))
-                .FirstOrDefault(x => x != null);
-        }
+        
     }
 }

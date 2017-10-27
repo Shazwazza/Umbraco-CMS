@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
+using Microsoft.AspNetCore.Http;
 
 namespace Umbraco.Core.Cache
 {
@@ -14,36 +14,14 @@ namespace Umbraco.Core.Cache
     /// </remarks>
     internal class HttpRequestCacheProvider : DictionaryCacheProviderBase
     {
-        // context provider
-        // the idea is that there is only one, application-wide HttpRequestCacheProvider instance,
-        // that is initialized with a method that returns the "current" context.
-        // NOTE
-        //   but then it is initialized with () => new HttpContextWrapper(HttpContent.Current)
-        //   which is higly inefficient because it creates a new wrapper each time we refer to _context()
-        //   so replace it with _context1 and _context2 below + a way to get context.Items.
-        //private readonly Func<HttpContextBase> _context;
+        private readonly IHttpContextAccessor _context;
+        private readonly object _lock = new object();
 
-        // NOTE
-        //   and then in almost 100% cases _context2 will be () => HttpContext.Current
-        //   so why not bring that logic in here and fallback on to HttpContext.Current when
-        //   _context1 is null?
-        //private readonly HttpContextBase _context1;
-        //private readonly Func<HttpContext> _context2;
-        private readonly HttpContextBase _context;
+        private IDictionary<object, object> ContextItems => _context.HttpContext.Items;
 
-        private IDictionary ContextItems
-        {
-            //get { return _context1 != null ? _context1.Items : _context2().Items; }
-            get { return _context != null ? _context.Items : HttpContext.Current.Items; }
-        }
+        private bool HasContextItems => _context != null;
 
-        private bool HasContextItems
-        {
-            get { return (_context != null && _context.Items != null) || HttpContext.Current != null; }
-        }
-
-        // for unit tests
-        public HttpRequestCacheProvider(HttpContextBase context)
+        public HttpRequestCacheProvider(IHttpContextAccessor context)
         {
             _context = context;
         }
@@ -95,7 +73,7 @@ namespace Umbraco.Core.Cache
             get
             {
                 return HasContextItems
-                    ? (IDisposable) new MonitorLock(ContextItems.SyncRoot)
+                    ? (IDisposable) new MonitorLock(_lock)
                     : new NoopLocker();
             }
         }

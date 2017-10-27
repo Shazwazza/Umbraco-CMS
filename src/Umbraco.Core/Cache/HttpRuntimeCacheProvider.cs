@@ -3,8 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Web.Caching;
-using CacheItemPriority = System.Web.Caching.CacheItemPriority;
 
 namespace Umbraco.Core.Cache
 {
