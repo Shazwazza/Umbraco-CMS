@@ -19,8 +19,26 @@ namespace Umbraco.Core.Services
     /// <summary>
     /// A helper class to serialize entities to XML
     /// </summary>
-    internal class EntityXmlSerializer
+    public class EntityXmlSerializer
     {
+        public IEnumerable<KeyValuePair<string, object>> KeyVals(IDataTypeService dataTypeService, IUserService userService, IContent content)
+        {   
+            var kv = KeyVals(dataTypeService, content);
+            foreach (var p in kv)
+            {
+                if(p.Value != null)
+                    yield return p;
+            }
+
+            yield return new KeyValuePair<string, object>("nodeType", content.ContentType.Id);
+            yield return new KeyValuePair<string, object>("creatorName", content.GetCreatorProfile(userService).Name);
+            yield return new KeyValuePair<string, object>("writerName", content.GetWriterProfile(userService).Name);
+            yield return new KeyValuePair<string, object>("writerID", content.WriterId);
+            yield return new KeyValuePair<string, object>("template", content.Template == null ? "0" : content.Template.Id.ToString(CultureInfo.InvariantCulture));
+            yield return new KeyValuePair<string, object>("nodeTypeAlias", content.ContentType.Alias);
+            yield return new KeyValuePair<string, object>("isPublished", content.Published);
+        }
+
         /// <summary>
         /// Exports an <see cref="IContent"/> item to xml as an <see cref="XElement"/>
         /// </summary>
@@ -107,6 +125,16 @@ namespace Umbraco.Core.Services
             xml.Add(new XAttribute("icon", member.ContentType.Icon));
 
             return xml;
+        }
+
+        public KeyValuePair<string, object> KeyVal(IDataTypeService dataTypeService, Property property)
+        {
+            var propertyType = property.PropertyType;
+            var nodeName = property.Alias.ToSafeAlias();
+
+            //Get the property editor for thsi property and let it convert it to the xml structure
+            var propertyEditor = PropertyEditorResolver.Current.GetByAlias(property.PropertyType.PropertyEditorAlias);
+            return propertyEditor != null ? new KeyValuePair<string, object>(nodeName, propertyEditor.ValueEditor.ConvertDbToString(property, propertyType, dataTypeService)) : new KeyValuePair<string, object>(nodeName, null);
         }
 
         public XElement Serialize(IDataTypeService dataTypeService, Property property)
@@ -465,6 +493,30 @@ namespace Umbraco.Core.Services
                 var children = originalDescendants.Where(x => x.ParentId == c.Id);
                 //recurse and add it's children to the child xml element
                 AddChildXml(mediaService, dataTypeService, userService, originalDescendants, children, childXml);
+            }
+        }
+
+        private IEnumerable<KeyValuePair<string, object>> KeyVals(IDataTypeService dataTypeService, IContentBase contentBase)
+        {
+            //NOTE: that one will take care of umbracoUrlName
+            var url = contentBase.GetUrlSegment();
+
+            yield return new KeyValuePair<string, object>("id", contentBase.Id);
+            yield return new KeyValuePair<string, object>("key", contentBase.Key);
+            yield return new KeyValuePair<string, object>("parentID", contentBase.Level > 1 ? contentBase.ParentId : -1);
+            yield return new KeyValuePair<string, object>("level", contentBase.Level);
+            yield return new KeyValuePair<string, object>("creatorID", contentBase.CreatorId);
+            yield return new KeyValuePair<string, object>("sortOrder", contentBase.SortOrder);
+            yield return new KeyValuePair<string, object>("createDate", contentBase.CreateDate.ToString("s"));
+            yield return new KeyValuePair<string, object>("updateDate", contentBase.UpdateDate.ToString("s"));
+            yield return new KeyValuePair<string, object>("nodeName", contentBase.Name);
+            yield return new KeyValuePair<string, object>("urlName", url);
+            yield return new KeyValuePair<string, object>("path", contentBase.Path);
+            yield return new KeyValuePair<string, object>("isDoc", "");
+
+            foreach (var property in contentBase.Properties.Where(p => p?.Value != null && p.Value.ToString().IsNullOrWhiteSpace() == false))
+            {
+                yield return KeyVal(dataTypeService, property);
             }
         }
 

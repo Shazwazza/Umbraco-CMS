@@ -635,7 +635,9 @@ namespace UmbracoExamine
             } while (more && IsCancellationRequested == false); //don't continue if the app is shutting down
         }
 
-        internal static IEnumerable<XElement> GetSerializedContent(
+        //TODO: This is just horrible - we are taking an existing IContent, converting it to XDocument and then converting that back to fields
+        // ... this is an insane amount of conversion and will always be done for the internal index
+        public static IEnumerable<XElement> GetSerializedContent(
             bool supportUnpublishdContent, 
             Func<IContent, XElement> serializer, 
             IEnumerable<IContent> content, 

@@ -142,3 +142,4 @@ build.out/
 build.tmp/
 build/Modules/*/temp/
 /src/.idea/*
+/src/Umbraco.Core.bak/*
