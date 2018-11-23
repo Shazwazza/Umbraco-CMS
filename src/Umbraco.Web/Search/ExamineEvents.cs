@@ -17,6 +17,7 @@ using Umbraco.Web.Cache;
 using UmbracoExamine;
 using Content = umbraco.cms.businesslogic.Content;
 using Document = umbraco.cms.businesslogic.web.Document;
+using TypeHelper = Umbraco.Core.TypeHelper;
 
 namespace Umbraco.Web.Search
 {
@@ -43,7 +44,7 @@ namespace Umbraco.Web.Search
             LogHelper.Info<ExamineEvents>("Initializing Examine and binding to business logic events");
 
 			var registeredProviders = ExamineManager.Instance.IndexProviderCollection
-				.OfType<BaseUmbracoIndexer>().Count(x => x.EnableDefaultEventHandler);
+				.OfType<IUmbracoIndexer>().Count(x => x.EnableDefaultEventHandler);
 
 			LogHelper.Info<ExamineEvents>("Adding examine event handlers for index providers: {0}", () => registeredProviders);
 
@@ -59,16 +60,6 @@ namespace Umbraco.Web.Search
             CacheRefresherBase<MemberCacheRefresher>.CacheUpdated += MemberCacheRefresherCacheUpdated;
             CacheRefresherBase<ContentTypeCacheRefresher>.CacheUpdated += ContentTypeCacheRefresherCacheUpdated;
 
-			var contentIndexer = ExamineManager.Instance.IndexProviderCollection[Constants.Examine.InternalIndexer] as UmbracoContentIndexer;
-			if (contentIndexer != null)
-			{
-				contentIndexer.DocumentWriting += IndexerDocumentWriting;
-			}
-			var memberIndexer = ExamineManager.Instance.IndexProviderCollection[Constants.Examine.InternalMemberIndexer] as UmbracoMemberIndexer;
-			if (memberIndexer != null)
-			{
-				memberIndexer.DocumentWriting += IndexerDocumentWriting;
-			}
 		}
 
         /// <summary>
@@ -459,30 +450,7 @@ namespace Umbraco.Web.Search
 		    else
 		        DeferedReIndexForMember.Execute(member);
 		}
-
-		/// <summary>
-		/// Event handler to create a lower cased version of the node name, this is so we can support case-insensitive searching and still
-		/// use the Whitespace Analyzer
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-
-		private static void IndexerDocumentWriting(object sender, DocumentWritingEventArgs e)
-		{
-			if (e.Fields.Keys.Contains("nodeName"))
-			{
-                //TODO: This logic should really be put into the content indexer instead of hidden here!!
-
-				//add the lower cased version
-				e.Document.Add(new Field("__nodeName",
-										e.Fields["nodeName"].ToLower(),
-										Field.Store.YES,
-										Field.Index.ANALYZED,
-										Field.TermVector.NO
-										));
-			}
-		}
-
+        
         private static void ReIndexForMedia(IMedia sender, bool isMediaPublished)
         {
             var actions = DeferedActions.Get(ApplicationContext.Current.ScopeProvider);
@@ -584,7 +552,7 @@ namespace Umbraco.Web.Search
 
 	            ExamineManager.Instance.ReIndexNode(
 	                xml, IndexTypes.Content,
-	                ExamineManager.Instance.IndexProviderCollection.OfType<BaseUmbracoIndexer>()
+	                ExamineManager.Instance.IndexProviderCollection.OfType<IUmbracoIndexer>()
 
 	                    //Index this item for all indexers if the content is published, otherwise if the item is not published
 	                    // then only index this for indexers supporting unpublished content
@@ -618,7 +586,7 @@ namespace Umbraco.Web.Search
 
 	            ExamineManager.Instance.ReIndexNode(
 	                xml, IndexTypes.Media,
-	                ExamineManager.Instance.IndexProviderCollection.OfType<BaseUmbracoIndexer>()
+	                ExamineManager.Instance.IndexProviderCollection.OfType<IUmbracoIndexer>()
 
 	                    //Index this item for all indexers if the media is not trashed, otherwise if the item is trashed
 	                    // then only index this for indexers supporting unpublished media
@@ -646,7 +614,7 @@ namespace Umbraco.Web.Search
 	        {
 	            ExamineManager.Instance.ReIndexNode(
 	                member.ToXml(), IndexTypes.Member,
-	                ExamineManager.Instance.IndexProviderCollection.OfType<BaseUmbracoIndexer>()
+	                ExamineManager.Instance.IndexProviderCollection.OfType<IUmbracoIndexer>()
 	                    //ensure that only the providers are flagged to listen execute
 	                    .Where(x => x.EnableDefaultEventHandler));
 	        }
@@ -672,7 +640,7 @@ namespace Umbraco.Web.Search
 	        {
 	            ExamineManager.Instance.DeleteFromIndex(
 	                id.ToString(CultureInfo.InvariantCulture),
-	                ExamineManager.Instance.IndexProviderCollection.OfType<BaseUmbracoIndexer>()
+	                ExamineManager.Instance.IndexProviderCollection.OfType<IUmbracoIndexer>()
 
 	                    //if keepIfUnpublished == true then only delete this item from indexes not supporting unpublished content,
 	                    // otherwise if keepIfUnpublished == false then remove from all indexes

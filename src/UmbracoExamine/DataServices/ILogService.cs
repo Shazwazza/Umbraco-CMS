@@ -1,4 +1,6 @@
 ﻿using System;
+using System.ComponentModel;
+
 namespace UmbracoExamine.DataServices
 {
     public interface ILogService
@@ -9,6 +11,7 @@ namespace UmbracoExamine.DataServices
         void AddVerboseLog(int nodeId, string msg);
 
 		[Obsolete("This value is no longer used since we support the log levels that are available with LogHelper")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
 		LoggingLevel LogLevel { get; set; }
     }
 }

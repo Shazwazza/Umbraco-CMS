@@ -54,7 +54,7 @@
                                 <li>
                                     <a href="" ng-click="toggle(indexer, 'showTools')">Index info & tools</a>
 
-                                    <div ng-show="indexer.showTools && indexer.isLuceneIndex">
+                                    <div ng-show="indexer.showTools">
                                         <div>
                                             <br />
 
@@ -69,22 +69,22 @@
                                         </div>
                                         <table class="table table-bordered table-condensed">
                                             <caption>&nbsp;</caption>
-                                            <tr>
+                                            <tr ng-if="indexer.fieldCount > -1">
                                                 <th>Documents in index</th>
                                                 <td>{{indexer.documentCount}}</td>
                                             </tr>
-                                            <tr>
+                                            <tr ng-if="indexer.fieldCount > -1">
                                                 <th>Fields in index</th>
                                                 <td>{{indexer.fieldCount}}</td>
                                             </tr>
-                                            <tr>
+                                            <tr ng-if="indexer.isLuceneIndex">
                                                 <th>Has deletions?</th>
                                                 <td>
                                                     <span>{{indexer.deletionCount > 0}}</span>
                                                     (<span>{{indexer.deletionCount}}</span>)
                                                 </td>
                                             </tr>
-                                            <tr>
+                                            <tr ng-if="indexer.isLuceneIndex">
                                                 <th>Optimized?</th>
                                                 <td>
                                                     <span>{{indexer.isOptimized}}</span>

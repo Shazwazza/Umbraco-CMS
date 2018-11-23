@@ -10,6 +10,7 @@ using Examine;
 using Examine.LuceneEngine.SearchCriteria;
 using Examine.Providers;
 using Lucene.Net.Documents;
+using Lucene.Net.QueryParsers;
 using Lucene.Net.Store;
 using Umbraco.Core;
 using Umbraco.Core.Configuration;
@@ -255,7 +256,8 @@ namespace Umbraco.Web.PublishedCache.XmlPublishedCache
                     // note that since the use of the wildcard, it automatically escapes it in Lucene.
 
                     var criteria = searchProvider.CreateSearchCriteria("media");
-                    var filter = criteria.Id(id).Not().Field(UmbracoContentIndexer.IndexPathFieldName, "-1,-21,".MultipleCharacterWildcard());
+                    var filter = criteria.Id(id).Not()
+                        .Field(UmbracoContentIndexer.IndexPathFieldName, QueryParser.Escape("-1,-21,").MultipleCharacterWildcard());
 
                     var result = searchProvider.Search(filter.Compile()).FirstOrDefault();
                     if (result != null) return ConvertFromSearchResult(result);

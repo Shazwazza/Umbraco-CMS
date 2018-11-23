@@ -15,7 +15,7 @@ namespace UmbracoExamine.AzureSearch
             _mediaService = mediaService;
         }
 
-        public IEnumerable<IndexDocument> GetAllData(string indexType)
+        public IEnumerable<IndexDocument> GetAllData(IIndexer indexer, string indexType)
         {
             switch (indexType)
             {

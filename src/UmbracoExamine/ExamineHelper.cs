@@ -6,50 +6,68 @@ using System.Threading.Tasks;
 using System.Web;
 using Examine;
 using Examine.LuceneEngine.Config;
+using Examine.Providers;
 using Umbraco.Core;
+using UmbracoExamine.DataServices;
 
 namespace UmbracoExamine
 {
-    internal class ExamineHelper
+    public static class ExamineHelper
     {
-      
-        public static IndexSet GetConfiguredIndexSet(string name, System.Collections.Specialized.NameValueCollection config, string matchingVerb, Func<bool> alreadyConfiguredCheck)
+        /// <summary>
+        /// A helper method to be used for GatheringNodeData for Umbraco content
+        /// </summary>
+        /// <param name="indexer"></param>
+        /// <param name="contentService"></param>
+        /// <param name="e"></param>
+        public static void AddIndexDataForContent(this BaseIndexProvider indexer, IContentService contentService, IndexingNodeDataEventArgs e)
         {
-            //Need to check if the index set or IndexerData is specified...
-
-            if (config["indexSet"] == null && alreadyConfiguredCheck() == false)
+            //strip html of all users fields if we detect it has HTML in it. 
+            //if that is the case, we'll create a duplicate 'raw' copy of it so that we can return
+            //the value of the field 'as-is'.
+            // Get all user data that we want to index and store into a dictionary 
+            foreach (var field in indexer.IndexerData.UserFields)
             {
-                //if we don't have either, then we'll try to set the index set by naming conventions
-                if (name.EndsWith(matchingVerb))
+                if (e.Fields.TryGetValue(field.Name, out var fieldVal))
                 {
-                    var setNameByConvension = name.Remove(name.LastIndexOf(matchingVerb)) + "IndexSet";
-                    //check if we can assign the index set by naming convention
-                    var set = IndexSets.Instance.Sets.Cast<IndexSet>().SingleOrDefault(x => x.SetName == setNameByConvension);
-
-                    if (set != null)
+                    //check if the field value has html
+                    if (XmlHelper.CouldItBeXml(fieldVal))
                     {
-                        //we've found an index set by naming conventions :)
-                        return set;
+                        //First save the raw value to a raw field, we will change the policy of this field by detecting the prefix later
+                        e.Fields[UmbracoContentIndexer.RawFieldPrefix + field.Name] = fieldVal;
+                        //now replace the original value with the stripped html
+                        e.Fields[field.Name] = contentService.StripHtml(fieldVal);
                     }
                 }
-
-                throw new ArgumentNullException("indexSet on LuceneExamineIndexer provider has not been set in configuration and/or the IndexerData property has not been explicitly set");
             }
 
-            if (config["indexSet"] != null)
+            //ensure the special path and node type alias fields is added to the dictionary to be saved to file
+            var path = e.Node.Attribute("path").Value;
+            if (e.Fields.ContainsKey(UmbracoContentIndexer.IndexPathFieldName) == false)
+                e.Fields.Add(UmbracoContentIndexer.IndexPathFieldName, path);
+
+            //this needs to support both schema's so get the nodeTypeAlias if it exists, otherwise the name
+            var nodeTypeAlias = e.Node.Attribute("nodeTypeAlias") == null ? e.Node.Name.LocalName : e.Node.Attribute("nodeTypeAlias").Value;
+            if (e.Fields.ContainsKey(UmbracoContentIndexer.NodeTypeAliasFieldName) == false)
+                e.Fields.Add(UmbracoContentIndexer.NodeTypeAliasFieldName, nodeTypeAlias);
+
+            //add icon 
+            var icon = (string)e.Node.Attribute("icon");
+            if (e.Fields.ContainsKey(UmbracoContentIndexer.IconFieldName) == false)
+                e.Fields.Add(UmbracoContentIndexer.IconFieldName, icon);
+
+            //add guid 
+            var guid = (string)e.Node.Attribute("key");
+            if (e.Fields.ContainsKey(UmbracoContentIndexer.NodeKeyFieldName) == false)
+                e.Fields.Add(UmbracoContentIndexer.NodeKeyFieldName, guid);
+
+            if (e.Fields.ContainsKey("nodeName"))
             {
-                //if an index set is specified, ensure it exists and initialize the indexer based on the set
-
-                if (IndexSets.Instance.Sets[config["indexSet"]] == null)
-                {
-                    throw new ArgumentException("The indexSet specified for the LuceneExamineIndexer provider does not exist");
-                }
-                var indexSetName = config["indexSet"];
-                return IndexSets.Instance.Sets[indexSetName];
+                //add the __nodeName as lower case
+                e.Fields[UmbracoContentIndexer.NodeNameFieldName] = e.Fields["nodeName"].ToLower();
             }
-
-            //it's already configured internally
-            return null;
         }
+
+        private string GetValue()
     }
 }

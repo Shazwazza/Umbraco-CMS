@@ -1,4 +1,4 @@
-function ExamineMgmtController($scope, umbRequestHelper, $log, $http, $q, $timeout) {
+function ExamineMgmtController($scope, umbRequestHelper, $log, $http, $q, $timeout, notificationsService) {
 
     $scope.indexerDetails = [];
     $scope.searcherDetails = [];
@@ -78,15 +78,20 @@ function ExamineMgmtController($scope, umbRequestHelper, $log, $http, $q, $timeo
                         "PostRebuildIndex",
                         { indexerName: indexer.name })),
                     'Failed to rebuild index')
-                .then(function() {
+                .then(function(data) {
 
-                    //rebuilding has started, nothing is returned accept a 200 status code.
-                    //lets poll to see if it is done.
-                    $timeout(function() {
-                            checkProcessing(indexer, "PostCheckRebuildIndex");
-                        },
-                        1000);
-
+                    if (data.isLuceneIndex) {
+                        //rebuilding has started lets poll to see if it is done.
+                        $timeout(function() {
+                                checkProcessing(indexer, "PostCheckRebuildIndex");
+                            },
+                            1000);
+                    }
+                    else {
+                        indexer.isProcessing = false;
+                        notificationsService.success("Examine",
+                            "A rebuild request has been sent, indexing will occur in the background.");
+                    }
                 });
         }
     }

@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security;
-using System.Text;
 using Umbraco.Core.Logging;
-using umbraco.BusinessLogic;
 
 namespace UmbracoExamine.DataServices
 {

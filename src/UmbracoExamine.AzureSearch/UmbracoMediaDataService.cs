@@ -52,8 +52,8 @@ namespace UmbracoExamine.AzureSearch
         {
             var pageIndex = 0;
 
-            var contentTypes = _contentTypeService.GetAllContentTypes().ToList();
-            var icons = contentTypes.ToDictionary(x => x.Id, y => y.Icon);
+            var mediaTypes = _contentTypeService.GetAllMediaTypes().ToList();
+            var icons = mediaTypes.ToDictionary(x => x.Id, y => y.Icon);
             var parent = parentId == -1 ? null : _mediaService.GetById(parentId);
             bool more;
 
@@ -83,7 +83,7 @@ namespace UmbracoExamine.AzureSearch
                 //TODO: Update the service layer to join the cmsContentType table so we can query by content type too
                 if (_indexerData.IncludeNodeTypes.Any())
                 {
-                    var includeNodeTypeIds = contentTypes.Where(x => _indexerData.IncludeNodeTypes.Contains(x.Alias)).Select(x => x.Id);
+                    var includeNodeTypeIds = mediaTypes.Where(x => _indexerData.IncludeNodeTypes.Contains(x.Alias)).Select(x => x.Id);
                     xmlEntry = xmlEntry.Where(elm => includeNodeTypeIds.Contains(elm.Item2.AttributeValue<int>("nodeType"))).ToArray();
                 }
 

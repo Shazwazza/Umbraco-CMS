@@ -187,6 +187,7 @@ namespace UmbracoExamine
         public const string NodeKeyFieldName = "__Key";
         public const string NodeTypeAliasFieldName = "__NodeTypeAlias";
         public const string IconFieldName = "__Icon";
+        public const string NodeNameFieldName = "__nodeName";
 
         /// <summary>
         /// The prefix added to a field when it is duplicated in order to store the original raw value.
@@ -198,29 +199,7 @@ namespace UmbracoExamine
         /// Alot of standard umbraco fields shouldn't be tokenized or even indexed, just stored into lucene
         /// for retreival after searching.
         /// </summary>
-        internal static readonly StaticFieldCollection IndexFieldPolicies
-            = new StaticFieldCollection
-            {
-                new StaticField("id", FieldIndexTypes.NOT_ANALYZED, false, string.Empty),
-                new StaticField("key", FieldIndexTypes.NOT_ANALYZED, false, string.Empty),
-                new StaticField("version", FieldIndexTypes.NOT_ANALYZED, false, string.Empty),
-                new StaticField("parentID", FieldIndexTypes.NOT_ANALYZED, false, string.Empty),
-                new StaticField("level", FieldIndexTypes.NOT_ANALYZED, true, "NUMBER"),
-                new StaticField("writerID", FieldIndexTypes.NOT_ANALYZED, false, string.Empty),
-                new StaticField("creatorID", FieldIndexTypes.NOT_ANALYZED, false, string.Empty),
-                new StaticField("nodeType", FieldIndexTypes.NOT_ANALYZED, false, string.Empty),
-                new StaticField("template", FieldIndexTypes.NOT_ANALYZED, false, string.Empty),
-                new StaticField("sortOrder", FieldIndexTypes.NOT_ANALYZED, true, "NUMBER"),
-                new StaticField("createDate", FieldIndexTypes.NOT_ANALYZED, false, "DATETIME"),
-                new StaticField("updateDate", FieldIndexTypes.NOT_ANALYZED, false, "DATETIME"),
-                new StaticField("nodeName", FieldIndexTypes.ANALYZED, false, string.Empty),
-                new StaticField("urlName", FieldIndexTypes.NOT_ANALYZED, false, string.Empty),
-                new StaticField("writerName", FieldIndexTypes.ANALYZED, false, string.Empty),
-                new StaticField("creatorName", FieldIndexTypes.ANALYZED, false, string.Empty),
-                new StaticField("nodeTypeAlias", FieldIndexTypes.ANALYZED, false, string.Empty),
-                new StaticField( "path", FieldIndexTypes.NOT_ANALYZED, false, string.Empty),
-                new StaticField( "isPublished", FieldIndexTypes.NOT_ANALYZED, false, string.Empty)
-            };
+        internal static readonly StaticFieldCollection IndexFieldPolicies = StaticFieldCollection.CreateDefaultUmbracoContentIndexFieldPolicies();
 
         #endregion
 
@@ -246,23 +225,10 @@ namespace UmbracoExamine
         
         public override void Initialize(string name, NameValueCollection config)
         {
-
-            //check if there's a flag specifying to support unpublished content,
-            //if not, set to false;
-            bool supportUnpublished;
-            if (config["supportUnpublished"] != null && bool.TryParse(config["supportUnpublished"], out supportUnpublished))
-                SupportUnpublishedContent = supportUnpublished;
-            else
-                SupportUnpublishedContent = false;
-
-
-            //check if there's a flag specifying to support protected content,
-            //if not, set to false;
-            bool supportProtected;
-            if (config["supportProtected"] != null && bool.TryParse(config["supportProtected"], out supportProtected))
-                SupportProtectedContent = supportProtected;
-            else
-                SupportProtectedContent = false;
+            bool supportUnpublishedContent, supportProtectedContent;
+            config.ConfigureOptions(out supportUnpublishedContent, out supportProtectedContent);
+            SupportProtectedContent = supportProtectedContent;
+            SupportUnpublishedContent = supportUnpublishedContent;
 
             bool disableXmlDocLookup;
             if (config["disableXmlDocLookup"] != null && bool.TryParse(config["disableXmlDocLookup"], out disableXmlDocLookup))
@@ -314,6 +280,18 @@ namespace UmbracoExamine
         protected override void OnDocumentWriting(DocumentWritingEventArgs docArgs)
         {
             var d = docArgs.Document;
+
+            if (docArgs.Fields.Keys.Contains("nodeName"))
+            {
+                //add the lower cased version
+                d.Add(new Field(NodeNameFieldName,
+                    docArgs.Fields["nodeName"].ToLower(),
+                    Field.Store.YES,
+                    Field.Index.ANALYZED,
+                    Field.TermVector.NO
+                ));
+            }
+            
             foreach (var f in docArgs.Fields.Where(x => x.Key.StartsWith(RawFieldPrefix)))
             {
                 d.Add(new Field(
@@ -699,7 +677,7 @@ namespace UmbracoExamine
             //TODO: This would be much better done if the IndexerData property had read/write locks applied
             // to it! Unless we update the base class there's really no way to prevent the IndexerData from being
             // changed during an operation that is reading from it.
-            var newIndexerData = GetIndexerData(IndexSets.Instance.Sets[IndexSetName]);
+            var newIndexerData = CreateIndexerData(IndexSets.Instance.Sets[IndexSetName]);
             IndexerData = newIndexerData;
         }
 
@@ -711,47 +689,8 @@ namespace UmbracoExamine
 
         protected override void OnGatheringNodeData(IndexingNodeDataEventArgs e)
         {
-            //strip html of all users fields if we detect it has HTML in it. 
-            //if that is the case, we'll create a duplicate 'raw' copy of it so that we can return
-            //the value of the field 'as-is'.
-            // Get all user data that we want to index and store into a dictionary 
-            foreach (var field in IndexerData.UserFields)
-            {
-                string fieldVal;
-                if (e.Fields.TryGetValue(field.Name, out fieldVal))
-                {
-                    //check if the field value has html
-                    if (XmlHelper.CouldItBeXml(fieldVal))
-                    {
-                        //First save the raw value to a raw field, we will change the policy of this field by detecting the prefix later
-                        e.Fields[RawFieldPrefix + field.Name] = fieldVal;
-                        //now replace the original value with the stripped html
-                        e.Fields[field.Name] = DataService.ContentService.StripHtml(fieldVal);
-                    }
-                }
-            }
-
             base.OnGatheringNodeData(e);
-
-            //ensure the special path and node type alias fields is added to the dictionary to be saved to file
-            var path = e.Node.Attribute("path").Value;
-            if (e.Fields.ContainsKey(IndexPathFieldName) == false)
-                e.Fields.Add(IndexPathFieldName, path);
-
-            //this needs to support both schema's so get the nodeTypeAlias if it exists, otherwise the name
-            var nodeTypeAlias = e.Node.Attribute("nodeTypeAlias") == null ? e.Node.Name.LocalName : e.Node.Attribute("nodeTypeAlias").Value;
-            if (e.Fields.ContainsKey(NodeTypeAliasFieldName) == false)
-                e.Fields.Add(NodeTypeAliasFieldName, nodeTypeAlias);
-
-            //add icon 
-            var icon = (string)e.Node.Attribute("icon");
-            if (e.Fields.ContainsKey(IconFieldName) == false)
-                e.Fields.Add(IconFieldName, icon);
-
-            //add guid 
-            var guid = (string)e.Node.Attribute("key");
-            if (e.Fields.ContainsKey(NodeKeyFieldName) == false)
-                e.Fields.Add(NodeKeyFieldName, guid);
+            this.AddIndexDataForContent(DataService.ContentService, e);
         }
 
         /// <summary>
@@ -807,16 +746,9 @@ namespace UmbracoExamine
         /// <remarks>
         /// If we cannot initialize we will pass back empty indexer data since we cannot read from the database
         /// </remarks>
-        protected override IIndexCriteria GetIndexerData(IndexSet indexSet)
+        public override IIndexCriteria CreateIndexerData(IndexSet indexSet)
         {
-            if (CanInitialize())
-            {
-                return indexSet.ToIndexCriteria(DataService, IndexFieldPolicies);
-            }
-            else
-            {
-                return base.GetIndexerData(indexSet);
-            }
+            return CanInitialize() ? indexSet.ToIndexCriteria(DataService, IndexFieldPolicies) : base.CreateIndexerData(indexSet);
         }
 
         /// <summary>
@@ -846,7 +778,6 @@ namespace UmbracoExamine
             if (SupportUnpublishedContent == false
                 && SupportProtectedContent == false)
             {
-
                 var nodeId = int.Parse(node.Attribute("id").Value);
 
                 if (DataService.ContentService.IsProtected(nodeId, node.Attribute("path").Value))

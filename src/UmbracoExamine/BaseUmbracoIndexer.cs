@@ -25,7 +25,6 @@ using UmbracoExamine.LocalStorage;
 
 namespace UmbracoExamine
 {
-
     /// <summary>
     /// An abstract provider containing the basic functionality to be able to query against
     /// Umbraco data.
@@ -140,7 +139,7 @@ namespace UmbracoExamine
         public override void Initialize(string name, System.Collections.Specialized.NameValueCollection config)
         {
 
-            if (config["dataService"] != null && !string.IsNullOrEmpty(config["dataService"]))
+            if (config["dataService"] != null && string.IsNullOrEmpty(config["dataService"]) == false)
             {
                 //this should be a fully qualified type
                 var serviceType = Type.GetType(config["dataService"]);
@@ -152,23 +151,7 @@ namespace UmbracoExamine
                 //generally this would only need to be set differently for unit testing
                 DataService = CreateDefaultUmbracoDataService();
             }
-
-            DataService.LogService.LogLevel = LoggingLevel.Normal;
-
-            if (config["logLevel"] != null && !string.IsNullOrEmpty(config["logLevel"]))
-            {
-                try
-                {
-                    var logLevel = (LoggingLevel)Enum.Parse(typeof(LoggingLevel), config["logLevel"]);
-                    DataService.LogService.LogLevel = logLevel;
-                }
-                catch (ArgumentException)
-                {                    
-                    //FAILED
-                    DataService.LogService.LogLevel = LoggingLevel.Normal;
-                }
-            }
-
+            
             DataService.LogService.ProviderName = name;
 
             EnableDefaultEventHandler = true; //set to true by default
@@ -359,18 +342,8 @@ namespace UmbracoExamine
         protected bool CanInitialize()
         {
             //check the DisableInitializationCheck and ensure that it is not set to true
-            if (!DisableInitializationCheck.HasValue || !DisableInitializationCheck.Value)
-            {
-                //We need to check if we actually can initialize, if not then don't continue
-                if (ApplicationContext.Current == null
-                    || !ApplicationContext.Current.IsConfigured
-                    || !ApplicationContext.Current.DatabaseContext.IsDatabaseConfigured)
-                {
-                    return false;
-                }    
-            }
-            
-            return true;
+            if (DisableInitializationCheck.HasValue && DisableInitializationCheck.Value) return true;
+            return ApplicationContext.Current.CanInitialize();
         }
 
         /// <summary>

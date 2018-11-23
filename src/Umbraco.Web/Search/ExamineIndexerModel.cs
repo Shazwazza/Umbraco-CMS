@@ -4,11 +4,27 @@ using Examine;
 
 namespace Umbraco.Web.Search
 {
+    [DataContract(Name = "rebuild", Namespace = "")]
+    public class ExamineRebuildModel
+    {
+        /// <summary>
+        /// Generally will always be true unless someone has created a new non-lucene index
+        /// </summary>
+        [DataMember(Name = "isLuceneIndex")]
+        public bool IsLuceneIndex { get; set; }
+    }
+
 
     [DataContract(Name = "indexer", Namespace = "")]
     public class ExamineIndexerModel : ExamineSearcherModel
     {
-        
+        public ExamineIndexerModel()
+        {
+            DocumentCount = -1;
+            FieldCount = -1;
+            DeletionCount = -1;
+        }
+
         [DataMember(Name = "indexCriteria")]
         public IIndexCriteria IndexCriteria { get; set; }
         

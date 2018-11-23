@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
@@ -31,17 +33,11 @@ namespace Umbraco.Tests.UmbracoExamine
 		    _xMedia = XDocument.Parse(mediaXml);
 		}
 
-		#region IContentService Members
+        #region IContentService Members
 
-		/// <summary>
-		/// Return the XDocument containing the xml from the umbraco.config xml file
-		/// </summary>
-		/// <param name="xpath"></param>
-		/// <returns></returns>
-		/// <remarks>
-		/// This is no different in the test suite as published content
-		/// </remarks>
-		public XDocument GetLatestContentByXPath(string xpath)
+	    [Obsolete("This method is not be used, it will be removed in future versions")]
+	    [EditorBrowsable(EditorBrowsableState.Never)]
+        public XDocument GetLatestContentByXPath(string xpath)
 		{
 			var xdoc = XDocument.Parse("<content></content>");
 			xdoc.Root.Add(_xContent.XPathSelectElements(xpath));
@@ -49,12 +45,9 @@ namespace Umbraco.Tests.UmbracoExamine
 			return xdoc;
 		}
 
-		/// <summary>
-		/// Return the XDocument containing the xml from the umbraco.config xml file
-		/// </summary>
-		/// <param name="xpath"></param>
-		/// <returns></returns>
-		public XDocument GetPublishedContentByXPath(string xpath)
+        [Obsolete("This method is not be used, it will be removed in future versions")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public XDocument GetPublishedContentByXPath(string xpath)
 		{
 		    return GetContentByXPath(xpath, _xContent);			
 		}

@@ -43,6 +43,7 @@
     <TargetFrameworkProfile />
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
+    <LangVersion>6</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -59,6 +60,7 @@
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <CodeAnalysisIgnoreGeneratedCode>false</CodeAnalysisIgnoreGeneratedCode>
     <Prefer32Bit>false</Prefer32Bit>
+    <LangVersion />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -82,8 +84,8 @@
     <AssemblyOriginatorKeyFile>..\Solution Items\TheFARM-Public.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Examine, Version=0.1.89.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Examine.0.1.89\lib\net45\Examine.dll</HintPath>
+    <Reference Include="Examine, Version=0.1.90.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Examine.0.1.90-beta11\lib\net45\Examine.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
@@ -120,8 +122,10 @@
     <Compile Include="DataServices\UmbracoMemberContentService.cs" />
     <Compile Include="DataServices\UmbracoMemberDataService.cs" />
     <Compile Include="DeletePolicyTracker.cs" />
+    <Compile Include="ExamineExtensions.cs" />
     <Compile Include="ExamineHelper.cs" />
     <Compile Include="IndexTypes.cs" />
+    <Compile Include="IUmbracoIndexer.cs" />
     <Compile Include="LegacyLibrary.cs" />
     <Compile Include="LocalStorage\AzureLocalStorageDirectory.cs" />
     <Compile Include="LocalStorage\CodeGenLocalStorageDirectory.cs" />

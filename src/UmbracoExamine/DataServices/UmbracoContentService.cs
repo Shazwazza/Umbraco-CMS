@@ -6,6 +6,7 @@ using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
 using System.Xml.Linq;
 using System.Collections;
+using System.ComponentModel;
 using System.Xml.XPath;
 using Examine.LuceneEngine;
 
@@ -34,12 +35,9 @@ namespace UmbracoExamine.DataServices
 			return value.StripHtml();
         }
 
-        /// <summary>
-        /// Gets published content by xpath
-        /// </summary>
-        /// <param name="xpath"></param>
-        /// <returns></returns>
-		public XDocument GetPublishedContentByXPath(string xpath)
+        [Obsolete("This method is not be used, it will be removed in future versions")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public XDocument GetPublishedContentByXPath(string xpath)
         {
 			//TODO: Remove the need for this, the best way would be to remove all requirements of examine based on Xml but that
 			// would take some time. Another way in the in-term would be to add a static delegate to this class which can be set
@@ -54,8 +52,9 @@ namespace UmbracoExamine.DataServices
         /// </summary>
         /// <param name="xpath"></param>
         /// <returns></returns>
-        [Obsolete("This should no longer be used, latest content will be indexed by using the IContentService directly")]
-		public XDocument GetLatestContentByXPath(string xpath)
+        [Obsolete("This should no longer be used, latest content will be indexed by using Umbraco's own IContentService")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public XDocument GetLatestContentByXPath(string xpath)
         {
             using (var scope = ApplicationContext.Current.ScopeProvider.CreateScope())
             {
@@ -80,7 +79,7 @@ namespace UmbracoExamine.DataServices
         /// <returns></returns>
         public bool IsProtected(int nodeId, string path)
         {
-            using (var scope = ApplicationContext.Current.ScopeProvider.CreateScope())
+            using (var scope = ApplicationContext.ScopeProvider.CreateScope())
             {
                 var ret = ApplicationContext.Services.PublicAccessService.IsProtected(path.EnsureEndsWith("," + nodeId));
                 scope.Complete();
@@ -95,7 +94,7 @@ namespace UmbracoExamine.DataServices
 		
 		public virtual IEnumerable<string> GetAllUserPropertyNames()
 	    {
-            using (var scope = ApplicationContext.Current.ScopeProvider.CreateScope())
+            using (var scope = ApplicationContext.ScopeProvider.CreateScope())
             {
                 try
 	            {

@@ -17,6 +17,7 @@ using Umbraco.Core.Services;
 using Umbraco.Core.Xml;
 using Umbraco.Web.Models;
 using Umbraco.Web.PublishedCache;
+using TypeHelper = Umbraco.Core.TypeHelper;
 
 namespace Umbraco.Web
 {

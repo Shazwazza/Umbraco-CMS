@@ -113,7 +113,7 @@ namespace UmbracoExamine
         /// </summary>
         /// <param name="indexSet"></param>
         /// <returns></returns>
-        protected override IIndexCriteria GetIndexerData(IndexSet indexSet)
+        public override IIndexCriteria CreateIndexerData(IndexSet indexSet)
         {
             if (CanInitialize())
             {
@@ -132,7 +132,7 @@ namespace UmbracoExamine
             }
             else
             {
-                return base.GetIndexerData(indexSet);
+                return base.CreateIndexerData(indexSet);
             }
             
         }
@@ -144,7 +144,7 @@ namespace UmbracoExamine
         {
             get
             {
-                return new string[] { IndexTypes.Member };
+                return new[] { IndexTypes.Member };
             }
         }
 
@@ -258,12 +258,6 @@ namespace UmbracoExamine
             if (e.Fields.ContainsKey(IconFieldName) == false)
                 e.Fields.Add(IconFieldName, (string)e.Node.Attribute("icon"));
         }
-
-        private static XElement GetMemberItem(int nodeId)
-        {
-            //TODO: Change this so that it is not using the LegacyLibrary, just serialize manually!
-            var nodes = LegacyLibrary.GetMember(nodeId);
-            return XElement.Parse(nodes.Current.OuterXml);
-        }
+        
     }
 }

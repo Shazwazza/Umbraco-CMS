@@ -3,7 +3,7 @@ using Examine.LuceneEngine;
 
 namespace UmbracoExamine
 {
-    internal class StaticField : IIndexField
+    public class StaticField : IIndexField
     {
         public StaticField(string name, FieldIndexTypes indexType, bool enableSorting, string type)
         {
@@ -14,7 +14,7 @@ namespace UmbracoExamine
         }
 
         public string Name { get; set; }
-        public FieldIndexTypes IndexType { get; private set; }
+        public FieldIndexTypes IndexType { get; }
         public bool EnableSorting { get; set; }
         public string Type { get; set; }
     }
